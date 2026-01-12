@@ -47,6 +47,7 @@
 | `/vibe [ID]` | Implement feature (QA -> Designer -> Dev -> QA) |
 | `/vibe plan [sprint]` | Plan sprint (Domain -> Designer -> PM) |
 | `/vibe discover [ID]` | Pre-planning discovery (research, wireframe, draft scenarios) |
+| `/vibe check` | **NEW** Validate project structure + template sync status |
 | `/vibe debt [desc]` | Capture technical debt with triage |
 | `/vibe review [scope]` | Multi-agent code review (fresh context) |
 | `/vibe status` | Show current progress + debt summary |
@@ -121,6 +122,64 @@ Layer 4: Domain (100% Project Specific)
 
 ---
 
+## Project Validation (AI-Native Enforcement)
+
+**On first `/vibe` command in a session**, AI validates:
+
+1. `.claude/vibe.config.json` exists and is valid
+2. `architecture/` exists with required categories
+3. `docs/domain/` exists with required files
+
+**If validation fails → HARD BLOCK:**
+- Show what's missing
+- Offer to scaffold from template
+- User must approve before continuing
+
+**Template location:** `~/projects/vibe-ash-svelte-template/`
+
+### `/vibe check` Command
+
+Explicit validation + template sync status:
+
+```
+/vibe check
+
+=== Vibe Framework Check ===
+
+Project: MyProject
+Core KPI: Primary success metric
+
+Structure:
+  ✓ .claude/vibe.config.json
+  ✓ architecture/ (5 categories, 23 files)
+  ✓ docs/domain/ (5 feature specs, glossary, vision)
+
+Template Sync:
+  ✓ _fundamentals/ in sync
+  ⚠ _guides/testing.md differs
+  ✓ _patterns/ in sync
+
+Overall: ✓ Ready for /vibe commands
+```
+
+---
+
+## Template Sync (AI-Driven)
+
+No CLI scripts needed. AI handles sync directly:
+
+1. AI reads template file from `~/projects/vibe-ash-svelte-template/`
+2. AI reads project file
+3. AI shows diff and explains changes
+4. AI proposes Edit operations
+5. User approves or rejects
+
+To sync from template → project:
+- Run `/vibe check`
+- If files differ, AI will offer to sync
+
+---
+
 ## Pattern Discovery
 
 During retrospective (`/vibe retro`):
@@ -139,15 +198,16 @@ During retrospective (`/vibe retro`):
 ~/.claude/vibe-ash-svelte/
 ├── README.md           # This file
 ├── prompts/
-│   ├── vibe.md         # Master orchestrator
+│   ├── vibe.md         # Master orchestrator (includes validation)
 │   ├── help.md         # /vibe --help output
 │   └── commands/
+│       ├── check.md    # Project validation + template sync
 │       ├── plan.md     # Sprint planning
 │       ├── discover.md # Feature discovery
 │       ├── debt.md     # Technical debt capture
 │       ├── review.md   # Multi-agent code review
 │       ├── status.md   # Progress display
-│       └── retro.md    # Retrospective
+│       └── retro.md    # Retrospective + pattern promotion
 ├── roles/
 │   ├── developer.md
 │   ├── designer.md
@@ -176,9 +236,14 @@ During retrospective (`/vibe retro`):
 Your project needs:
 
 1. `.claude/vibe.config.json` - Project configuration
-2. `{{paths.features}}/` - Feature specs with scenarios
-3. `{{paths.domain}}/GLOSSARY.md` - Domain terms
-4. `{{paths.architecture}}/` - Architecture decisions
+2. `{{paths.architecture}}/` - Architecture decisions (scaffold from template)
+3. `{{paths.domain}}/` - Domain docs with GLOSSARY.md, vision.md
+4. `{{paths.features}}/` - Feature specs with scenarios
+
+**Template repo must be cloned:**
+```bash
+git clone git@github.com:AugustoPedraza/vibe-ash-svelte-template.git ~/projects/vibe-ash-svelte-template
+```
 
 ---
 
@@ -195,3 +260,18 @@ Roles and prompts use these variables from vibe.config.json:
 | `{{paths.features}}` | config.paths.features |
 | `{{commands.check}}` | config.commands.check |
 | `{{commands.test}}` | config.commands.test |
+| `{{sync.template_path}}` | config.sync.template_path |
+
+### Sync Configuration
+
+Add to vibe.config.json for template sync:
+
+```json
+{
+  "sync": {
+    "template_path": "~/projects/vibe-ash-svelte-template",
+    "ignored_files": [],
+    "last_sync": null
+  }
+}
+```

@@ -58,11 +58,119 @@ Do:
 - `{{paths.domain}}/SCENARIO_FORMAT.md` - BDD format
 
 ### HOW (How We Build)
-- `{{paths.architecture}}/01-quick-reference.md` - Core decisions
-- `{{paths.architecture}}/02-responsibility-matrix.md` - Frontend vs backend
-- `{{paths.architecture}}/17-testing-strategy.md` - Test patterns
-- `{{paths.architecture}}/18-anti-patterns.md` - What NOT to do
+- `{{paths.architecture}}/_fundamentals/quick-reference.md` - Core decisions
+- `{{paths.architecture}}/_fundamentals/responsibility.md` - Frontend vs backend
+- `{{paths.architecture}}/_guides/testing.md` - Test patterns
+- `{{paths.architecture}}/_anti-patterns/` - What NOT to do
 - `~/.claude/vibe-ash-svelte/patterns/` - Reusable patterns
+
+---
+
+## Project Validation (REQUIRED - Session Start)
+
+**Before ANY /vibe command, validate the project structure.**
+
+### Required Structure
+
+```
+{project}/
+├── .claude/
+│   └── vibe.config.json          # REQUIRED - Project configuration
+├── architecture/                  # REQUIRED - Technical decisions
+│   ├── README.md
+│   ├── _index.md
+│   ├── _fundamentals/            # At least quick-reference.md
+│   ├── _guides/                  # At least one guide
+│   ├── _patterns/
+│   ├── _anti-patterns/
+│   └── _checklists/
+└── docs/domain/                   # REQUIRED - Product specs
+    ├── GLOSSARY.md
+    ├── vision.md
+    ├── index.md
+    └── features/                  # At least one feature spec
+```
+
+### Validation Steps
+
+1. **Read `.claude/vibe.config.json`**
+   - If missing: HARD BLOCK. Ask user to create config.
+
+2. **Check `architecture/` exists with required categories**
+   - If missing: HARD BLOCK. Offer to scaffold from template.
+
+3. **Check `docs/domain/` exists with required files**
+   - If missing: HARD BLOCK. Offer to scaffold minimal domain structure.
+
+### Scaffolding from Template
+
+When scaffolding is needed, read files from:
+`~/projects/vibe-ash-svelte-template/`
+
+Copy directory structures, then customize based on vibe.config.json.
+
+### Hard Block Message Format
+
+When validation fails, display:
+
+```
+⚠️ VIBE FRAMEWORK: Project structure incomplete
+
+Missing:
+  ✗ architecture/_fundamentals/quick-reference.md
+  ✗ docs/domain/GLOSSARY.md
+
+Options:
+  1. Scaffold from template (I'll create the missing files)
+  2. Point me to existing docs (if they're in a different location)
+  3. Skip validation (NOT RECOMMENDED - workflow may fail)
+
+Which option?
+```
+
+### Session Tracking
+
+After successful validation, note that validation passed for this session.
+Do NOT re-validate on subsequent /vibe commands in the same conversation.
+
+---
+
+## Template Sync (AI-Driven)
+
+When user runs `/vibe check` or requests sync:
+
+### Sync Process
+
+1. **Read Template File**
+   - Path: `~/projects/vibe-ash-svelte-template/architecture/{path}`
+   - Read entire contents
+
+2. **Read Project File**
+   - Path: `{project}/architecture/{path}`
+   - Read entire contents
+
+3. **Compare & Explain**
+   - Show what's different
+   - Note any project-specific customizations that would be lost
+   - Explain WHY template has certain content (if obvious)
+
+4. **Offer Options**
+   - Merge from template (overwrite project file)
+   - Keep project version
+   - Merge specific sections (AI identifies mergeable parts)
+
+5. **Execute via Edit tool**
+   - If user approves, use Edit tool to update project file
+   - No external scripts needed
+
+### Divergence Types
+
+| Type | AI Action |
+|------|-----------|
+| Template has new section | Propose adding section to project |
+| Project has custom section | Keep project version, note in report |
+| Same section, different content | Show diff, let user decide |
+| Project missing entire file | Propose copying from template |
 
 ---
 
