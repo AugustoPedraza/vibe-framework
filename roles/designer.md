@@ -179,6 +179,48 @@ Run `just lint-tokens` to verify compliance.
 
 ---
 
+## Visual Iteration Workflow
+
+Use screenshot-based iteration to refine UI implementation:
+
+### Process
+
+```
+1. Implement UI based on wireframe
+2. Screenshot the result (cmd+ctrl+shift+4 on macOS)
+3. Compare to wireframe/design
+4. Iterate 2-3 times until match
+5. Final review before commit
+```
+
+### How to Iterate
+
+1. **Take screenshot** of implemented component
+2. **Paste into chat** for comparison
+3. **Identify gaps**: spacing, alignment, colors, states
+4. **Request specific fixes**: "Increase padding to p-4" not "fix spacing"
+5. **Repeat** until design matches
+
+### Checklist Per Iteration
+
+- [ ] Layout matches wireframe structure
+- [ ] Spacing uses correct tokens (p-4, gap-6, etc.)
+- [ ] Colors use design tokens (bg-primary, text-muted)
+- [ ] Touch targets are 44px minimum
+- [ ] States implemented (loading, empty, error)
+- [ ] Animations use motion presets
+
+### When to Stop Iterating
+
+- Layout matches wireframe ✓
+- All states implemented ✓
+- Design tokens used correctly ✓
+- Accessibility checklist passes ✓
+
+**Tip**: 2-3 iterations usually sufficient. More indicates unclear requirements.
+
+---
+
 ## Industry Research Requirement
 
 For each feature type, research **10 outstanding apps** in the industry:

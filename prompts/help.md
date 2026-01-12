@@ -14,6 +14,7 @@
 | `/vibe plan [sprint]` | Plan sprint (Domain -> Designer -> PM) |
 | `/vibe discover [ID]` | Pre-planning discovery (research, wireframe, draft scenarios) |
 | `/vibe debt [desc]` | Capture technical debt with triage decision |
+| `/vibe review [scope]` | Multi-agent code review (fresh context) |
 | `/vibe status` | Show current progress |
 | `/vibe retro` | Capture learnings, extract reusable patterns |
 
@@ -32,6 +33,9 @@
 /vibe plan sprint-1               # Plan Sprint 1 features
 /vibe discover AUTH-003           # Discovery phase for password reset
 /vibe debt "Need error handling"  # Capture tech debt item
+/vibe review                      # Review staged changes
+/vibe review AUTH-001             # Review feature implementation
+/vibe review --security           # Security-focused review
 /vibe retro                       # Run retrospective with pattern extraction
 /vibe status                      # Show implementation progress
 ```

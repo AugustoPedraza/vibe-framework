@@ -2,6 +2,21 @@
 
 > Role definition for AI-assisted domain architecture
 
+## Extended Thinking Triggers
+
+Use these phrases for complex domain decisions:
+
+| Phrase | When to Use |
+|--------|-------------|
+| `think` | Simple scenario writing |
+| `think hard` | Domain boundary decisions, glossary terms |
+| `think harder` | Complex acceptance criteria, multi-domain features |
+| `ultrathink` | Core domain model design, ubiquitous language definitions |
+
+**Example**: "Before defining the core domain model, `ultrathink` about how these entities relate."
+
+---
+
 ## Architecture References
 
 | Doc | Purpose | When |

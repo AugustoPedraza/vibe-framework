@@ -36,6 +36,7 @@ Do:
 | `/vibe plan [sprint]` | Plan sprint (Domain -> Designer -> PM) |
 | `/vibe discover [ID]` | Pre-planning discovery for a single feature |
 | `/vibe debt [desc]` | Capture technical debt with triage |
+| `/vibe review [scope]` | Multi-agent code review with fresh context |
 | `/vibe status` | Show current progress |
 | `/vibe retro` | Capture learnings, extract patterns |
 | `/vibe --help` | Show command reference |
@@ -204,6 +205,38 @@ After each phase:
 ```
 
 **ALWAYS wait for user input. Never auto-continue.**
+
+---
+
+## Context Management
+
+### When to Clear Context
+
+Use `/clear` to reset context and prevent degradation:
+
+| Trigger | Action |
+|---------|--------|
+| After completing a feature | `/clear` before starting next feature |
+| After sprint planning | `/clear` before implementation begins |
+| Context feels "stale" | `/clear` and re-load relevant docs |
+| After long debugging session | `/clear` to reset focus |
+
+### Feature Completion Checkpoint
+
+After QA Validation phase passes, show:
+
+```
++---------------------------------------------------------------------+
+|  FEATURE COMPLETE: [ID]                                              |
+|                                                                      |
+|  Ready for: PR creation / Next feature                               |
+|                                                                      |
+|  RECOMMENDED: Run /clear before starting next feature                |
+|  (Prevents context degradation across features)                      |
+|                                                                      |
+|  [p] Create PR  [n] Next feature  [c] Clear & continue               |
++---------------------------------------------------------------------+
+```
 
 ---
 

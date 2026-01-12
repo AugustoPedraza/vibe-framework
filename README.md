@@ -48,6 +48,7 @@
 | `/vibe plan [sprint]` | Plan sprint (Domain -> Designer -> PM) |
 | `/vibe discover [ID]` | Pre-planning discovery (research, wireframe, draft scenarios) |
 | `/vibe debt [desc]` | Capture technical debt with triage |
+| `/vibe review [scope]` | Multi-agent code review (fresh context) |
 | `/vibe status` | Show current progress + debt summary |
 | `/vibe retro` | Retrospective with pattern extraction + debt review |
 | `/vibe --help` | Show command reference |
@@ -144,6 +145,7 @@ During retrospective (`/vibe retro`):
 │       ├── plan.md     # Sprint planning
 │       ├── discover.md # Feature discovery
 │       ├── debt.md     # Technical debt capture
+│       ├── review.md   # Multi-agent code review
 │       ├── status.md   # Progress display
 │       └── retro.md    # Retrospective
 ├── roles/
@@ -163,8 +165,6 @@ During retrospective (`/vibe retro`):
 │   ├── frontend/
 │   ├── pwa/
 │   └── ux/
-├── docs/
-│   └── IMPROVEMENTS.md # Framework improvement backlog
 └── config/
     └── vibe.config.schema.json
 ```
