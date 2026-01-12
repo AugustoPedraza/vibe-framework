@@ -30,10 +30,12 @@
 2. **Use /vibe commands** in Claude:
 
 ```
-/vibe AUTH-001        # Implement feature
-/vibe plan sprint-1   # Plan sprint
-/vibe retro           # Run retrospective
-/vibe --help          # Show help
+/vibe AUTH-001                    # Implement feature
+/vibe plan sprint-1               # Plan sprint
+/vibe discover AUTH-003           # Pre-planning discovery
+/vibe debt "Need error handling"  # Capture tech debt
+/vibe retro                       # Run retrospective
+/vibe --help                      # Show help
 ```
 
 ---
@@ -44,8 +46,10 @@
 |---------|-------------|
 | `/vibe [ID]` | Implement feature (QA -> Designer -> Dev -> QA) |
 | `/vibe plan [sprint]` | Plan sprint (Domain -> Designer -> PM) |
-| `/vibe status` | Show current progress |
-| `/vibe retro` | Retrospective with pattern extraction |
+| `/vibe discover [ID]` | Pre-planning discovery (research, wireframe, draft scenarios) |
+| `/vibe debt [desc]` | Capture technical debt with triage |
+| `/vibe status` | Show current progress + debt summary |
+| `/vibe retro` | Retrospective with pattern extraction + debt review |
 | `/vibe --help` | Show command reference |
 
 ---
@@ -67,6 +71,25 @@
 1. Domain Architect -> Define scenarios, identify bootstrap patterns
 2. Designer         -> Create wireframes, define states
 3. Agile PM         -> Create GitHub issues
+```
+
+### Feature Discovery (`/vibe discover [ID]`)
+
+```
+1. Context Loading  -> Understand the feature
+2. Research         -> Industry patterns, user journey
+3. Wireframe        -> Draft UI/UX with states
+4. Draft Scenarios  -> Given/When/Then (not finalized)
+5. Risks            -> Technical risks, unknowns
+6. Document         -> Generate discovery spec (no GitHub issues)
+```
+
+### Technical Debt (`/vibe debt [desc]`)
+
+```
+1. Capture    -> Description, category, effort, context
+2. Triage     -> User decides: now / later / backlog / skip
+3. Record     -> Update .claude/backlog.md
 ```
 
 ---
@@ -114,11 +137,15 @@ During retrospective (`/vibe retro`):
 ```
 ~/.claude/vibe-ash-svelte/
 ├── README.md           # This file
-├── COMMANDS.md         # Command reference
 ├── prompts/
 │   ├── vibe.md         # Master orchestrator
 │   ├── help.md         # /vibe --help output
-│   └── commands/       # Command handlers
+│   └── commands/
+│       ├── plan.md     # Sprint planning
+│       ├── discover.md # Feature discovery
+│       ├── debt.md     # Technical debt capture
+│       ├── status.md   # Progress display
+│       └── retro.md    # Retrospective
 ├── roles/
 │   ├── developer.md
 │   ├── designer.md
@@ -136,6 +163,8 @@ During retrospective (`/vibe retro`):
 │   ├── frontend/
 │   ├── pwa/
 │   └── ux/
+├── docs/
+│   └── IMPROVEMENTS.md # Framework improvement backlog
 └── config/
     └── vibe.config.schema.json
 ```

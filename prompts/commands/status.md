@@ -29,6 +29,13 @@ Recent Activity:
 Patterns Discovered This Session:
   * patterns/backend/ash-authentication.md (promoted)
   * patterns/frontend/form-validation.md (pending review)
+
+Technical Debt:
+  In Progress: 0 items
+  Sprint: 2 items (1M, 1S)
+  Backlog: 3 items
+
+  [!] TD-003 (sprint): Add error handling to API layer
 ```
 
 ## Data Sources
@@ -36,6 +43,7 @@ Patterns Discovered This Session:
 Read from:
 - `.claude/IMPLEMENTATION_PLAN.md` - Current progress
 - `.claude/learnings.md` - Session history
+- `.claude/backlog.md` - Technical debt items
 - `vibe.config.json` - Project config
 - Feature specs for status
 

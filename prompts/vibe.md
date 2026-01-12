@@ -34,6 +34,8 @@ Do:
 |---------|--------------|
 | `/vibe [FEATURE-ID]` | Implement feature (QA -> Designer -> Dev -> QA) |
 | `/vibe plan [sprint]` | Plan sprint (Domain -> Designer -> PM) |
+| `/vibe discover [ID]` | Pre-planning discovery for a single feature |
+| `/vibe debt [desc]` | Capture technical debt with triage |
 | `/vibe status` | Show current progress |
 | `/vibe retro` | Capture learnings, extract patterns |
 | `/vibe --help` | Show command reference |
@@ -314,6 +316,81 @@ If approved:
 2. Extract selected patterns to `~/.claude/vibe-ash-svelte/patterns/`
 3. Append session summary to `.claude/learnings.md`
 4. Commit changes to vibe-ash-svelte repo
+
+---
+
+## Feature Discovery Workflow
+
+**Trigger:** `/vibe discover [FEATURE-ID]`
+
+```
++======================================================================+
+|  DISC DISCOVERY PHASE                                                |
+|  Feature: [ID]                                                       |
++======================================================================+
+```
+
+### Purpose
+
+Lightweight pre-planning for a single feature:
+- Research requirements and industry patterns
+- Create wireframes (mobile-first)
+- Draft scenarios (marked as DRAFT, not finalized)
+- Identify risks and unknowns
+- Output: Discovery document
+
+**Does NOT create GitHub issues** (use `/vibe plan` for that).
+
+### Phases
+
+1. **Context Loading** - Read vision, glossary, check existing spec
+2. **Research** - Industry patterns, user journey, component audit
+3. **Wireframe** - Draft UI/UX with states (loading/error/empty/success)
+4. **Draft Scenarios** - Given/When/Then (Domain Architect lens)
+5. **Risk Identification** - Technical risks, unknowns, dependencies
+6. **Document** - Generate discovery spec at `{{paths.features}}/{area}/{ID}.md`
+
+**CHECKPOINT after each phase. Never auto-continue.**
+
+Load command: `~/.claude/vibe-ash-svelte/prompts/commands/discover.md`
+
+---
+
+## Technical Debt Workflow
+
+**Trigger:** `/vibe debt [description]` or AI-detected during development
+
+```
++======================================================================+
+|  DEBT TECHNICAL DEBT CAPTURE                                         |
+|  Context: [Current Feature] - [Current Phase]                        |
++======================================================================+
+```
+
+### Purpose
+
+Capture technical debt or out-of-scope items with user decision on priority.
+
+### Workflow
+
+1. **Capture** - Description, category, effort, context
+2. **User Decision** (CHECKPOINT):
+   - `now` - Pause current work, address immediately
+   - `later` - Add to sprint, continue current work
+   - `backlog` - Add to future, continue current work
+   - `skip` - Don't record, continue
+3. **Record** - Update `.claude/backlog.md` based on decision
+
+**ALWAYS wait for user decision. Never auto-triage.**
+
+### Categories
+
+- `tech-debt` - Code quality, architecture issues
+- `out-of-scope` - Feature scope creep, new requirements
+- `improvement` - Enhancement opportunities
+- `refactor` - Code restructuring needs
+
+Load command: `~/.claude/vibe-ash-svelte/prompts/commands/debt.md`
 
 ---
 

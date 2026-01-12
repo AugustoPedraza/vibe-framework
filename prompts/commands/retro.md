@@ -62,6 +62,35 @@ Only suggest patterns scoring MEDIUM or HIGH.
 +---------------------------------------------------------------------+
 ```
 
+## Step 2.5: Technical Debt Review
+
+If `.claude/backlog.md` exists, show debt summary:
+
+```
++---------------------------------------------------------------------+
+|  TECHNICAL DEBT REVIEW                                               |
+|                                                                      |
+|  New this session: 2 items captured                                  |
+|  Resolved this session: 1 item                                       |
+|                                                                      |
+|  Sprint debt load: 3 items                                           |
+|  Recommendation: Keep < 5 items per sprint                           |
+|                                                                      |
+|  Sprint Items:                                                       |
+|  * TD-003 (M): Add error handling to API layer                       |
+|  * TD-005 (S): Refactor duplicate validation logic                   |
+|                                                                      |
+|  Review sprint debt? [y] Yes [n] Skip: ___                           |
++---------------------------------------------------------------------+
+```
+
+If user reviews:
+- Show each sprint item with option to:
+  - `[r]` Resolve (mark completed, add resolution)
+  - `[b]` Move to backlog
+  - `[k]` Keep in sprint
+  - `[d]` Delete (remove completely)
+
 ## Step 3: Apply Changes
 
 ### Documentation Improvements
