@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Vibe Config",
+  "description": "Configuration for vibe framework in a project",
+  "type": "object",
+  "required": ["project", "paths"],
+  "properties": {
+    "project": {
+      "type": "object",
+      "description": "Project identification",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Project name (used in phase headers)"
+        },
+        "core_kpi": {
+          "type": "string",
+          "description": "Primary success metric for the project"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["web", "pwa", "mobile", "api"],
+          "description": "Project type (affects checklists)"
+        }
+      }
+    },
+    "stack": {
+      "type": "object",
+      "description": "Technology stack (for pattern filtering)",
+      "properties": {
+        "backend": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Backend technologies (e.g., elixir, ash, phoenix)"
+        },
+        "frontend": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Frontend technologies (e.g., svelte, react, tailwind)"
+        },
+        "database": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Database technologies (e.g., postgres, sqlite)"
+        }
+      }
+    },
+    "paths": {
+      "type": "object",
+      "description": "Project paths (relative to project root)",
+      "required": ["architecture", "domain", "features"],
+      "properties": {
+        "architecture": {
+          "type": "string",
+          "description": "Path to architecture docs",
+          "default": "architecture/"
+        },
+        "domain": {
+          "type": "string",
+          "description": "Path to domain docs",
+          "default": "docs/domain/"
+        },
+        "features": {
+          "type": "string",
+          "description": "Path to feature specs",
+          "default": "docs/domain/features/"
+        }
+      }
+    },
+    "modules": {
+      "type": "object",
+      "description": "Code module naming (for code generation)",
+      "properties": {
+        "domain_prefix": {
+          "type": "string",
+          "description": "Domain module prefix (e.g., MyApp)"
+        },
+        "web_prefix": {
+          "type": "string",
+          "description": "Web module prefix (e.g., MyAppWeb)"
+        }
+      }
+    },
+    "ux": {
+      "type": "object",
+      "description": "UX requirements (affects checklists)",
+      "properties": {
+        "pwa": {
+          "type": "boolean",
+          "description": "Is this a PWA?",
+          "default": false
+        },
+        "mobile_first": {
+          "type": "boolean",
+          "description": "Mobile-first design?",
+          "default": false
+        },
+        "offline_required": {
+          "type": "boolean",
+          "description": "Must work offline?",
+          "default": false
+        }
+      }
+    },
+    "commands": {
+      "type": "object",
+      "description": "Project-specific commands",
+      "properties": {
+        "check": {
+          "type": "string",
+          "description": "Quality check command",
+          "default": "just check"
+        },
+        "test": {
+          "type": "string",
+          "description": "Test command",
+          "default": "just test"
+        },
+        "dev": {
+          "type": "string",
+          "description": "Dev server command",
+          "default": "just dev"
+        }
+      }
+    }
+  }
+}
