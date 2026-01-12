@@ -35,8 +35,10 @@ Before implementing any feature, read these docs:
 | `{{paths.architecture}}16-error-handling.md` | Error flow | Error handling |
 | `{{paths.architecture}}17-testing-strategy.md` | Test pyramid | Writing tests |
 | `{{paths.architecture}}18-anti-patterns.md` | Patterns to avoid | **Always** |
-| `{{paths.architecture}}19-pwa-native-experience.md` | PWA lifecycle, state preservation, navigation | PWA features |
-| `{{paths.architecture}}20-motion-system.md` | Motion tokens, animation presets | Animations |
+| `{{paths.architecture}}19-pwa-native-experience.md` | **Pattern Catalog**: PWA patterns (form preservation, offline, gestures) | PWA features |
+| `{{paths.architecture}}20-motion-system.md` | **Pattern Catalog**: Motion patterns (modal, sheet, toast animations) | Animations |
+| `{{paths.architecture}}08-app-shell.md` | **Pattern Catalog**: Shell patterns (tabs, navigation, badges) | App shell work |
+| `{{paths.architecture}}11-mobile-first.md` | **Pattern Catalog**: Mobile patterns (touch, swipe, haptics) | Mobile UX |
 
 Also check `~/.claude/vibe-ash-svelte/patterns/` for reusable patterns.
 
@@ -52,8 +54,16 @@ Architecture docs describe the **target end state**. When implementing:
 
 1. **Read feature spec first** - `{{paths.features}}{area}/{ID}.md`
 2. **Create only what the scenario tests** - No speculative infrastructure
-3. **Pull patterns as needed** - Reference architecture docs for HOW, not WHAT to build
+3. **Pull patterns from catalogs** - Architecture docs are reference catalogs, pull patterns when features need them
 4. **Extend incrementally** - Add to existing code, don't pre-build
+
+### Pattern Catalog Usage
+
+Architecture docs (08, 11, 19, 20) are **pattern catalogs**, not build plans:
+- Each pattern has a **"Use when"** trigger - check if your feature matches
+- Start with **minimal implementation** - simpler is better
+- Expand to **full implementation** only when needed
+- Check **"What NOT to Build"** sections to avoid over-engineering
 
 ### YAGNI Checklist
 

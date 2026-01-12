@@ -11,8 +11,9 @@
 | `{{paths.architecture}}08-app-shell.md` | Bottom tab navigation, transitions | Navigation work |
 | `{{paths.architecture}}02-responsibility-matrix.md` | Frontend ownership | Understanding boundaries |
 | `{{paths.architecture}}18-anti-patterns.md` | UX mistakes to avoid | Reviewing designs |
-| `{{paths.architecture}}19-pwa-native-experience.md` | PWA lifecycle, native navigation, gestures | Native-like UX |
-| `{{paths.architecture}}20-motion-system.md` | **Motion tokens, animation presets** | All animations |
+| `{{paths.architecture}}19-pwa-native-experience.md` | **Pattern Catalog**: PWA patterns (form preservation, offline, gestures) | Native-like UX |
+| `{{paths.architecture}}20-motion-system.md` | **Pattern Catalog**: Motion patterns (modal, sheet, toast animations) | All animations |
+| `{{paths.architecture}}11-mobile-first.md` | **Pattern Catalog**: Mobile patterns (touch targets, swipe, haptics) | Mobile UX |
 
 ## Key Documents (MUST READ)
 
@@ -96,7 +97,7 @@ This is a **mobile-first PWA**. Every UI decision must prioritize:
 
 ## Animation & Polish (REQUIRED)
 
-**ALWAYS use motion tokens** from `{{paths.architecture}}20-motion-system.md`. No arbitrary duration values.
+**Pull motion patterns** from `{{paths.architecture}}20-motion-system.md`. This is a **Pattern Catalog** - use "Quick Index" to find the right pattern for your component type. No arbitrary duration values.
 
 ```svelte
 import { motion } from '$lib/motion';

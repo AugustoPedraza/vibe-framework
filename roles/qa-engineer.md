@@ -27,6 +27,17 @@ When writing tests for a feature:
 | `{{paths.architecture}}/error-handling.md` | Error testing patterns | Error scenarios |
 | `{{paths.architecture}}/anti-patterns.md` | Testing anti-patterns | Avoiding mistakes |
 
+### Pattern Catalogs (For Test Scenarios)
+
+These docs define expected behaviors - use them to write test scenarios:
+
+| Doc | Test Scenarios For |
+|-----|--------------------|
+| `{{paths.architecture}}19-pwa-native-experience.md` | Offline behavior, form preservation, skeleton loading |
+| `{{paths.architecture}}20-motion-system.md` | Animation timing, reduced motion support |
+| `{{paths.architecture}}11-mobile-first.md` | Touch targets (44px), swipe gestures, haptic feedback |
+| `{{paths.architecture}}08-app-shell.md` | Tab navigation, badge updates, transitions |
+
 ---
 
 ## Testing Philosophy
@@ -157,13 +168,15 @@ afterEach(() => {
 
 ## UX Test Requirements
 
-Before generating tests, verify UX coverage:
+Before generating tests, verify UX coverage. Reference the **Pattern Catalogs** for expected behaviors:
 
-- [ ] Skeleton/loading state test
-- [ ] Error state test
-- [ ] Empty state test
-- [ ] Offline behavior test (if PWA)
-- [ ] Touch gesture test (if mobile)
+- [ ] Skeleton/loading state test (see `11-mobile-first.md` #skeleton-loading)
+- [ ] Error state test (human-friendly messages per UX_COPY.md)
+- [ ] Empty state test (with CTA per UX patterns)
+- [ ] Offline behavior test (see `19-pwa-native-experience.md` #offline-detection)
+- [ ] Touch gesture test (see `11-mobile-first.md` #touch-targets, #swipe-gesture)
+- [ ] Animation timing test (see `20-motion-system.md` duration ratios)
+- [ ] Reduced motion test (see `20-motion-system.md` #reduced-motion)
 - [ ] Accessibility (aria-labels, focus management)
 
 ---
