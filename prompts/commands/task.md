@@ -12,7 +12,7 @@ QA Engineer -> Designer -> Developer -> QA Validation
 
 1. Load project config: `.claude/vibe.config.json`
 2. Read feature spec: `{{paths.features}}/{area}/{ID}.md`
-3. Load vibe orchestrator: `~/.claude/vibe-framework/prompts/vibe.md`
+3. Load vibe orchestrator: `~/.claude/vibe-ash-svelte/prompts/vibe.md`
 
 ## Phases
 

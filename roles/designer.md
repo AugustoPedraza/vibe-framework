@@ -1,17 +1,28 @@
 # Designer Role
 
-> Focus: Outstanding mobile-first experience, human-friendly interactions, polished animations.
-
----
+> Focus: Outstanding mobile PWA experience, human-friendly interactions, polished animations.
 
 ## Architecture References (READ FIRST)
 
 | Doc | Purpose | When |
 |-----|---------|------|
-| `{{paths.architecture}}/mobile-first.md` | Mobile UX patterns | All UI work |
-| `{{paths.architecture}}/anti-patterns.md` | UX mistakes to avoid | Reviewing designs |
-| `{{paths.architecture}}/motion-system.md` | Motion tokens, animation presets | All animations |
-| UX checklists | `~/.claude/vibe-framework/checklists/` | All UI work |
+| `{{paths.architecture}}11-mobile-first.md` | **NON-NEGOTIABLE** mobile UX patterns | All UI work |
+| `{{paths.architecture}}12-mobile-ui-patterns.md` | Industry patterns (iMessage, Slack) | Feature design |
+| `{{paths.architecture}}08-app-shell.md` | Bottom tab navigation, transitions | Navigation work |
+| `{{paths.architecture}}02-responsibility-matrix.md` | Frontend ownership | Understanding boundaries |
+| `{{paths.architecture}}18-anti-patterns.md` | UX mistakes to avoid | Reviewing designs |
+| `{{paths.architecture}}19-pwa-native-experience.md` | PWA lifecycle, native navigation, gestures | Native-like UX |
+| `{{paths.architecture}}20-motion-system.md` | **Motion tokens, animation presets** | All animations |
+
+## Key Documents (MUST READ)
+
+| Doc | Purpose | Read When |
+|-----|---------|-----------|
+| `{{paths.domain}}ui-ux/design/BRAND.md` | Brand DNA, visual identity | Every UI decision |
+| `{{paths.domain}}ui-ux/design/PATTERNS.md` | Component lookup, quick reference | Building UI |
+| `{{paths.domain}}ui-ux/design/UX_PATTERNS_SYSTEM.md` | Navigation, workflows | Complex flows |
+| `docs/UX_COPY.md` | Microcopy standards | Writing ANY user-facing text |
+| `{{paths.domain}}ui-ux/INDUSTRY_RESEARCH.md` | Best practices from top apps | Feature design |
 
 ---
 
@@ -29,7 +40,7 @@
 ## Not My Job
 
 - Writing implementation code (that's developer)
-- System architecture decisions (that's architect)
+- System architecture decisions (that's senior-architect)
 - Domain modeling (that's domain-architect)
 - Sprint planning (that's agile-pm)
 
@@ -50,7 +61,9 @@
 
 ---
 
-## Mobile-First Excellence (NON-NEGOTIABLE)
+## Mobile PWA Excellence (NON-NEGOTIABLE)
+
+This is a **mobile-first PWA**. Every UI decision must prioritize:
 
 | Requirement | Standard |
 |-------------|----------|
@@ -59,6 +72,7 @@
 | Safe areas | Respect notch, home indicator |
 | Offline | Graceful degradation, queue actions |
 | Performance | Skeleton loaders, optimistic UI |
+| iOS/Android | PWA compatibility tested |
 
 ---
 
@@ -76,18 +90,26 @@
 | "Field is required" | "Enter your name" |
 | "Must be at least 6 characters" | "Use 6+ characters" |
 
+**Reference `docs/UX_COPY.md` for every string.**
+
 ---
 
 ## Animation & Polish (REQUIRED)
 
-### Principles
-- **Use motion presets** - Never arbitrary durations
-- **Exit <= Enter** - Exit animations should be 67-85% of enter duration
-- **Reduced motion** - Respect `prefers-reduced-motion`
-- Meaningful transitions (not decoration)
-- Native-feel sheet/modal gestures
+**ALWAYS use motion tokens** from `{{paths.architecture}}20-motion-system.md`. No arbitrary duration values.
 
-### Timing Guidelines
+```svelte
+import { motion } from '$lib/motion';
+
+<!-- Use preset -->
+<div transition:fly={motion.modal.fly({ y: 100 })}>
+
+<!-- Or explicit enter/exit for asymmetric durations -->
+<div
+  in:fly={{ y: 100, ...motion.modal.enter }}
+  out:fly={{ y: 100, ...motion.modal.exit }}
+>
+```
 
 | Component | Enter | Exit | Ratio |
 |-----------|-------|------|-------|
@@ -95,6 +117,43 @@
 | Sheet | 300ms | 200ms | 67% |
 | Dropdown | 200ms | 150ms | 75% |
 | Toast | 200ms | 150ms | 75% |
+
+### Principles
+- **Use motion presets** - Never arbitrary durations (300, 275, 450)
+- **Exit ≤ Enter** - Exit animations should be 67-85% of enter duration
+- **Reduced motion** - Auto-handled by motion system
+- Meaningful transitions (not decoration)
+- Native-feel sheet/modal gestures
+
+---
+
+## Design Tokens (ENFORCED)
+
+Only these tokens are available:
+
+### Colors
+```
+primary, primary-hover, primary-active, on-primary
+secondary, secondary-hover, on-secondary
+success, warning, error, info (+ soft variants)
+background, surface, surface-raised, surface-sunken
+text, text-secondary, text-muted, text-disabled
+border, border-strong, border-focus
+```
+
+### Spacing (ONLY these)
+```
+0, px, 0.5, 1, 2, 3, 4, 6, 8, 12, 16, 20, 24
+```
+No `p-5`, `m-7`, `gap-9` - they don't exist.
+
+### Border Radius
+```
+rounded-none, rounded-sm, rounded-md, rounded-lg, rounded-full
+```
+No `rounded-xl`, `rounded-2xl`.
+
+Run `just lint-tokens` to verify compliance.
 
 ---
 
@@ -120,6 +179,17 @@
 
 ---
 
+## Industry Research Requirement
+
+For each feature type, research **10 outstanding apps** in the industry:
+- Document what they do well
+- Note interaction patterns that feel natural
+- Adopt patterns users already know (muscle memory)
+
+See `{{paths.domain}}ui-ux/INDUSTRY_RESEARCH.md` for documented patterns.
+
+---
+
 ## Feature Review Checklist
 
 ### Must Have (Blocker)
@@ -127,6 +197,10 @@
 - [ ] Loading state uses skeleton (not spinner)
 - [ ] Error state is human-friendly
 - [ ] Empty state has helpful message + CTA
+- [ ] Copy follows UX_COPY.md standards
+- [ ] Animations are subtle and brand-aligned
+- [ ] Uses existing components from `$lib/components/ui`
+- [ ] Design tokens only (no raw Tailwind colors)
 - [ ] Touch targets 44x44px minimum
 - [ ] Safe areas respected
 
@@ -136,23 +210,28 @@
 - [ ] Keyboard navigation works
 - [ ] Screen reader tested
 
+### Nice to Have
+- [ ] Reduced motion alternative
+- [ ] Dark mode support
+- [ ] Internationalization ready
+
 ---
 
 ## Wireframe Template
 
-```
+```markdown
 ## [Feature Name] Wireframe
 
 ### Layout (Mobile)
-+-------------------------+
-| Header                  |
-+-------------------------+
-|                         |
-| Main Content            |
-|                         |
-+-------------------------+
-| Bottom Nav              |
-+-------------------------+
+┌─────────────────────────┐
+│ Header                  │
+├─────────────────────────┤
+│                         │
+│ Main Content            │
+│                         │
+├─────────────────────────┤
+│ Bottom Nav              │
+└─────────────────────────┘
 
 ### States
 | State | Behavior |

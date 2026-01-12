@@ -17,20 +17,20 @@ Domain Architect -> Designer -> Agile PM
 ## Phases
 
 ### Phase 1: Domain Architect
-- Load role: `~/.claude/vibe-framework/roles/domain-architect.md`
+- Load role: `~/.claude/vibe-ash-svelte/roles/domain-architect.md`
 - Define/refine BDD scenarios for each feature
 - Identify Bootstrap Patterns for early features
 - CHECKPOINT after each feature
 
 ### Phase 2: Designer
-- Load role: `~/.claude/vibe-framework/roles/designer.md`
+- Load role: `~/.claude/vibe-ash-svelte/roles/designer.md`
 - Create wireframes or UI descriptions
 - Define states (loading, error, empty)
 - Verify touch targets and accessibility
 - CHECKPOINT after each feature
 
 ### Phase 3: Agile PM
-- Load role: `~/.claude/vibe-framework/roles/agile-pm.md`
+- Load role: `~/.claude/vibe-ash-svelte/roles/agile-pm.md`
 - Review sprint scope and completeness
 - Create GitHub issues
 - Establish dependencies

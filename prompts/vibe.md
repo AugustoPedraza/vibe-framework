@@ -59,7 +59,7 @@ Do:
 - `{{paths.architecture}}/02-responsibility-matrix.md` - Frontend vs backend
 - `{{paths.architecture}}/17-testing-strategy.md` - Test patterns
 - `{{paths.architecture}}/18-anti-patterns.md` - What NOT to do
-- `~/.claude/vibe-framework/patterns/` - Reusable patterns
+- `~/.claude/vibe-ash-svelte/patterns/` - Reusable patterns
 
 ---
 
@@ -100,7 +100,7 @@ Display when switching roles:
 ```
 
 1. Load context (WHY + WHAT + HOW)
-2. Load role: `~/.claude/vibe-framework/roles/qa-engineer.md`
+2. Load role: `~/.claude/vibe-ash-svelte/roles/qa-engineer.md`
 3. Read feature spec: `{{paths.features}}/{area}/{ID}.md`
 4. Extract acceptance scenarios (Given/When/Then)
 5. **Check UX Test Requirements:**
@@ -121,8 +121,8 @@ Display when switching roles:
 +======================================================================+
 ```
 
-1. Load role: `~/.claude/vibe-framework/roles/designer.md`
-2. Load checklist: `~/.claude/vibe-framework/checklists/ux-pwa.md`
+1. Load role: `~/.claude/vibe-ash-svelte/roles/designer.md`
+2. Load checklist: `~/.claude/vibe-ash-svelte/checklists/ux-pwa.md`
 3. Verify UI requirements from feature spec
 4. Confirm component selection (existing vs new)
 5. Check UX requirements:
@@ -142,7 +142,7 @@ Display when switching roles:
 ```
 
 For EACH scenario:
-1. Load role: `~/.claude/vibe-framework/roles/developer.md`
+1. Load role: `~/.claude/vibe-ash-svelte/roles/developer.md`
 2. Run test -> Show **RED** failure
 3. Propose implementation approach
 4. **Implement incrementally** (only what this scenario needs)
@@ -222,7 +222,7 @@ After each phase:
 +======================================================================+
 ```
 
-- Load role: `~/.claude/vibe-framework/roles/domain-architect.md`
+- Load role: `~/.claude/vibe-ash-svelte/roles/domain-architect.md`
 - Define/refine BDD scenarios
 - **Identify Bootstrap Patterns** for early features
 - **CHECKPOINT** after each feature
@@ -236,7 +236,7 @@ After each phase:
 +======================================================================+
 ```
 
-- Load role: `~/.claude/vibe-framework/roles/designer.md`
+- Load role: `~/.claude/vibe-ash-svelte/roles/designer.md`
 - Create wireframes
 - Define states (loading, error, empty)
 - **CHECKPOINT** after each feature
@@ -250,7 +250,7 @@ After each phase:
 +======================================================================+
 ```
 
-- Load role: `~/.claude/vibe-framework/roles/agile-pm.md`
+- Load role: `~/.claude/vibe-ash-svelte/roles/agile-pm.md`
 - Review completeness
 - Create GitHub issues
 - **CHECKPOINT** before creating issues
@@ -311,9 +311,9 @@ AI scans implementation for potential reusable patterns:
 
 If approved:
 1. Apply doc improvements to target files
-2. Extract selected patterns to `~/.claude/vibe-framework/patterns/`
+2. Extract selected patterns to `~/.claude/vibe-ash-svelte/patterns/`
 3. Append session summary to `.claude/learnings.md`
-4. Commit changes to vibe-framework repo
+4. Commit changes to vibe-ash-svelte repo
 
 ---
 

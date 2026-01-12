@@ -72,14 +72,14 @@ Create `.claude/vibe.config.json` in your project:
 During retrospective (`/vibe retro`), AI will:
 1. Scan implementation for reusable patterns
 2. Score pattern reusability (HIGH/MEDIUM)
-3. Suggest extraction to `~/.claude/vibe-framework/patterns/`
+3. Suggest extraction to `~/.claude/vibe-ash-svelte/patterns/`
 4. User approves which patterns to promote
 
 Promoted patterns are available across all projects.
 
 ## MORE INFO
 
-- Framework: `~/.claude/vibe-framework/`
-- Roles: `~/.claude/vibe-framework/roles/`
-- Checklists: `~/.claude/vibe-framework/checklists/`
-- Patterns: `~/.claude/vibe-framework/patterns/`
+- Framework: `~/.claude/vibe-ash-svelte/`
+- Roles: `~/.claude/vibe-ash-svelte/roles/`
+- Checklists: `~/.claude/vibe-ash-svelte/checklists/`
+- Patterns: `~/.claude/vibe-ash-svelte/patterns/`

@@ -1,6 +1,6 @@
-# Vibe Framework
+# Vibe Ash+Svelte Framework
 
-> AI-assisted development workflow with role-based phases, UX integration, and pattern discovery
+> AI-assisted development workflow for Ash + LiveSvelte projects with role-based phases, UX integration, and pattern discovery
 
 ---
 
@@ -75,12 +75,12 @@
 
 ```
 Layer 1: Vibe Framework (100% Reusable)
-  ~/.claude/vibe-framework/
+  ~/.claude/vibe-ash-svelte/
   - Workflow, roles, checklists, commands
   - No domain references
 
 Layer 2: Generic Patterns (Reusable Tech Patterns)
-  ~/.claude/vibe-framework/patterns/
+  ~/.claude/vibe-ash-svelte/patterns/
   - Discovered via retrospectives
   - Ash, Svelte, PWA, UX patterns
 
@@ -104,7 +104,7 @@ During retrospective (`/vibe retro`):
 1. AI detects reusable patterns in implementation
 2. Scores pattern reusability (HIGH/MEDIUM)
 3. User approves patterns to extract
-4. Patterns saved to `~/.claude/vibe-framework/patterns/`
+4. Patterns saved to `~/.claude/vibe-ash-svelte/patterns/`
 5. Available for all future projects
 
 ---
@@ -112,7 +112,7 @@ During retrospective (`/vibe retro`):
 ## Structure
 
 ```
-~/.claude/vibe-framework/
+~/.claude/vibe-ash-svelte/
 ├── README.md           # This file
 ├── COMMANDS.md         # Command reference
 ├── prompts/

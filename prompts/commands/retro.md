@@ -72,9 +72,9 @@ For each approved improvement:
 ### Pattern Extraction
 For each approved pattern:
 1. Generate pattern file using template
-2. Write to `~/.claude/vibe-framework/patterns/{category}/`
+2. Write to `~/.claude/vibe-ash-svelte/patterns/{category}/`
 3. Update `patterns/README.md` index
-4. Commit to vibe-framework repo
+4. Commit to vibe-ash-svelte repo
 
 ### Session Logging
 Append to `.claude/learnings.md`:

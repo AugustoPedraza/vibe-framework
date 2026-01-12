@@ -87,4 +87,4 @@ If you discover a pattern outside of retrospective:
 1. Create file using TEMPLATE.md format
 2. Place in appropriate category folder
 3. Update this README index
-4. Commit to vibe-framework repo
+4. Commit to vibe-ash-svelte repo
