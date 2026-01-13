@@ -33,12 +33,15 @@ Do:
 | Command | What it does |
 |---------|--------------|
 | `/vibe [FEATURE-ID]` | Implement feature (QA -> Designer -> Dev -> QA) |
+| `/vibe quick [desc]` | **NEW** Bug/hotfix mode (condensed 2-phase workflow) |
+| `/vibe pivot` | **NEW** Course correction when implementation diverges |
 | `/vibe plan [sprint]` | Plan sprint (Domain -> Designer -> PM) |
 | `/vibe discover [ID]` | Pre-planning discovery for a single feature |
 | `/vibe debt [desc]` | Capture technical debt with triage |
 | `/vibe review [scope]` | Multi-agent code review with fresh context |
 | `/vibe status` | Show current progress |
 | `/vibe retro` | Capture learnings, extract patterns |
+| `/vibe check` | Validate project structure + template sync |
 | `/vibe --help` | Show command reference |
 
 ---
@@ -243,6 +246,43 @@ Display when switching roles:
    - [ ] Haptic feedback points identified (if mobile)
 6. **CHECKPOINT** - Wait for Enter
 
+### Readiness Gate (HARD BLOCK)
+
+**Before entering Developer phase, verify ALL conditions:**
+
+```
++---------------------------------------------------------------------+
+|  IMPLEMENTATION READINESS CHECK                                      |
+|                                                                      |
+|  Specification:                                                      |
+|  □ All scenarios have Given/When/Then?                               |
+|  □ UI states defined (loading/error/empty/success)?                  |
+|  □ No open questions marked as BLOCKING?                             |
+|                                                                      |
+|  Technical:                                                          |
+|  □ Dependencies available?                                           |
+|  □ No blocking issues from other features?                           |
+|                                                                      |
+|  Environment:                                                        |
+|  □ Tests can run?                                                    |
+|  □ Dev server works?                                                 |
++---------------------------------------------------------------------+
+```
+
+**If ANY fail → HARD BLOCK:**
+```
+⚠️ Cannot start implementation.
+
+Missing:
+  ✗ [List specific missing items]
+
+Options:
+  [1] Fix now (go back to Designer phase)
+  [2] Mark as known gap and proceed (NOT RECOMMENDED)
+```
+
+**Do NOT proceed to Developer phase until all checks pass.**
+
 ### Phase 3: Developer (Implementation)
 
 ```
@@ -345,6 +385,79 @@ After QA Validation phase passes, show:
 |  [p] Create PR  [n] Next feature  [c] Clear & continue               |
 +---------------------------------------------------------------------+
 ```
+
+---
+
+## AI Optimization Guidelines
+
+> You are an AI assistant. Use these guidelines to make optimal decisions automatically.
+
+### Task Type Detection (Auto-Detect Quick vs Full)
+
+Before starting any `/vibe` command, assess the task type:
+
+| Task Type | Indicators | Workflow |
+|-----------|------------|----------|
+| **Hotfix/Typo** | "urgent", "typo", "copy fix", single file | Skip to implementation (no phases) |
+| **Bug Fix** | "bug", "fix", existing behavior, 2-3 files | `/vibe quick` (condensed 2-phase) |
+| **Small Feature** | Single scenario, one component | Full workflow (4 phases) |
+| **Standard Feature** | Multiple scenarios, new component | Full workflow (4 phases) |
+| **Architectural** | New domain, cross-cutting concern | Full workflow + extra validation |
+
+**When auto-detecting, confirm with user:**
+```
+This looks like a [bug fix]. Use quick workflow? [Y/n]
+```
+
+### When to Parallelize (Spawn Task Agents)
+
+**DO parallelize when:**
+- Task involves 3+ independent concerns (research, tests, review)
+- Context would exceed ~50% capacity doing it sequentially
+- User explicitly asks for speed
+- Scope is discovery, review, or planning (not implementation)
+
+**DON'T parallelize when:**
+- Task is simple (single file, bug fix)
+- Results depend on each other (sequential by nature)
+- User prefers detailed step-by-step visibility
+
+### Parallelization Points
+
+| Phase | Parallel Strategy |
+|-------|------------------|
+| `/vibe discover` | 3 agents: industry patterns, component audit, related features |
+| `/vibe plan` (multi-feature) | 1 agent per feature (up to 3 concurrent) |
+| QA Test Generation | 3 agents: unit tests, integration tests, e2e scenarios |
+| `/vibe review` | 3 agents: security, performance, pattern compliance |
+| Dev Implementation | Sequential (dependencies matter) |
+| Retro | Sequential (synthesis requires full context) |
+
+### When to Use Agents vs Direct Execution
+
+| Scenario | Use Task Agent | Use Direct Tool |
+|----------|----------------|-----------------|
+| Research/exploration | Explore agent | - |
+| Code search (known location) | - | Grep/Glob |
+| Multi-file implementation | Plan agent | - |
+| Single file edit | - | Edit tool |
+| Test generation (multiple types) | Multiple agents | - |
+| Test generation (single type) | - | Direct write |
+
+### Context Efficiency
+
+- Read files only once, then reference from memory
+- Use Explore agent for codebase questions (fresher context)
+- Batch related edits in single phase
+- Don't re-read architecture docs if already loaded this session
+
+### When to Recommend Context Clear
+
+Suggest `/clear` when:
+- Switching from one feature to another
+- Context feels "stale" (AI repeating itself, missing obvious things)
+- After sprint planning (before implementation)
+- After long debugging session (>30 min on single issue)
 
 ---
 

@@ -181,6 +181,56 @@ Before generating tests, verify UX coverage. Reference the **Pattern Catalogs** 
 
 ---
 
+## Security Checks (Required for Auth/Data Features)
+
+**Always verify when feature involves authentication, user data, or sensitive operations.**
+
+### Input Validation
+- [ ] All user inputs validated server-side (not just client)
+- [ ] Input length limits enforced
+- [ ] Type coercion handled safely
+- [ ] File uploads validated (type, size, content)
+
+### Authentication & Authorization
+- [ ] Auth tokens validated on each request
+- [ ] Session management secure (proper expiry, invalidation)
+- [ ] Role-based access enforced at action level
+- [ ] Sensitive actions require re-authentication
+
+### Data Protection
+- [ ] Sensitive data not logged (passwords, tokens, PII)
+- [ ] Sensitive data not exposed in responses
+- [ ] Proper data sanitization on output (XSS prevention)
+- [ ] API responses don't leak internal structure
+
+### Common Vulnerabilities (OWASP Top 10)
+- [ ] SQL injection: Using Ash queries (parameterized by default)
+- [ ] XSS: Svelte escapes by default, verify `{@html}` usage
+- [ ] CSRF: Phoenix tokens in place
+- [ ] Broken access control: Policies enforced on all actions
+- [ ] Security misconfiguration: No debug info in production
+
+### Test Scenarios for Security
+```elixir
+# Test unauthorized access
+test "rejects unauthorized user" do
+  assert {:error, %Ash.Error.Forbidden{}} = Domain.action(resource, actor: other_user)
+end
+
+# Test input validation
+test "rejects invalid input" do
+  assert {:error, _} = Domain.create(Resource, %{email: "not-an-email"})
+end
+
+# Test rate limiting (if applicable)
+test "rate limits excessive requests" do
+  for _ <- 1..100, do: make_request()
+  assert {:error, :rate_limited} = make_request()
+end
+```
+
+---
+
 ## Anti-Patterns to Avoid
 
 ### Testing Implementation Details

@@ -976,7 +976,89 @@ end
 
 ---
 
-## 9. Code Quality Automation
+## 9. Documentation Guidance
+
+**When to write documentation (and when not to).**
+
+### DO Document
+
+| Situation | What to Write |
+|-----------|---------------|
+| New public API | `@doc` with examples |
+| Complex business logic | Inline comment explaining WHY |
+| Breaking change | Update CHANGELOG.md |
+| New pattern | Note for `/vibe retro` to capture |
+| Non-obvious workaround | Comment explaining the workaround |
+| External API integration | Module doc with endpoint info |
+
+### DON'T Document
+
+| Situation | Why |
+|-----------|-----|
+| Self-explanatory code | Code should be readable |
+| What the code does | Code says what, comments say why |
+| Every function | Only when behavior isn't obvious |
+| TODOs | Use `/vibe debt` instead |
+
+### @doc Examples (Elixir)
+
+```elixir
+@doc """
+Registers a new user with email verification.
+
+## Examples
+
+    iex> Accounts.register_user(%{email: "test@example.com", password: "secret123"})
+    {:ok, %User{}}
+
+    iex> Accounts.register_user(%{email: "invalid"})
+    {:error, %Ash.Error.Invalid{}}
+
+## Options
+
+  * `:skip_verification` - Skip email verification (testing only)
+
+"""
+@spec register_user(map(), keyword()) :: {:ok, User.t()} | {:error, term()}
+def register_user(params, opts \\ [])
+```
+
+### Inline Comment Examples
+
+```elixir
+# GOOD - Explains why
+# Rate limit requires 100ms delay between API calls per provider docs
+Process.sleep(100)
+
+# GOOD - Business rule
+# Premium users get 20% discount after 2 years (per marketing Q4 2024)
+discount = if user.years_active > 2, do: 0.20, else: 0.10
+
+# BAD - Explains what (obvious from code)
+# Increment counter by 1
+counter = counter + 1
+```
+
+### CHANGELOG Format
+
+When making breaking changes, update CHANGELOG.md:
+
+```markdown
+## [Unreleased]
+
+### Breaking Changes
+- `Accounts.create_user/1` now requires `name` field
+
+### Added
+- New `Accounts.verify_email/1` function
+
+### Fixed
+- Fixed race condition in session creation
+```
+
+---
+
+## 10. Code Quality Automation
 
 ### Pre-Commit Checklist
 

@@ -123,6 +123,76 @@
           "default": "just dev"
         }
       }
+    },
+    "sync": {
+      "type": "object",
+      "description": "Template sync configuration",
+      "properties": {
+        "template_path": {
+          "type": "string",
+          "description": "Path to local template repo",
+          "default": "~/projects/vibe-ash-svelte-template"
+        },
+        "ignored_files": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Files to ignore during sync",
+          "default": []
+        },
+        "last_sync": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "description": "Last sync timestamp"
+        }
+      }
+    },
+    "migration": {
+      "type": "object",
+      "description": "Migration configuration (strangler fig pattern)",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable migration mode",
+          "default": false
+        },
+        "template_repo": {
+          "type": "string",
+          "description": "Target architecture template repository URL",
+          "default": "https://github.com/AugustoPedraza/vibe-ash-svelte-template"
+        },
+        "current_stack": {
+          "type": "object",
+          "description": "Current technology stack being migrated FROM",
+          "properties": {
+            "backend": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Current backend (e.g., [\"phoenix\", \"liveview\"] or [\"rails\", \"graphql\"])"
+            },
+            "frontend": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Current frontend (e.g., [\"liveview\"] or [\"vue\", \"capacitor\"])"
+            }
+          }
+        },
+        "test_requirements": {
+          "type": "object",
+          "description": "Test requirements for migration safety",
+          "properties": {
+            "require_regression_tests": {
+              "type": "boolean",
+              "description": "Require regression tests before migration",
+              "default": true
+            },
+            "tests_must_pass_legacy": {
+              "type": "boolean",
+              "description": "Tests must pass against legacy code first",
+              "default": true
+            }
+          }
+        }
+      }
     }
   }
 }

@@ -14,13 +14,47 @@ Domain Architect -> Designer -> Agile PM
 2. Read all feature specs for the sprint
 3. Read vision, glossary, design system
 
+## AI Optimization: Parallel Feature Analysis
+
+When planning a sprint with multiple features, analyze features in parallel:
+
+```
+┌─ Agent 1: Feature A Analysis
+│   - Read feature spec
+│   - Draft scenarios (Domain Architect lens)
+│   - Identify dependencies
+│
+├─ Agent 2: Feature B Analysis
+│   - Read feature spec
+│   - Draft scenarios (Domain Architect lens)
+│   - Identify dependencies
+│
+└─ Agent 3: Feature C Analysis
+│   - Read feature spec
+│   - Draft scenarios (Domain Architect lens)
+│   - Identify dependencies
+```
+
+**Wait for all agents → Review cross-feature dependencies → Continue to Designer phase**
+
+### When to Parallelize Planning
+
+| Features in Sprint | Approach |
+|--------------------|----------|
+| 1-2 features | Sequential (no parallelization) |
+| 3-5 features | Parallel (1 agent per feature, max 3) |
+| 6+ features | Parallel in batches of 3 |
+
+---
+
 ## Phases
 
 ### Phase 1: Domain Architect
 - Load role: `~/.claude/vibe-ash-svelte/roles/domain-architect.md`
 - Define/refine BDD scenarios for each feature
+- If 3+ features: spawn parallel agents (see above)
 - Identify Bootstrap Patterns for early features
-- CHECKPOINT after each feature
+- CHECKPOINT after each feature (or after all parallel agents complete)
 
 ### Phase 2: Designer
 - Load role: `~/.claude/vibe-ash-svelte/roles/designer.md`

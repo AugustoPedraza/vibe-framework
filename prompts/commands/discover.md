@@ -66,7 +66,7 @@ Context -> Research -> Wireframe -> Scenarios (Draft) -> Risks -> Document
 
 ---
 
-## Phase 2: Research (Designer Lens)
+## Phase 2: Research (Designer Lens) - PARALLELIZED
 
 ```
 +======================================================================+
@@ -75,10 +75,31 @@ Context -> Research -> Wireframe -> Scenarios (Draft) -> Risks -> Document
 +======================================================================+
 ```
 
+**AI Optimization: Spawn 3 parallel agents for research:**
+
+```
+┌─ Agent 1: Industry Patterns
+│   - Research how similar apps solve this
+│   - Identify best practices
+│   - Note emerging trends
+│
+├─ Agent 2: Component Audit
+│   - Scan existing components in $lib/components/ui
+│   - Identify reusable components
+│   - Note gaps requiring new components
+│
+└─ Agent 3: Related Features
+│   - Check related features in docs/domain/features/
+│   - Identify dependencies
+│   - Note shared patterns
+```
+
+**Wait for all agents → Synthesize findings → Present**
+
 1. Load role context: `~/.claude/vibe-ash-svelte/roles/designer.md`
-2. Research industry patterns for this feature type
-3. Identify user journey touchpoints
-4. Audit existing components
+2. Launch parallel research agents (if parallelization appropriate)
+3. Synthesize findings from all agents
+4. Identify user journey touchpoints
 
 ```
 +---------------------------------------------------------------------+

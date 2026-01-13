@@ -153,21 +153,62 @@ The review agent loads ONLY:
 
 ---
 
-## Multi-Agent Pattern
+## Multi-Agent Pattern (AI Optimization)
 
-For complex reviews, suggest running parallel agents:
+**Default behavior: Spawn 3 parallel review agents for comprehensive coverage.**
+
+```
+┌─ Agent 1: Security Review
+│   - OWASP top 10 checks
+│   - Input validation
+│   - Auth/authz verification
+│   - Secrets exposure
+│
+├─ Agent 2: Performance Review
+│   - N+1 query detection
+│   - Unbounded lists
+│   - Memory leaks
+│   - Caching opportunities
+│
+└─ Agent 3: Pattern Compliance Review
+│   - Architecture patterns
+│   - Design tokens
+│   - UX consistency
+│   - Code idioms
+```
+
+**Wait for all agents → Merge findings → Present unified report**
+
+### When to Use Single Agent
+
+Use single-agent review when:
+- Reviewing very small changes (<10 lines)
+- User explicitly requests single review
+- Only one concern area (e.g., `--security` flag only)
+
+### Parallel Review Output
 
 ```
 +---------------------------------------------------------------------+
-|  COMPLEX REVIEW SUGGESTED                                            |
+|  PARALLEL REVIEW COMPLETE                                            |
 |                                                                      |
-|  This change touches multiple areas. Consider parallel review:       |
+|  Agents: 3 completed                                                 |
+|  Files reviewed: [count]                                             |
 |                                                                      |
-|  Terminal 1: /vibe review --security                                 |
-|  Terminal 2: /vibe review --patterns                                 |
-|  Terminal 3: /vibe review --a11y                                     |
+|  SECURITY AGENT:                                                     |
+|  ! [file:line] Unvalidated user input                                |
 |                                                                      |
-|  [p] Run parallel  [s] Single comprehensive  [c] Cancel              |
+|  PERFORMANCE AGENT:                                                  |
+|  ~ [file:line] Potential N+1 query                                   |
+|                                                                      |
+|  PATTERN AGENT:                                                      |
+|  ~ [file:line] Raw color instead of design token                     |
+|                                                                      |
+|  MERGED BLOCKERS: 1                                                  |
+|  MERGED WARNINGS: 2                                                  |
+|  MERGED SUGGESTIONS: 0                                               |
+|                                                                      |
+|  [f] Fix blockers  [a] Accept with warnings  [d] Details             |
 +---------------------------------------------------------------------+
 ```
 

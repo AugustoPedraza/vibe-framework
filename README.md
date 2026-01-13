@@ -1,6 +1,6 @@
 # Vibe Ash+Svelte Framework
 
-> AI-assisted development workflow for Ash + LiveSvelte projects with role-based phases, UX integration, and pattern discovery
+> AI-optimized development workflow for Ash + LiveSvelte projects with role-based phases, UX integration, and intelligent parallelization
 
 ---
 
@@ -30,9 +30,11 @@
 2. **Use /vibe commands** in Claude:
 
 ```
-/vibe AUTH-001                    # Implement feature
+/vibe AUTH-001                    # Implement feature (auto-detects full vs quick)
+/vibe quick "fix login button"    # Bug/hotfix (condensed 2-phase workflow)
 /vibe plan sprint-1               # Plan sprint
 /vibe discover AUTH-003           # Pre-planning discovery
+/vibe pivot                       # Course correction when stuck
 /vibe debt "Need error handling"  # Capture tech debt
 /vibe retro                       # Run retrospective
 /vibe --help                      # Show help
@@ -44,33 +46,100 @@
 
 | Command | Description |
 |---------|-------------|
-| `/vibe [ID]` | Implement feature (QA -> Designer -> Dev -> QA) |
-| `/vibe plan [sprint]` | Plan sprint (Domain -> Designer -> PM) |
-| `/vibe discover [ID]` | Pre-planning discovery (research, wireframe, draft scenarios) |
-| `/vibe check` | **NEW** Validate project structure + template sync status |
+| `/vibe [ID]` | Implement feature (auto-detects quick vs full workflow) |
+| `/vibe quick [desc]` | Bug/hotfix mode (condensed 2-phase: Dev -> Verify) |
+| `/vibe pivot` | Course correction when implementation diverges |
+| `/vibe plan [sprint]` | Plan sprint (Domain -> Designer -> PM) with parallel analysis |
+| `/vibe discover [ID]` | Pre-planning discovery with parallel research agents |
+| `/vibe check` | Validate project structure + template sync status |
 | `/vibe debt [desc]` | Capture technical debt with triage |
-| `/vibe review [scope]` | Multi-agent code review (fresh context) |
+| `/vibe review [scope]` | Multi-agent code review (3 parallel agents: security, perf, patterns) |
 | `/vibe status` | Show current progress + debt summary |
 | `/vibe retro` | Retrospective with pattern extraction + debt review |
+| `/vibe migrate init` | Initialize migration project (analyze current state) |
+| `/vibe migrate [FEATURE]` | Create migration spec for existing feature |
+| `/vibe migrate status` | Show migration progress |
 | `/vibe --help` | Show command reference |
+
+---
+
+## AI Optimization (Auto-Managed)
+
+The framework is **AI-optimized** - AI makes optimal decisions automatically without user configuration.
+
+### Task Type Detection
+
+AI automatically detects the appropriate workflow:
+
+| Task Type | Indicators | Workflow |
+|-----------|------------|----------|
+| **Hotfix/Typo** | "urgent", "typo", "copy fix", single file | Skip to implementation |
+| **Bug Fix** | "bug", "fix", existing behavior, 2-3 files | `/vibe quick` (2 phases) |
+| **Standard Feature** | Multiple scenarios, new component | Full workflow (4 phases) |
+
+### Intelligent Parallelization
+
+AI spawns parallel agents when beneficial:
+
+| Command | Parallelization |
+|---------|-----------------|
+| `/vibe discover` | 3 agents (industry patterns, component audit, related features) |
+| `/vibe review` | 3 agents (security, performance, pattern compliance) |
+| `/vibe plan` | 1 agent per feature (for 3+ features) |
+| QA Test Generation | Parallel by test type (unit, integration, e2e) |
+
+### When AI Parallelizes
+
+**DO parallelize when:**
+- Task involves 3+ independent concerns
+- Scope is discovery, review, or planning
+
+**DON'T parallelize when:**
+- Task is simple (single file, bug fix)
+- Results depend on each other (implementation)
+
+### Readiness Gate
+
+Before Developer phase, AI verifies **ALL conditions** or hard blocks:
+
+- All scenarios have Given/When/Then
+- UI states defined (loading/error/empty/success)
+- No open questions marked BLOCKING
+- Dependencies available
 
 ---
 
 ## Workflow Phases
 
-### Feature Implementation (`/vibe [ID]`)
+### Feature Implementation (`/vibe [ID]`) - Full Workflow
 
 ```
 1. QA Engineer    -> Generate tests from scenarios + UX tests
 2. Designer       -> UX verification & component selection
+   ─── READINESS GATE ─── (AI verifies all conditions or blocks)
 3. Developer      -> TDD implementation with UX checklist
 4. QA Validation  -> Quality gates + UX verification
+```
+
+### Bug/Hotfix (`/vibe quick [desc]`) - Condensed Workflow
+
+```
+1. DEV PHASE     -> Read code, write minimal test, implement fix, run tests
+2. VERIFY PHASE  -> Full test suite, `just check`, offer commit
+```
+
+### Course Correction (`/vibe pivot`)
+
+```
+1. ASSESS  -> What was planned vs what happened
+2. DECIDE  -> Update spec / Change approach / Capture debt / Rollback
+3. RESUME  -> Return to appropriate phase
 ```
 
 ### Sprint Planning (`/vibe plan [sprint]`)
 
 ```
-1. Domain Architect -> Define scenarios, identify bootstrap patterns
+1. Domain Architect -> Define scenarios (parallel agents for 3+ features)
 2. Designer         -> Create wireframes, define states
 3. Agile PM         -> Create GitHub issues
 ```
@@ -79,7 +148,7 @@
 
 ```
 1. Context Loading  -> Understand the feature
-2. Research         -> Industry patterns, user journey
+2. Research         -> 3 parallel agents (industry patterns, components, related features)
 3. Wireframe        -> Draft UI/UX with states
 4. Draft Scenarios  -> Given/When/Then (not finalized)
 5. Risks            -> Technical risks, unknowns
@@ -198,16 +267,19 @@ During retrospective (`/vibe retro`):
 ~/.claude/vibe-ash-svelte/
 ├── README.md           # This file
 ├── prompts/
-│   ├── vibe.md         # Master orchestrator (includes validation)
+│   ├── vibe.md         # Master orchestrator (includes AI optimization)
 │   ├── help.md         # /vibe --help output
 │   └── commands/
 │       ├── check.md    # Project validation + template sync
-│       ├── plan.md     # Sprint planning
-│       ├── discover.md # Feature discovery
+│       ├── quick.md    # Bug/hotfix condensed workflow
+│       ├── pivot.md    # Course correction when stuck
+│       ├── plan.md     # Sprint planning (parallel features)
+│       ├── discover.md # Feature discovery (parallel research)
 │       ├── debt.md     # Technical debt capture
-│       ├── review.md   # Multi-agent code review
+│       ├── review.md   # Multi-agent code review (parallel)
 │       ├── status.md   # Progress display
-│       └── retro.md    # Retrospective + pattern promotion
+│       ├── retro.md    # Retrospective + pattern promotion
+│       └── migrate.md  # Strangler fig migration workflow
 ├── roles/
 │   ├── developer.md
 │   ├── designer.md
@@ -225,6 +297,13 @@ During retrospective (`/vibe retro`):
 │   ├── frontend/
 │   ├── pwa/
 │   └── ux/
+├── templates/
+│   ├── architecture/
+│   │   ├── _current/   # Templates for current state docs
+│   │   └── _target/    # Templates for target state docs
+│   ├── features/
+│   │   └── MIGRATE-TEMPLATE.md
+│   └── migration.md    # Progress tracking template
 └── config/
     └── vibe.config.schema.json
 ```
@@ -275,3 +354,107 @@ Add to vibe.config.json for template sync:
   }
 }
 ```
+
+---
+
+## Migration Mode (Strangler Fig)
+
+For migrating existing projects to Ash+Svelte incrementally using the strangler fig pattern.
+
+### What is Strangler Fig?
+
+- Keep old code running
+- Build new features in Ash+Svelte
+- Gradually migrate existing features
+- Eventually retire legacy code
+
+### Safety Rule
+
+> **HARD RULE**: No migration without regression tests first.
+> Tests must be written in **target architecture** (ExUnit + Ash, Vitest + Svelte).
+> Tests must pass against **legacy code** before migration starts.
+
+### Setup
+
+1. **Add migration config** to `.claude/vibe.config.json`:
+
+```json
+{
+  "migration": {
+    "enabled": true,
+    "template_repo": "https://github.com/AugustoPedraza/vibe-ash-svelte-template",
+    "current_stack": {
+      "backend": ["phoenix", "liveview"],
+      "frontend": ["liveview"]
+    }
+  }
+}
+```
+
+2. **Run `/vibe check`** to scaffold migration structure:
+
+```
+architecture/
+├── _current/              # Document existing system
+│   ├── overview.md
+│   ├── features.md
+│   ├── database.md
+│   └── api.md
+└── _target/               # Target architecture (from template)
+    └── README.md
+
+docs/domain/features/
+├── _current/              # Legacy feature specs
+└── new/                   # New Ash+Svelte features
+
+.claude/migration.md       # Progress tracking
+```
+
+3. **Run `/vibe migrate init`** to analyze codebase
+
+### Migration Workflow
+
+```
+1. /vibe migrate init         # Analyze current state, populate docs
+2. /vibe migrate FEATURE      # Create migration spec + test requirements
+3. (write regression tests)   # In target architecture
+4. (verify tests pass legacy) # Tests must work against old code
+5. /vibe MIGRATE-FEATURE      # Implement migration (blocked until tests pass)
+6. (verify tests pass new)    # Same tests against new implementation
+7. (switch routes)            # Route traffic to new code
+8. (remove legacy)            # Clean up old code
+```
+
+### Migration Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/vibe migrate init` | Analyze codebase, create architecture docs |
+| `/vibe migrate [FEATURE]` | Create migration spec with test requirements |
+| `/vibe migrate status` | Show migration progress |
+| `/vibe MIGRATE-[FEATURE]` | Implement migration (requires passing tests) |
+| `/vibe NEW-[ID]` | Build new feature directly in Ash+Svelte |
+
+### Migration Readiness Gate
+
+Before `/vibe MIGRATE-FEATURE` can proceed:
+
+```
+Migration Readiness Check:
+[x] Regression tests written (target architecture)
+[x] Tests pass against legacy code
+[x] All BDD scenarios have corresponding tests
+[x] Edge cases covered
+
+✓ READY FOR IMPLEMENTATION
+```
+
+If any condition fails → **HARD BLOCK** until tests pass.
+
+### Key Principles
+
+1. **Target Architecture** = [vibe-ash-svelte-template](https://github.com/AugustoPedraza/vibe-ash-svelte-template)
+2. **Shared Database** = Both old and new code access same tables during migration
+3. **No Schema Changes** = Until legacy code is fully removed
+4. **Tests First** = Regression tests capture current behavior before migration
+5. **Incremental** = Migrate one feature at a time
