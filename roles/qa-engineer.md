@@ -23,9 +23,9 @@ When writing tests for a feature:
 
 | Doc | Purpose | When |
 |-----|---------|------|
-| `{{paths.architecture}}/testing-strategy.md` | Test pyramid, coverage | **Always** |
-| `{{paths.architecture}}/error-handling.md` | Error testing patterns | Error scenarios |
-| `{{paths.architecture}}/anti-patterns.md` | Testing anti-patterns | Avoiding mistakes |
+| `{{paths.architecture}}/_guides/testing.md` | Test pyramid, coverage, E2E | **Always** |
+| `{{paths.architecture}}/_guides/errors.md` | Error testing patterns | Error scenarios |
+| `{{paths.architecture}}/_anti-patterns/` | Testing anti-patterns | Avoiding mistakes |
 
 ### Pattern Catalogs (For Test Scenarios)
 
@@ -75,6 +75,55 @@ These docs define expected behaviors - use them to write test scenarios:
    /    Unit       \ <- Many: Stores, utilities, component logic
   -------------------
 ```
+
+---
+
+## E2E Test Requirements (MANDATORY)
+
+> **Critical paths MUST have E2E tests.** These catch integration gaps that unit/integration tests miss.
+
+### When to Write E2E Tests
+
+| MUST Have E2E | Skip E2E (covered elsewhere) |
+|---------------|------------------------------|
+| Login/logout flow | Form field validation |
+| Registration/onboarding | Individual component state |
+| Payment/checkout flows | API response handling |
+| Cross-page navigation | Error message display |
+| Real-time features (chat, notifications) | Loading spinners |
+| File upload/download | Button disabled states |
+
+### E2E Checklist (Verify Before Completing QA Phase)
+
+Before marking QA phase complete, check if current feature requires E2E:
+
+- [ ] **Is this an auth flow?** (login, logout, register, password reset) → **E2E REQUIRED**
+- [ ] **Does it span multiple pages?** (wizard, checkout, onboarding) → **E2E REQUIRED**
+- [ ] **Does it involve real-time?** (chat, live updates) → **E2E REQUIRED**
+- [ ] **Is it a critical business path?** (payment, data export) → **E2E REQUIRED**
+- [ ] **Does it integrate multiple systems?** (LiveView + Svelte + PubSub) → **E2E REQUIRED**
+
+### E2E Test Location
+
+```
+assets/tests/e2e/
+├── auth.spec.ts        # Login, logout, register, password flows
+├── projects.spec.ts    # Project CRUD, navigation
+├── chat.spec.ts        # Real-time messaging
+└── fixtures/
+    └── auth.ts         # Authenticated page fixture
+```
+
+### Why E2E Catches What Others Miss
+
+| Gap Type | Unit Tests | Integration Tests | E2E Tests |
+|----------|------------|-------------------|-----------|
+| Component not registered in app.js | ❌ | ❌ | ✅ |
+| Route not defined in router | ❌ | ✅ | ✅ |
+| LiveView ↔ Svelte event mismatch | ❌ | ❌ | ✅ |
+| Session/cookie issues | ❌ | ❌ | ✅ |
+| CSS breaking layout | ❌ | ❌ | ✅ |
+| JavaScript bundle errors | ❌ | ❌ | ✅ |
 
 ---
 

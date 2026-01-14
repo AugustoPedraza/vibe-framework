@@ -320,17 +320,25 @@ Repeat for all scenarios.
 +======================================================================+
 ```
 
-1. Run tests -> Show results
-2. Run quality checks -> Show results
-3. **UX Verification:**
+1. Run unit tests -> Show results
+2. Run integration tests -> Show results
+3. **E2E Verification (MANDATORY for critical paths):**
+   - [ ] Check if feature requires E2E (see QA role checklist)
+   - [ ] If E2E required: tests exist in `assets/tests/e2e/`
+   - [ ] If E2E required: run `npx playwright test` -> Show results
+   - [ ] E2E covers: login/logout, cross-page nav, real-time, payments
+4. Run quality checks -> Show results
+5. **UX Verification:**
    - [ ] Component lint passes
    - [ ] No raw colors (design tokens only)
    - [ ] No hardcoded z-index
    - [ ] PWA manifest valid (if PWA)
-4. If all pass -> Offer to create PR
-5. **CHECKPOINT** - Wait for Enter
-6. Create PR with scenario checklist
-7. Offer retro: "Quick retro? [Enter] Yes [s] Skip"
+6. If all pass -> Offer to create PR
+7. **CHECKPOINT** - Wait for Enter
+8. Create PR with scenario checklist
+9. Offer retro: "Quick retro? [Enter] Yes [s] Skip"
+
+**E2E HARD BLOCK:** If feature is a critical path (auth, payment, real-time) and E2E tests don't exist or fail, do NOT proceed to PR. Go back and add E2E tests.
 
 ---
 
