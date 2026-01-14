@@ -130,6 +130,34 @@ Design visual fallbacks for haptic-dependent interactions:
 
 ---
 
+## User Messaging UI
+
+> Reference: `{{paths.architecture}}/_guides/user-messaging.md`
+
+### Toasts (Svelte Sonner)
+
+- [ ] Use Sonner for all notifications (not Phoenix flash)
+- [ ] Position: top-right (desktop), bottom (mobile)
+- [ ] Colors use design tokens (--success, --error, etc.)
+- [ ] Include Toaster component in root layout
+
+### Error States
+
+| Error Type | Display Method |
+|------------|----------------|
+| Field errors | Inline below input |
+| Form errors | Summary at top of form |
+| Page errors | EmptyState preset="error" |
+| Global errors | Toast notification |
+
+### Success States
+
+- Brief confirmation toast (4s auto-dismiss)
+- No modal for simple actions
+- Inline checkmark for form submissions
+
+---
+
 ## Copy Standards (ENFORCED)
 
 **All user-facing text MUST be human-friendly.**

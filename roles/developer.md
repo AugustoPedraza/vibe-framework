@@ -775,9 +775,29 @@ end
 
 ---
 
-## 6. Error Handling
+## 6. User Messaging & Error Handling
 
-See `{{paths.architecture}}16-error-handling.md` for complete error flow.
+See `{{paths.architecture}}/_guides/user-messaging.md` for complete system.
+See `{{paths.architecture}}/_patterns/errors.md` for error flow.
+
+### User Messaging Checklist
+
+**Copy:**
+- [ ] Use Copy modules for all user-facing strings
+- [ ] Backend: `import AppWeb.Copy.{Toasts, Errors, Auth}`
+- [ ] Frontend: import from `$lib/copy/`
+- [ ] Never hardcode strings in components
+
+**Toasts:**
+- [ ] Use `push_toast/3` for notifications (not `put_flash`)
+- [ ] Types: `:success`, `:error`, `:warning`, `:info`
+- [ ] Include `duration` for important messages
+
+**Error Handling:**
+- [ ] Use `ErrorHelpers.classify/1` to categorize errors
+- [ ] System errors → generic message + Sentry
+- [ ] User errors → specific field hints
+- [ ] Auth errors → toast + redirect to login
 
 ### Ash Error Types -> User Messages
 

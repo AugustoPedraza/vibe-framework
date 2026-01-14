@@ -216,6 +216,33 @@ afterEach(() => {
 
 ---
 
+## User Messaging Tests (MANDATORY)
+
+> Reference: `{{paths.architecture}}/_guides/user-messaging.md`
+
+### Error Handling Tests
+
+- [ ] User errors show field-level hints (not toasts)
+- [ ] Auth errors show toast AND redirect to /login
+- [ ] System errors show generic "Something went wrong"
+- [ ] System errors are reported to Sentry
+- [ ] User/auth/business errors are NOT reported to Sentry
+
+### Toast Tests
+
+- [ ] Success actions show success toast
+- [ ] Error actions show error toast
+- [ ] Toasts auto-dismiss (default 4s)
+- [ ] Toast can be dismissed manually
+
+### Copy Tests
+
+- [ ] All copy functions return strings
+- [ ] Copy matches UX_COPY.md guidelines
+- [ ] No hardcoded strings in components
+
+---
+
 ## UX Test Requirements
 
 Before generating tests, verify UX coverage. Reference the **Pattern Catalogs** for expected behaviors:
