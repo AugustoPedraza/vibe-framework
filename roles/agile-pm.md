@@ -243,3 +243,48 @@ Raise for architecture discussion if feature requires:
 | "Access phone contacts" | iOS: not supported in PWA. Android: Contact Picker API |
 
 When you see these requests, add platform considerations to the issue and align with Product Owner on acceptable iOS experience.
+
+---
+
+## Table Stakes Planning
+
+> Reference: `{{paths.architecture}}/_checklists/table-stakes.md`
+
+"Table stakes" are implicit features users expect but never request. Use this to catch scope gaps early in planning.
+
+### Quick Reference
+
+| Feature Type | Implicit Expectations |
+|--------------|----------------------|
+| **Media** | Preview, crop, progress, formats, error recovery |
+| **CRUD** | If create → edit/delete/list; duplicate detection; soft delete |
+| **Forms** | Validation feedback, draft save, dirty state, error mapping |
+| **Lists** | Pagination, sort/filter, empty state, loading skeletons |
+| **Auth** | Forgot password, sessions, logout, account deletion |
+| **Navigation** | Back behavior, deep links, state preservation |
+| **Notifications** | Preferences, read/unread, batch actions, permission flow |
+| **Search** | Recent searches, no results state, suggestions |
+| **Settings** | Defaults, sync, export, validation |
+| **Social** | Undo reaction, who reacted, share targets |
+| **Payments** | Receipt, retry failed, billing history, refund flow |
+
+### Universal Stakes (Every Feature)
+
+- [ ] **Loading**: Skeleton (not spinner)
+- [ ] **Empty**: Helpful message + action CTA
+- [ ] **Error**: Human message + retry
+- [ ] **Offline**: Queue actions, show pending indicator
+- [ ] **Mobile**: 44px touch targets, safe areas, keyboard handling
+
+### The 4 States Rule
+
+Every UI must handle: **Loading → Empty → Error → Success**
+
+If your spec doesn't address all 4, it's incomplete.
+
+### When to Use
+
+1. **Before writing issue**: Scan relevant domain row in quick reference
+2. **Writing Done Criteria**: Include implicit expectations from table stakes
+3. **Review before split**: Verify table stakes are accounted for
+4. **Before dev handoff**: Check universal stakes checklist
