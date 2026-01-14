@@ -258,6 +258,53 @@ Before generating tests, verify UX coverage. Reference the **Pattern Catalogs** 
 
 ---
 
+## Mobile UX Testing Checklist
+
+> Reference: `{{paths.architecture}}/_guides/ux-design-philosophy.md`
+
+### Touch & Interaction
+
+- [ ] Touch targets >= 24px (WCAG AA minimum)
+- [ ] Recommended touch targets 44-48px for primary actions
+- [ ] Spacing between targets >= 8px
+- [ ] No dropdowns for selection (use segmented/chips/sheet)
+- [ ] Primary actions in bottom 50% of screen (thumb zone)
+- [ ] Single primary action per screen
+
+### Visual
+
+- [ ] Dark mode supported and tested
+- [ ] Contrast ratio 4.5:1 minimum (text), 3:1 (large text/UI)
+- [ ] No pure black (#000) backgrounds (use #121212)
+- [ ] Color is not sole indicator (icons + color)
+
+### Accessibility
+
+- [ ] `prefers-reduced-motion` respected
+- [ ] Motion < 100ms when reduced motion enabled
+- [ ] Dynamic type accommodated
+- [ ] Focus visible on all interactive elements
+- [ ] Keyboard navigation works
+
+### Loading States
+
+- [ ] Skeleton for loads > 1s
+- [ ] Button spinner for loads < 1s
+- [ ] No full-page spinners
+- [ ] Optimistic updates where appropriate
+
+### Component Selection (Anti-Pattern Check)
+
+| If You See | Flag As | Should Be |
+|------------|---------|-----------|
+| Hamburger as primary nav | Anti-pattern | Bottom tab bar |
+| Dropdown with 2-7 options | Anti-pattern | Segmented control or chips |
+| Centered modal on mobile | Anti-pattern | Bottom sheet |
+| Spinner for content load | Anti-pattern | Skeleton loader |
+| Pure black dark mode | Anti-pattern | #121212 background |
+
+---
+
 ## Native Mobile Testing
 
 > Reference: `{{paths.architecture}}/_patterns/native-mobile.md`

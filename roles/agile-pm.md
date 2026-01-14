@@ -13,6 +13,7 @@
 | `{{paths.domain}}/index.md` | Sprint overview & KPIs | Sprint planning |
 | `{{paths.domain}}/GLOSSARY.md` | Domain terms | Issue writing |
 | `{{paths.architecture}}/_patterns/native-mobile.md` | Platform constraints | Native feature scoping |
+| `{{paths.architecture}}/_guides/ux-design-philosophy.md` | UX principles (thumb zone, complexity limits) | Writing feature specs |
 
 ---
 

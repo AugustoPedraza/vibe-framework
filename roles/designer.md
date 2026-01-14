@@ -15,6 +15,85 @@
 | `{{paths.architecture}}20-motion-system.md` | **Pattern Catalog**: Motion patterns (modal, sheet, toast animations) | All animations |
 | `{{paths.architecture}}11-mobile-first.md` | **Pattern Catalog**: Mobile patterns (touch targets, swipe, haptics) | Mobile UX |
 | `{{paths.architecture}}/_patterns/native-mobile.md` | **Pattern Catalog**: Native-like PWA (camera, uploads, platform limits) | Native features |
+| `{{paths.architecture}}/_guides/ux-design-philosophy.md` | **UX Philosophy**: WHY behind UX decisions | All design decisions |
+| `{{paths.architecture}}/_guides/component-intent.md` | **Component Intent**: WHEN to use each component | Component selection |
+| `{{paths.architecture}}/_guides/wireframe-patterns.md` | **Wireframe Patterns**: Screen templates | Layout design |
+
+---
+
+## UX Design Philosophy Quick Reference
+
+> Full guides: `{{paths.architecture}}/_guides/ux-design-philosophy.md`
+
+### Core Principles (Industry Validated)
+
+| Principle | Rule | Source |
+|-----------|------|--------|
+| **Thumb-first** | Primary actions in bottom 50% of screen | Luke Wroblewski |
+| **One primary** | Single primary action per screen | Hick's Law |
+| **Glanceable** | Key info visible without scrolling | NN/g |
+| **4 States** | Every UI: Loading → Empty → Error → Success | PatternFly |
+| **Dark mode** | Support light/dark themes | 82% user pref |
+| **Reduced motion** | Respect `prefers-reduced-motion` | WCAG 2.3.3 |
+
+### Maximum Complexity
+
+| Element | Limit |
+|---------|-------|
+| Tab bar items | 3-5 |
+| Form fields visible | 5-7 |
+| Actions per screen | 1 primary + 2 secondary |
+| Data points per list item | 3-4 |
+
+### Touch Targets (Standards Hierarchy)
+
+| Standard | Size |
+|----------|------|
+| Minimum (WCAG AA) | 24x24px |
+| Recommended | 44-48px |
+| Spacing between | 8-12px |
+
+### Component Selection (2024-2025)
+
+| User Intent | Use | NOT |
+|-------------|-----|-----|
+| Navigate sections | BottomTabBar | Hamburger menu |
+| Select 2-4 options | Segmented control | Dropdown |
+| Select 5-7 options | Chips | Dropdown |
+| Select 8+ options | BottomSheet + search | Dropdown |
+| Quick menu (mobile) | BottomSheet | Centered modal |
+| Multiple related actions | FAB Menu | Speed dial |
+| Show loading (>1s) | Skeleton | Spinner |
+| Show loading (<1s) | Button spinner | Full skeleton |
+
+### Anti-Patterns (Never Do)
+
+| Don't | Do Instead | Evidence |
+|-------|------------|----------|
+| Hamburger as primary nav | Bottom tab bar | 65% lower engagement |
+| Dropdowns on mobile | Segmented/chips/sheet | 60% slower |
+| Multi-column forms | Single column | 15.4s slower |
+| Spinner for content | Skeleton | 40% slower perceived |
+| Primary action at top | Bottom 50% | Thumb zone |
+| Centered modals | Bottom sheets | 25-30% lower engagement |
+| Pure black dark mode | #121212 | Halation effect |
+
+### Loading State Duration
+
+| Duration | Show |
+|----------|------|
+| <1s | Button spinner |
+| 1s+ | Skeleton loader |
+
+### Wireframe Quick Templates
+
+See `{{paths.architecture}}/_guides/wireframe-patterns.md` for:
+- List screen template
+- Detail screen template
+- Form screen template
+- Empty state presets
+- Adaptive layouts (foldable)
+- Dark mode schemes
 
 ## Key Documents (MUST READ)
 

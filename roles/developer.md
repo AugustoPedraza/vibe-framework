@@ -40,6 +40,8 @@ Before implementing any feature, read these docs:
 | `{{paths.architecture}}08-app-shell.md` | **Pattern Catalog**: Shell patterns (tabs, navigation, badges) | App shell work |
 | `{{paths.architecture}}11-mobile-first.md` | **Pattern Catalog**: Mobile patterns (touch, swipe, haptics) | Mobile UX |
 | `{{paths.architecture}}/_patterns/native-mobile.md` | **Pattern Catalog**: Native-like PWA (camera, uploads, haptics) | Native features |
+| `{{paths.architecture}}/_guides/ux-design-philosophy.md` | UX principles (thumb zone, cognitive load) | Understanding design decisions |
+| `{{paths.architecture}}/_guides/component-intent.md` | Component selection guidance | Choosing UI patterns |
 
 Also check `~/.claude/vibe-ash-svelte/patterns/` for reusable patterns.
 
