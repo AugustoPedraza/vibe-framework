@@ -1158,7 +1158,42 @@ When making breaking changes, update CHANGELOG.md:
 
 ---
 
-## 11. Code Quality Automation
+## 11. Environment Variables Checklist
+
+See `{{paths.architecture}}/_guides/environment-variables.md` for complete guide.
+
+### When Adding/Modifying ENV Vars
+
+- [ ] Check if new ENV var is actually needed (prefer config files for non-secrets)
+- [ ] Use `System.get_env/2` with sensible default where appropriate
+- [ ] Add to `.env.example` with documentation comment
+- [ ] Add to `docs/ENVIRONMENT.md` with full details
+- [ ] Update Environment Matrix in docs
+- [ ] PR description explicitly mentions ENV changes
+- [ ] Notify ops/devops if production secret needed
+
+### Naming Convention
+
+| Pattern | Example | Use For |
+|---------|---------|---------|
+| `SERVICE_KEY` | `SENTRY_DSN`, `MAILGUN_API_KEY` | Third-party credentials |
+| `FEATURE_SETTING` | `POOL_SIZE`, `CACHE_TTL` | Configurable settings |
+| `APP_MODE` | `PHX_SERVER`, `PHX_HOST` | Application behavior |
+
+### Required vs Optional
+
+```elixir
+# Required - fail fast with clear error
+database_url = System.get_env("DATABASE_URL") ||
+  raise "DATABASE_URL environment variable is missing"
+
+# Optional - sensible default
+pool_size = String.to_integer(System.get_env("POOL_SIZE", "10"))
+```
+
+---
+
+## 12. Code Quality Automation
 
 ### Pre-Commit Checklist
 
@@ -1206,7 +1241,7 @@ interface Props {
 
 ---
 
-## 12. Anti-Patterns to Avoid
+## 13. Anti-Patterns to Avoid
 
 > See `{{paths.architecture}}18-anti-patterns.md` for comprehensive anti-patterns across Elixir, Svelte, and PWA.
 
@@ -1322,7 +1357,7 @@ end
 
 ---
 
-## 13. Quick Reference
+## 14. Quick Reference
 
 ### Commands
 
@@ -1355,6 +1390,7 @@ iex -S mix            # Interactive shell
 - [ ] `npm run lint:components` passes (0 errors)
 - [ ] No hardcoded z-index (use z-modal, z-overlay)
 - [ ] No raw Tailwind colors (use design tokens)
+- [ ] ENV changes documented (`.env.example` + `docs/ENVIRONMENT.md`)
 
 ### Code Review Checklist
 
