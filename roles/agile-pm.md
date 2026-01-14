@@ -12,6 +12,7 @@
 | `{{paths.architecture}}/02-responsibility-matrix.md` | Frontend vs backend ownership | Task splitting |
 | `{{paths.domain}}/index.md` | Sprint overview & KPIs | Sprint planning |
 | `{{paths.domain}}/GLOSSARY.md` | Domain terms | Issue writing |
+| `{{paths.architecture}}/_patterns/native-mobile.md` | Platform constraints | Native feature scoping |
 
 ---
 
@@ -184,3 +185,61 @@ Before creating GitHub issues:
 - Another issue covers the same scope
 - Work was absorbed into a larger issue
 - Requirements changed and issue is no longer relevant
+
+---
+
+## Native Mobile Feature Scoping
+
+> Reference: `{{paths.architecture}}/_patterns/native-mobile.md`
+
+### Check Platform Constraints Before Creating Issues
+
+For features involving native-like behavior, check what's achievable:
+
+| Feature Type | Scoping Guidance |
+|--------------|------------------|
+| Background uploads | iOS cannot do true background - scope for "resume on return" pattern |
+| Push notifications | iOS requires home screen install - may need install prompt issue first |
+| Haptic feedback | iOS not supported - ensure design includes visual feedback backup |
+| Bluetooth/NFC | Android only - escalate to architect if critical for iOS |
+| File system access | iOS not supported - use file pickers only |
+| Background audio | iOS pauses when backgrounded - may need native wrapper discussion |
+
+### Issue Description Additions
+
+For native-like features, add platform considerations:
+
+```markdown
+## Platform Considerations
+- **iOS behavior**: [expected limitation]
+- **Android behavior**: [expected behavior]
+- **Fallback**: [if iOS limited]
+```
+
+### Example
+
+```markdown
+## Platform Considerations
+- **iOS behavior**: Upload pauses when user leaves app
+- **Android behavior**: Upload continues in background
+- **Fallback**: Save progress, resume on return, show "Keep app open" guidance
+```
+
+### When to Escalate to Domain Architect
+
+Raise for architecture discussion if feature requires:
+- True background audio playback (may need Capacitor)
+- Bluetooth/NFC on iOS (requires Capacitor)
+- Proximity sensor access (requires Capacitor)
+- Deep OS integration beyond PWA capabilities
+
+### Red Flags in Feature Requests
+
+| User Request | Reality Check |
+|--------------|---------------|
+| "Works like WhatsApp voice messages" | iOS cannot do background recording - scope accordingly |
+| "Upload continues when I close the app" | iOS: no. Android: yes. Set proper expectations |
+| "Vibrate on every tap" | iOS: not possible. Need visual feedback alternative |
+| "Access phone contacts" | iOS: not supported in PWA. Android: Contact Picker API |
+
+When you see these requests, add platform considerations to the issue and align with Product Owner on acceptable iOS experience.

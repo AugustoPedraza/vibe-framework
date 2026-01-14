@@ -23,6 +23,7 @@ Use these phrases for complex domain decisions:
 |-----|---------|------|
 | `{{paths.architecture}}/01-quick-reference.md` | Core decisions | Understanding patterns |
 | `{{paths.architecture}}/02-responsibility-matrix.md` | Backend ownership boundaries | Feature design |
+| `{{paths.architecture}}/_patterns/native-mobile.md` | PWA platform constraints | Native-like features |
 
 ---
 
@@ -141,3 +142,51 @@ This feature establishes foundational architecture:
 - Sprint 1 features (almost always)
 - First feature in a new domain
 - First use of a pattern (real-time, offline, file upload)
+
+---
+
+## Native Mobile Constraints (PWA)
+
+When writing feature specs for native-like behavior, check platform constraints first.
+
+### Check Before Writing Feature Spec
+
+| Feature Type | Platform Constraint | Reference |
+|--------------|---------------------|-----------|
+| Audio/video playback | Background behavior differs iOS/Android | `_patterns/native-mobile.md#background-processing` |
+| File uploads | May need chunked/resumable upload | `_patterns/native-mobile.md#background-processing` |
+| Offline actions | Queue + resume patterns needed | `_patterns/offline.md` |
+| Push notifications | iOS requires home screen install | `_patterns/native-mobile.md#push-notifications` |
+| Sensor access | iOS needs permission prompts | `_patterns/native-mobile.md#media-capture` |
+| Haptic feedback | iOS not supported (use visual fallback) | `_patterns/native-mobile.md#haptic-feedback` |
+
+### Feature Spec Additions
+
+For features involving native-like behavior, add this section:
+
+```markdown
+## Platform Considerations
+
+| Platform | Behavior | Workaround |
+|----------|----------|------------|
+| **iOS** | [specific limitation] | [fallback approach] |
+| **Android** | [expected behavior] | - |
+```
+
+### Example
+
+```markdown
+## Platform Considerations
+
+| Platform | Behavior | Workaround |
+|----------|----------|------------|
+| **iOS** | Upload pauses when backgrounded | Save progress, resume on return |
+| **Android** | Upload continues in background | - |
+```
+
+### When This Matters
+
+- File upload features (voice memos, images, videos)
+- Audio/video playback features
+- Real-time features that should work offline
+- Any feature users expect to "just work" like native apps

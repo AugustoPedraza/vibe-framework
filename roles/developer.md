@@ -39,6 +39,7 @@ Before implementing any feature, read these docs:
 | `{{paths.architecture}}20-motion-system.md` | **Pattern Catalog**: Motion patterns (modal, sheet, toast animations) | Animations |
 | `{{paths.architecture}}08-app-shell.md` | **Pattern Catalog**: Shell patterns (tabs, navigation, badges) | App shell work |
 | `{{paths.architecture}}11-mobile-first.md` | **Pattern Catalog**: Mobile patterns (touch, swipe, haptics) | Mobile UX |
+| `{{paths.architecture}}/_patterns/native-mobile.md` | **Pattern Catalog**: Native-like PWA (camera, uploads, haptics) | Native features |
 
 Also check `~/.claude/vibe-ash-svelte/patterns/` for reusable patterns.
 
@@ -866,7 +867,84 @@ export const counter = createCounterStore();
 
 ---
 
-## 8. TDD & Testing
+## 8. Native Mobile Implementation (PWA)
+
+> Reference: `{{paths.architecture}}/_patterns/native-mobile.md`
+
+### Platform Check Pattern
+
+Always check platform before using native APIs:
+
+```typescript
+// CORRECT: Check before using
+if ('vibrate' in navigator) {
+  navigator.vibrate(pattern);
+}
+
+// WRONG: Assume availability
+navigator.vibrate(pattern); // Crashes on iOS
+```
+
+### TDD for Native Features
+
+Native features require specific test patterns:
+
+| Feature | Test Strategy |
+|---------|---------------|
+| Camera access | Mock `getUserMedia`, test permission denied |
+| Upload resume | Simulate network interruption, verify recovery |
+| Draft persistence | Test localStorage + IndexedDB fallback |
+| Haptics | Skip on iOS (no API), test Android pattern |
+| Push notifications | Mock subscription, test backend push |
+
+### Example: Testing Upload Resume
+
+```typescript
+// tests/upload-manager.test.ts
+describe('UploadManager', () => {
+  it('should save progress when visibility changes to hidden', async () => {
+    const manager = new UploadManager();
+    const file = new Blob(['test'], { type: 'text/plain' });
+
+    const uploadId = await manager.createUpload({ file, filename: 'test.txt' });
+
+    // Simulate backgrounding (iOS)
+    document.dispatchEvent(new Event('visibilitychange'));
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden' });
+
+    const progress = manager.getProgress(uploadId);
+    expect(progress.savedToStorage).toBe(true);
+  });
+
+  it('should resume from last chunk after interruption', async () => {
+    // Simulate interrupted upload with 3 of 5 chunks done
+    localStorage.setItem('upload_progress_123', JSON.stringify({
+      id: '123',
+      uploadedChunks: [0, 1, 2],
+      totalChunks: 5,
+      status: 'paused'
+    }));
+
+    const manager = new UploadManager();
+    const progress = manager.getProgress('123');
+
+    expect(progress.uploadedChunks.length).toBe(3);
+    expect(progress.canResume).toBe(true);
+  });
+});
+```
+
+### Code Must Follow
+
+- [ ] Platform check before native API use
+- [ ] Graceful fallback when API unavailable
+- [ ] Test covers both supported and unsupported cases
+- [ ] Visual feedback backup for missing haptics
+- [ ] Progress saves on visibility change (iOS backgrounding)
+
+---
+
+## 9. TDD & Testing
 
 See `{{paths.architecture}}17-testing-strategy.md` for test pyramid and E2E patterns.
 
@@ -976,7 +1054,7 @@ end
 
 ---
 
-## 9. Documentation Guidance
+## 10. Documentation Guidance
 
 **When to write documentation (and when not to).**
 
@@ -1058,7 +1136,7 @@ When making breaking changes, update CHANGELOG.md:
 
 ---
 
-## 10. Code Quality Automation
+## 11. Code Quality Automation
 
 ### Pre-Commit Checklist
 
@@ -1106,7 +1184,7 @@ interface Props {
 
 ---
 
-## 10. Anti-Patterns to Avoid
+## 12. Anti-Patterns to Avoid
 
 > See `{{paths.architecture}}18-anti-patterns.md` for comprehensive anti-patterns across Elixir, Svelte, and PWA.
 
@@ -1222,7 +1300,7 @@ end
 
 ---
 
-## 11. Quick Reference
+## 13. Quick Reference
 
 ### Commands
 

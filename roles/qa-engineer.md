@@ -37,6 +37,7 @@ These docs define expected behaviors - use them to write test scenarios:
 | `{{paths.architecture}}20-motion-system.md` | Animation timing, reduced motion support |
 | `{{paths.architecture}}11-mobile-first.md` | Touch targets (44px), swipe gestures, haptic feedback |
 | `{{paths.architecture}}08-app-shell.md` | Tab navigation, badge updates, transitions |
+| `{{paths.architecture}}/_patterns/native-mobile.md` | Camera, uploads, haptics, platform limits |
 
 ---
 
@@ -227,6 +228,81 @@ Before generating tests, verify UX coverage. Reference the **Pattern Catalogs** 
 - [ ] Animation timing test (see `20-motion-system.md` duration ratios)
 - [ ] Reduced motion test (see `20-motion-system.md` #reduced-motion)
 - [ ] Accessibility (aria-labels, focus management)
+
+---
+
+## Native Mobile Testing
+
+> Reference: `{{paths.architecture}}/_patterns/native-mobile.md`
+
+### Device Testing Requirements
+
+Native-like features **MUST** be tested on real devices (not just simulators):
+
+| Feature | iOS Device Test | Android Device Test |
+|---------|-----------------|---------------------|
+| Camera capture | Real camera, both front/back | Real camera, both front/back |
+| Audio recording | Real mic, test background behavior | Real mic, test background |
+| File upload | Test backgrounding (pauses), resume | Test background sync continues |
+| Haptics | Verify no errors (API unavailable) | Verify vibration works |
+| Push notifications | Home screen install required | Standard PWA behavior |
+
+### Test Scenarios for Native Features
+
+#### Upload Resume
+- [ ] Start upload, switch apps, return → upload resumes (iOS pauses, Android continues)
+- [ ] Start upload, lose network, regain → upload resumes from last chunk
+- [ ] Start upload, force close app, reopen → prompt to resume or show saved progress
+- [ ] iOS: verify upload pauses when backgrounded (expected behavior, not a bug)
+
+#### Draft Persistence
+- [ ] Type message, close tab → reopen shows draft banner
+- [ ] Type message, navigate away in app → return shows draft
+- [ ] Type message, force close app → reopen shows recovery banner
+- [ ] Draft auto-saves (check localStorage/IndexedDB)
+
+#### Camera/Microphone
+- [ ] Permission denied → graceful fallback UI shown
+- [ ] Permission granted → capture works
+- [ ] Switch front/back camera mid-session
+- [ ] iOS MediaRecorder → verify Settings > Safari > Advanced toggle works
+
+#### Haptic Feedback (Behavior Test)
+```typescript
+// Test that haptic doesn't throw on iOS
+it('should not throw when vibration unavailable', () => {
+  // Mock missing API
+  delete (navigator as any).vibrate;
+
+  expect(() => haptic('light')).not.toThrow();
+});
+```
+
+### E2E Test Additions for Native Features
+
+| Feature Type | E2E Required? | Why |
+|--------------|---------------|-----|
+| File upload flow | Yes | Critical user journey |
+| Camera capture flow | Yes (if core feature) | Permission + capture + preview |
+| Push notification delivery | No (manual test) | Browser dependency |
+| Draft recovery | Yes | Cross-session persistence |
+
+### Platform-Specific Mocking
+
+```typescript
+// Mock iOS platform for testing
+beforeEach(() => {
+  Object.defineProperty(navigator, 'userAgent', {
+    value: 'iPhone OS 16_0',
+    configurable: true
+  });
+});
+
+// Mock missing APIs
+beforeEach(() => {
+  delete (navigator as any).vibrate; // iOS doesn't have this
+});
+```
 
 ---
 

@@ -14,6 +14,7 @@
 | `{{paths.architecture}}19-pwa-native-experience.md` | **Pattern Catalog**: PWA patterns (form preservation, offline, gestures) | Native-like UX |
 | `{{paths.architecture}}20-motion-system.md` | **Pattern Catalog**: Motion patterns (modal, sheet, toast animations) | All animations |
 | `{{paths.architecture}}11-mobile-first.md` | **Pattern Catalog**: Mobile patterns (touch targets, swipe, haptics) | Mobile UX |
+| `{{paths.architecture}}/_patterns/native-mobile.md` | **Pattern Catalog**: Native-like PWA (camera, uploads, platform limits) | Native features |
 
 ## Key Documents (MUST READ)
 
@@ -74,6 +75,58 @@ This is a **mobile-first PWA**. Every UI decision must prioritize:
 | Offline | Graceful degradation, queue actions |
 | Performance | Skeleton loaders, optimistic UI |
 | iOS/Android | PWA compatibility tested |
+
+---
+
+## Native Mobile UX Considerations
+
+> Reference: `{{paths.architecture}}/_patterns/native-mobile.md`
+
+### Platform-Specific UX
+
+| Component | iOS Consideration | Android Consideration |
+|-----------|-------------------|----------------------|
+| Upload progress | Show "Keep app open" message | Can show "Continues in background" |
+| Haptic feedback | Not available (use visual feedback) | Available via Vibration API |
+| Loading states | Skeleton + optimistic update | Same |
+| Error states | Platform-appropriate messaging | Same |
+
+### Upload UX Requirements
+
+When designing upload features (images, videos, voice memos):
+
+| Requirement | Design Guidance |
+|-------------|-----------------|
+| Progress indicator | Show percentage AND bytes (e.g., "45% - 2.3 MB / 5.1 MB") |
+| Pause/Resume | Visible buttons, not hidden in menu |
+| Status visibility | Clear badges: uploading, paused, failed |
+| iOS guidance | Add "Keep app open for faster upload" text |
+| Failed state | Red badge + "Retry" button, not just toast |
+| Floating indicator | Shows on ALL pages during upload (SPA navigation) |
+
+### Camera/Media UX Requirements
+
+When designing camera or media capture features:
+
+| Requirement | Design Guidance |
+|-------------|-----------------|
+| Permission request | Explain WHY before triggering browser prompt |
+| Permission denied | Show helpful fallback (not just error) |
+| Camera switch | Clear front/back toggle button |
+| Capture feedback | Visual pulse (Android gets haptic, iOS doesn't) |
+| Preview | Always show captured media before upload |
+
+### When Haptics Aren't Available (iOS)
+
+Design visual fallbacks for haptic-dependent interactions:
+
+| Action | With Haptics | Without Haptics (iOS) |
+|--------|--------------|----------------------|
+| Button tap | Light vibration | Press scale animation |
+| Toggle | Light vibration | Color change + checkmark |
+| Success | Success pattern | Checkmark animation |
+| Error | Error pattern | Shake animation + red highlight |
+| Long press trigger | Medium vibration | Visual ring/pulse animation |
 
 ---
 
