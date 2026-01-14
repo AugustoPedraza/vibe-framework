@@ -474,6 +474,68 @@ end
 
 ---
 
+## Responsive Testing Checklist
+
+> Reference: `{{paths.architecture}}/_guides/desktop-ux.md`
+
+### Viewport Matrix
+
+Test at these viewport widths to cover all breakpoints:
+
+| Viewport | Width | Breakpoint Class | Test Focus |
+|----------|-------|------------------|------------|
+| Mobile S | 375px | Compact | Core mobile layout |
+| Mobile L | 428px | Compact | Large mobile |
+| Tablet P | 768px | Medium | Navigation rail transition |
+| Tablet L | 1024px | Expanded | Desktop minimum |
+| Desktop | 1280px | Large | Full desktop layout |
+| Desktop L | 1440px | Large | Wide desktop |
+| Desktop XL | 1920px | Large | Max common width |
+
+### Navigation Transformation
+
+- [ ] Bottom tabs visible at <600px
+- [ ] Bottom tabs hidden at >=600px
+- [ ] Sidebar visible at >=600px (or navigation rail at medium)
+- [ ] Desktop header visible at >=600px
+- [ ] Mobile AppHeader hidden at >=600px
+- [ ] Navigation items consistent across breakpoints
+
+### Layout Tests
+
+- [ ] Content never exceeds 1024px width on large viewports
+- [ ] Forms center correctly on desktop (max 640px)
+- [ ] Split-pane shows detail on selection (>=840px)
+- [ ] Split-pane list panel fixed width (~380px)
+- [ ] Card grids reflow at breakpoints (1→2→3→4 cols)
+- [ ] No horizontal scroll at any viewport
+
+### Component Transformation
+
+- [ ] Modal: slides from bottom on mobile, centered on desktop
+- [ ] BottomSheet: transforms to dropdown for menus on desktop
+- [ ] List detail: navigates on mobile, shows in split-pane on desktop
+- [ ] Settings: full-width on mobile, split-pane on desktop
+
+### Content Width
+
+- [ ] Main content max-width: 1024px
+- [ ] Centered forms max-width: 640px
+- [ ] Sidebar width: ~280px
+- [ ] White space on sides when viewport > 1304px
+
+### Visual Regression Checkpoints
+
+| Screen | Compact | Medium | Expanded | Large |
+|--------|---------|--------|----------|-------|
+| Dashboard | Stacked | 2-col | 3-col | 4-col |
+| List view | List | List | Split | Split |
+| Form | Full | Centered | Centered | Centered |
+| Settings | List | List | Split | Split |
+| Modal | Bottom | Bottom | Center | Center |
+
+---
+
 ## Anti-Patterns to Avoid
 
 ### Testing Implementation Details

@@ -290,6 +290,68 @@ Native apps don't redirect to login pages when sessions expire - neither should 
 
 ---
 
+## Desktop UX Patterns
+
+> Reference: `{{paths.architecture}}/_guides/desktop-ux.md`
+
+### Content Width Standards
+
+| Element | Width | Notes |
+|---------|-------|-------|
+| Main content | max 1024px | Readable line length (65-70 chars) |
+| Sidebar | ~280px | Standard navigation width |
+| Centered forms | max 640px | Optimal form width |
+| Total app | ~1304px | Content + sidebar |
+
+### Breakpoint System
+
+Following Material Design 3 Window Size Classes:
+
+| Class | Width | Layout Strategy |
+|-------|-------|-----------------|
+| **Compact** | 0-599px | Single column, bottom tabs |
+| **Medium** | 600-839px | Navigation rail or sidebar |
+| **Expanded** | 840-1023px | Full sidebar, split-pane |
+| **Large** | 1024px+ | Constrained width, enhanced split |
+
+### Navigation Transformation
+
+| Viewport | Navigation Pattern |
+|----------|-------------------|
+| Compact (<600px) | Bottom tab bar |
+| Medium (600-839px) | Navigation rail (collapsed) |
+| Expanded (840px+) | Full sidebar + desktop header |
+
+### Split-Pane Decision
+
+| Screen Type | Use Split-Pane? | Desktop Behavior |
+|-------------|-----------------|------------------|
+| Lists (inbox, projects) | **Yes** | Show detail on selection |
+| Forms (create, edit) | **No** | Center the form (640px max) |
+| Settings | **Yes** | Categories left, form right |
+| Dashboard | **No** | Use responsive card grid |
+
+### Component Transformation
+
+| Component | Mobile | Desktop |
+|-----------|--------|---------|
+| BottomTabBar | Visible | Hidden (use Sidebar) |
+| AppHeader | Visible | Hidden (use DesktopHeader) |
+| Modal | Bottom sheet (slide up) | Centered dialog (scale in) |
+| BottomSheet (menu) | Keep | Transform to Dropdown |
+| List → Detail | Navigate to page | Show in split-pane |
+
+### Desktop Anti-Patterns
+
+| Don't | Do Instead |
+|-------|------------|
+| Full-width content on xl+ | Max-width constraint (1024px) |
+| Hide sidebar on desktop | Always show on expanded+ |
+| Hover-only interactions | Click/tap alternatives |
+| Different nav structure | Same items, adapted display |
+
+---
+
 ## Copy Standards (ENFORCED)
 
 **All user-facing text MUST be human-friendly.**

@@ -43,6 +43,8 @@ Before implementing any feature, read these docs:
 | `{{paths.architecture}}/_patterns/native-mobile.md` | **Pattern Catalog**: Native-like PWA (camera, uploads, haptics) | Native features |
 | `{{paths.architecture}}/_guides/ux-design-philosophy.md` | UX principles (thumb zone, cognitive load) | Understanding design decisions |
 | `{{paths.architecture}}/_guides/component-intent.md` | Component selection guidance | Choosing UI patterns |
+| `{{paths.architecture}}/_guides/desktop-ux.md` | Desktop patterns (sidebar, split-pane, width constraints) | Responsive layouts |
+| `{{paths.architecture}}/_patterns/adaptive-layouts.md` | Layout transformations (mobile → desktop) | Desktop adaptations |
 
 Also check `~/.claude/vibe-ash-svelte/patterns/` for reusable patterns.
 
