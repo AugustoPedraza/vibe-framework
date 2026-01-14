@@ -430,6 +430,50 @@ end
 
 ---
 
+## PWA Auth Testing Checklist
+
+> Reference: `{{paths.architecture}}/_patterns/pwa-auth.md`
+
+### Session Persistence
+
+- [ ] User stays logged in after closing browser (30-day session)
+- [ ] User stays logged in after device restart
+- [ ] Session extends on activity (test after 25 days if possible)
+- [ ] Session expires after 30 days of inactivity
+
+### Offline Auth Scenarios
+
+- [ ] App works offline with valid session (full functionality)
+- [ ] App shows read-only mode with expired session offline
+- [ ] Re-auth modal appears on reconnection with expired session
+- [ ] Queued actions flush after successful re-auth
+- [ ] Failed auth actions stay queued (not discarded)
+
+### Re-authentication UX
+
+- [ ] Uses inline modal (not page redirect)
+- [ ] Preserves user context during re-auth
+- [ ] Validates same user on re-auth (prevent account switching)
+- [ ] Shows clear error messages on failure
+- [ ] Auto-focuses email field in modal
+
+### Security
+
+- [ ] Session token NOT visible in localStorage/sessionStorage (HttpOnly cookie only)
+- [ ] Only session expiry timestamp is cached in localStorage
+- [ ] Logout clears session from database
+- [ ] "Logout all devices" invalidates other sessions
+- [ ] CSRF token refreshed on LiveView mount
+
+### Multi-device
+
+- [ ] User can be logged in on multiple devices simultaneously
+- [ ] Logout on one device doesn't affect others
+- [ ] "Logout all devices" logs out all devices
+- [ ] Session metadata (device, IP) tracked correctly
+
+---
+
 ## Anti-Patterns to Avoid
 
 ### Testing Implementation Details

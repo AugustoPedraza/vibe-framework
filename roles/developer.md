@@ -32,6 +32,7 @@ Before implementing any feature, read these docs:
 | `{{paths.architecture}}07-notifications.md` | Push/pull notifications | Sprint 2+ |
 | `{{paths.architecture}}10-channels.md` | Channel structure | Sprint 2+ |
 | `{{paths.architecture}}15-authentication.md` | Auth patterns | Auth features |
+| `{{paths.architecture}}/_patterns/pwa-auth.md` | PWA auth (offline, re-auth UX, session management) | Auth + PWA features |
 | `{{paths.architecture}}16-error-handling.md` | Error flow | Error handling |
 | `{{paths.architecture}}17-testing-strategy.md` | Test pyramid | Writing tests |
 | `{{paths.architecture}}18-anti-patterns.md` | Patterns to avoid | **Always** |

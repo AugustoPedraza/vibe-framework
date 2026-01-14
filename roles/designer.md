@@ -237,6 +237,59 @@ Design visual fallbacks for haptic-dependent interactions:
 
 ---
 
+## Auth UX Patterns (PWA)
+
+> Reference: `{{paths.architecture}}/_patterns/pwa-auth.md`
+
+### Re-authentication Flow
+
+Native apps don't redirect to login pages when sessions expire - neither should PWAs.
+
+| Anti-Pattern | PWA Pattern |
+|--------------|-------------|
+| Redirect to /login | Inline re-auth modal |
+| Lose user context | Preserve current screen |
+| Discard pending work | Queue actions, flush after re-auth |
+
+**Key Principles**:
+- Use inline modal, NOT page redirect
+- Preserve user context during re-auth
+- Show clear error messages on failure
+- Auto-focus email field in modal
+
+### Session State Indicators
+
+| State | UX |
+|-------|-----|
+| Authenticated + online | Normal UI |
+| Authenticated + offline | "Working offline" banner |
+| Session expiring (< 3 days) | Optional subtle indicator |
+| Session expired + offline | "Sign in when connected" message |
+| Session expired + online | Inline re-auth modal |
+
+### Copy Guidelines
+
+| Scenario | Copy |
+|----------|------|
+| Session expired | "Your session has expired. Please sign in again." |
+| Re-auth success | "Welcome back!" (brief toast) |
+| Re-auth failure | "Wrong email or password" |
+| Different account | "Please sign in with the same account" |
+| Offline + valid | "Working offline. Changes will sync when connected." |
+| Offline + expired | "Session expired. Sign in when connected to sync changes." |
+| Sync success | "All changes synced" (brief toast) |
+
+### Modal Design Requirements
+
+- Use BottomSheet on mobile (not centered modal)
+- Include clear "Session Expired" title
+- Show email/password fields (no username)
+- Include "Forgot password" link
+- Primary action: "Sign In"
+- No close button (must complete re-auth)
+
+---
+
 ## Copy Standards (ENFORCED)
 
 **All user-facing text MUST be human-friendly.**
