@@ -536,6 +536,66 @@ Test at these viewport widths to cover all breakpoints:
 
 ---
 
+## Visual Design System Testing Checklist
+
+> Reference: `{{paths.architecture}}/_guides/visual-design-system.md`
+
+### Micro-Interaction Tests
+
+- [ ] Buttons scale down on press (`active:scale-95`)
+- [ ] Icon buttons scale down on press (`active:scale-90`)
+- [ ] Interactive cards lift on hover (shadow increases, translates up)
+- [ ] FormField shakes on validation error (when `shake` prop used)
+- [ ] Success alerts animate in (when `animate` prop used)
+- [ ] Loading skeletons pulse OR shimmer (based on prop)
+
+### Elevation Tests
+
+- [ ] Cards have `shadow-sm` (subtle elevation)
+- [ ] Dropdowns have `shadow-md` (medium elevation)
+- [ ] Modals have `shadow-xl` (high elevation)
+- [ ] Interactive cards change shadow on hover (`shadow-sm` → `shadow-md`)
+
+### Spacing Tests (4px Grid)
+
+- [ ] All spacing values divisible by 4px
+- [ ] Form fields use `space-y-4` (16px) gap
+- [ ] Cards use `p-4` (16px) padding
+- [ ] Touch targets >= 44px height
+
+### Component Dimension Tests
+
+| Component | Expected Height |
+|-----------|-----------------|
+| Button (sm) | 32px |
+| Button (md) | 40px |
+| Button (lg) | 48px |
+| Input | 40px |
+| Touch target min | 44px |
+
+### Animation Timing Tests
+
+- [ ] Button press feedback: ~100ms
+- [ ] Hover effects: ~150ms
+- [ ] State transitions: ~200ms
+- [ ] Modal open/close: ~300ms
+
+### Reduced Motion Tests
+
+- [ ] All animations respect `prefers-reduced-motion`
+- [ ] Shake animation disabled with reduced motion
+- [ ] Shimmer animation disabled with reduced motion
+- [ ] Transitions near-instant with reduced motion
+
+### Loading State Tests
+
+- [ ] Button shows spinner for <1s loads
+- [ ] Skeleton pulse for 1-3s loads
+- [ ] Skeleton shimmer for 3s+ loads (when shimmer prop used)
+- [ ] No full-page spinners
+
+---
+
 ## Anti-Patterns to Avoid
 
 ### Testing Implementation Details

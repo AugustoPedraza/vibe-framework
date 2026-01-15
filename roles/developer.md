@@ -45,6 +45,8 @@ Before implementing any feature, read these docs:
 | `{{paths.architecture}}/_guides/component-intent.md` | Component selection guidance | Choosing UI patterns |
 | `{{paths.architecture}}/_guides/desktop-ux.md` | Desktop patterns (sidebar, split-pane, width constraints) | Responsive layouts |
 | `{{paths.architecture}}/_patterns/adaptive-layouts.md` | Layout transformations (mobile → desktop) | Desktop adaptations |
+| `{{paths.architecture}}/_guides/visual-design-system.md` | Visual polish (elevation, micro-interactions, typography) | UI polish |
+| `{{paths.architecture}}/_patterns/design-tokens.md` | Design token reference (shadows, spacing, animations) | Styling consistency |
 
 Also check `~/.claude/vibe-ash-svelte/patterns/` for reusable patterns.
 

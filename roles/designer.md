@@ -352,6 +352,75 @@ Following Material Design 3 Window Size Classes:
 
 ---
 
+## Visual Design System (Pixel-Perfect)
+
+> Reference: `{{paths.architecture}}/_guides/visual-design-system.md`
+
+### Spacing System (4px Grid)
+
+All spacing aligns to 4px baseline grid:
+
+| Value | Tailwind | Use For |
+|-------|----------|---------|
+| 4px | `gap-1`, `p-1` | Micro gap |
+| 8px | `gap-2`, `p-2` | Tight spacing |
+| 12px | `gap-3`, `p-3` | Normal spacing |
+| 16px | `gap-4`, `p-4` | Comfortable |
+| 24px | `gap-6`, `p-6` | Spacious |
+| 32px | `gap-8`, `p-8` | Section spacing |
+
+### Elevation System (Shadows)
+
+| Level | Token | Use For |
+|-------|-------|---------|
+| xs | `shadow-xs` | Subtle depth, inputs |
+| sm | `shadow-sm` | Cards, buttons |
+| md | `shadow-md` | Dropdowns, hover states |
+| lg | `shadow-lg` | Popovers, tooltips |
+| xl | `shadow-xl` | Modals, dialogs |
+
+### Micro-Interaction Requirements
+
+| Component | Required Feedback |
+|-----------|-------------------|
+| Button | `active:scale-95` (auto-applied) |
+| IconButton | `active:scale-90` (auto-applied) |
+| Card (clickable) | Use `interactive` prop for hover lift |
+| FormField (error) | Use `shake` prop for validation |
+| Alert (success) | Use `animate` prop for pop-in |
+
+### Component Dimensions (Pixel-Perfect)
+
+| Component | Height | Padding | Border-Radius |
+|-----------|--------|---------|---------------|
+| Button (sm) | 32px | `px-3 py-1.5` | 6px |
+| Button (md) | 40px | `px-4 py-2` | 8px |
+| Button (lg) | 48px | `px-6 py-3` | 8px |
+| Input | 40px | `px-3 py-2` | 6px |
+| Card | auto | `p-4` | 8px |
+| Touch target | 44px min | - | - |
+
+### Typography Scale
+
+| Level | Size | Line-Height | Weight |
+|-------|------|-------------|--------|
+| Display | 30px | 1.2 | 700 |
+| Heading | 24px | 1.33 | 600 |
+| Title | 20px | 1.4 | 600 |
+| Body | 16px | 1.5 | 400 |
+| Caption | 14px | 1.43 | 400 |
+| Micro | 12px | 1.33 | 500 |
+
+### Loading Pattern Selection
+
+| Duration | Use |
+|----------|-----|
+| <1s | Button spinner |
+| 1-3s | Skeleton (pulse) |
+| 3s+ | Skeleton (shimmer) |
+
+---
+
 ## Copy Standards (ENFORCED)
 
 **All user-facing text MUST be human-friendly.**
