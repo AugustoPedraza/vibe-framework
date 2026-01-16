@@ -478,12 +478,43 @@ Only these tokens are available:
 
 ### Colors
 ```
-primary, primary-hover, primary-active, on-primary
-secondary, secondary-hover, on-secondary
-success, warning, error, info (+ soft variants)
-background, surface, surface-raised, surface-sunken
-text, text-secondary, text-muted, text-disabled
-border, border-strong, border-focus
+# Brand (with foreground for text on colored backgrounds)
+primary, primary-foreground
+secondary, secondary-foreground
+
+# Status colors (with foreground and soft variants)
+success, success-foreground, success-soft
+warning, warning-foreground, warning-soft
+error, error-foreground, error-soft
+info, info-foreground, info-soft
+
+# Surfaces
+background, card, muted, accent, popover
+
+# Disabled state (for form elements)
+disabled, disabled-foreground
+
+# Text
+foreground, muted-foreground, accent-foreground, popover-foreground
+
+# Border/Focus
+border, input, ring
+```
+
+### Foreground Token Pattern
+Use `{color}-foreground` for text ON colored backgrounds:
+```svelte
+<button class="bg-error text-error-foreground">Delete</button>
+<button class="bg-warning text-warning-foreground">Caution</button>
+```
+
+### Disabled State Pattern
+```svelte
+<!-- Form elements: dedicated disabled tokens -->
+<input class="disabled:bg-disabled disabled:text-disabled-foreground" />
+
+<!-- Buttons/toggles: opacity to keep brand visible -->
+<button class="disabled:opacity-60" />
 ```
 
 ### Spacing (ONLY these)
@@ -499,6 +530,98 @@ rounded-none, rounded-sm, rounded-md, rounded-lg, rounded-full
 No `rounded-xl`, `rounded-2xl`.
 
 Run `just lint-tokens` to verify compliance.
+
+---
+
+## Alignment Patterns (PIXEL-PERFECT)
+
+> 5 standardized patterns for consistent visual alignment across all components.
+
+### Pattern 1: Flex Row Center
+**For:** Icon beside text on single line
+```svelte
+<div class="flex items-center gap-2">
+  <Icon class="h-5 w-5 shrink-0" />
+  <span>Label text</span>
+</div>
+```
+**Rules:**
+- Always use `shrink-0` on icons
+- Use design token gaps: `gap-1`, `gap-1.5`, `gap-2`, `gap-3`
+- Never use margin for spacing between items
+
+### Pattern 2: Flex Row Start
+**For:** Icon with potentially multi-line text
+```svelte
+<div class="flex items-start gap-3">
+  <!-- mt-0.5 is optical adjustment for baseline alignment -->
+  <Icon class="h-5 w-5 shrink-0 mt-0.5" />
+  <div>
+    <p>First line of text</p>
+    <p>Second line that wraps</p>
+  </div>
+</div>
+```
+**Rules:**
+- `items-start` aligns icon to top of text block
+- `mt-0.5` allowed ONLY for optical baseline alignment (document why)
+
+### Pattern 3: Absolute Stretch (InputWrapper)
+**For:** Icons/buttons inside input fields
+```svelte
+<div class="relative">
+  <Input class="pl-10 pr-10" />  <!-- padding for addons -->
+  <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+    <Icon class="h-4 w-4" />  <!-- prefix (decorative) -->
+  </div>
+  <button class="absolute inset-y-0 right-0 flex items-center pr-3">
+    <Icon class="h-4 w-4" />  <!-- suffix (interactive) -->
+  </button>
+</div>
+```
+**Rules:**
+- NEVER use `top-1/2 -translate-y-1/2` for input addons
+- Use `inset-y-0` (top-0 bottom-0) for full height stretch
+- Use `pointer-events-none` for decorative icons
+
+### Pattern 4: Absolute Corner (Badges)
+**For:** Badges on avatars, notification counts
+```svelte
+<div class="relative inline-flex">
+  <Avatar />
+  <span class="absolute -top-1.5 -right-1.5 flex items-center justify-center
+               h-5 w-5 rounded-full bg-error text-error-foreground text-xs">
+    3
+  </span>
+</div>
+```
+**Rules:**
+- Use negative values: `-top-1.5`, `-right-1.5`
+- Badge content uses `flex items-center justify-center`
+- Minimum badge size: 20x20px (h-5 w-5)
+
+### Pattern 5: Centered Button
+**For:** All button variations
+```svelte
+<button class="inline-flex items-center justify-center gap-2">
+  <Icon class="h-4 w-4" />
+  <span>Button Text</span>
+</button>
+```
+**Rules:**
+- Always use `inline-flex` (not `flex`) for buttons
+- Both `items-center` AND `justify-center` for 2D centering
+- Gap based on size: `gap-1.5` (sm), `gap-2` (md/lg)
+
+### Decision Matrix
+
+| Use Case | Pattern | Key Classes |
+|----------|---------|-------------|
+| Icon inside input | Pattern 3 | `absolute inset-y-0 flex items-center` |
+| Icon beside single-line text | Pattern 1 | `flex items-center gap-2` + `shrink-0` |
+| Icon with multi-line text | Pattern 2 | `flex items-start gap-3` + `mt-0.5` |
+| Icon-only button | Pattern 5 | `inline-flex items-center justify-center` |
+| Badge on corner | Pattern 4 | `absolute -top-1.5 -right-1.5` |
 
 ---
 

@@ -17,36 +17,62 @@ border-(red|blue|green|yellow|purple|pink|gray|slate|zinc|neutral|stone|orange|a
 
 **Valid Tokens:**
 ```
-bg-primary, bg-primary-hover, bg-primary-active
-bg-secondary, bg-secondary-hover
-bg-success, bg-success-soft
-bg-warning, bg-warning-soft
-bg-error, bg-error-soft
-bg-info, bg-info-soft
-bg-background, bg-surface, bg-surface-raised, bg-surface-sunken
-text-text, text-text-secondary, text-text-muted, text-text-disabled
-text-on-primary, text-on-secondary, text-on-success, text-on-warning, text-on-error
-border-border, border-border-strong, border-border-focus
+# Brand colors
+bg-primary, bg-secondary
+text-primary-foreground, text-secondary-foreground
+
+# Status colors (with foreground for text on colored backgrounds)
+bg-success, bg-success-soft, text-success-foreground
+bg-warning, bg-warning-soft, text-warning-foreground
+bg-error, bg-error-soft, text-error-foreground
+bg-info, bg-info-soft, text-info-foreground
+
+# Surface colors
+bg-background, bg-card, bg-muted, bg-accent, bg-popover
+
+# Disabled state
+bg-disabled, text-disabled-foreground
+
+# Text colors
+text-foreground, text-muted-foreground, text-accent-foreground, text-popover-foreground
+
+# Border/Focus
+border-border, border-input, ring-ring
 ```
 
 **Common Mappings:**
 | Invalid | Valid |
 |---------|-------|
 | `bg-blue-500` | `bg-primary` |
-| `bg-blue-600` | `bg-primary-hover` |
 | `bg-red-500` | `bg-error` |
 | `bg-green-500` | `bg-success` |
 | `bg-yellow-500` | `bg-warning` |
-| `bg-gray-100` | `bg-surface-sunken` |
-| `bg-gray-200` | `bg-surface` |
-| `bg-gray-800` | `bg-surface-raised` |
+| `bg-gray-100` | `bg-muted` |
+| `bg-gray-200` | `bg-accent` |
 | `bg-white` | `bg-background` |
-| `text-gray-500` | `text-text-muted` |
-| `text-gray-700` | `text-text-secondary` |
-| `text-gray-900` | `text-text` |
-| `text-white` | `text-on-primary` |
+| `text-gray-500` | `text-muted-foreground` |
+| `text-gray-900` | `text-foreground` |
+| `text-white` (on primary) | `text-primary-foreground` |
+| `text-white` (on error) | `text-error-foreground` |
 | `border-gray-200` | `border-border` |
-| `border-gray-400` | `border-border-strong` |
+| `border-gray-300` | `border-input` |
+
+**Disabled State Pattern:**
+```svelte
+<!-- Form elements (inputs, textareas) -->
+<input class="disabled:bg-disabled disabled:text-disabled-foreground disabled:cursor-not-allowed" />
+
+<!-- Buttons/toggles (keep brand color visible) -->
+<button class="disabled:opacity-60 disabled:cursor-not-allowed" />
+```
+
+**Foreground Token Pattern:**
+Use `{color}-foreground` for text ON colored backgrounds:
+```svelte
+<button class="bg-error text-error-foreground">Delete</button>
+<button class="bg-success text-success-foreground">Confirm</button>
+<button class="bg-warning text-warning-foreground">Caution</button>
+```
 
 ---
 
@@ -489,3 +515,110 @@ states:
 - "Check your email address"
 - "Use 6 or more characters"
 - "Required"
+
+---
+
+## Alignment Rules
+
+### AL001: No Transform Centering in Inputs
+
+**Severity:** Error
+
+**Check:** Input-related components should not use transform-based vertical centering
+
+**Invalid Patterns:**
+```
+top-1/2.*-translate-y-1/2
+```
+
+**In context of:** Input suffix/prefix icons, password toggle buttons, search clear buttons
+
+**Fix:** Use `inset-y-0 flex items-center` pattern instead
+
+```svelte
+<!-- BAD -->
+<button class="absolute top-1/2 -translate-y-1/2 right-3">
+  <Icon />
+</button>
+
+<!-- GOOD -->
+<button class="absolute inset-y-0 right-0 flex items-center pr-3">
+  <Icon />
+</button>
+```
+
+---
+
+### AL002: Shrink-0 on Flex Icons
+
+**Severity:** Warning
+
+**Check:** Icons in flex containers should have `shrink-0` to prevent squishing
+
+**Detection:**
+- Find `<Icon>`, `<svg>`, or Lucide components inside `flex` containers
+- Check if `shrink-0` class is present
+
+```svelte
+<!-- BAD -->
+<div class="flex items-center gap-2">
+  <Icon class="h-5 w-5" />
+  <span>Text that might be long</span>
+</div>
+
+<!-- GOOD -->
+<div class="flex items-center gap-2">
+  <Icon class="h-5 w-5 shrink-0" />
+  <span>Text that might be long</span>
+</div>
+```
+
+---
+
+### AL003: No Arbitrary Margins for Alignment
+
+**Severity:** Warning
+
+**Check:** Margin classes should not be used for alignment (only for spacing)
+
+**Invalid Patterns:**
+```
+mt-[1-9]|mb-[1-9]|ml-[1-9]|mr-[1-9]
+```
+when used for centering/alignment rather than spacing.
+
+**Allowed Exception:**
+- `mt-0.5` for optical baseline alignment (must be documented with comment)
+
+```svelte
+<!-- BAD - using margin to center -->
+<Icon class="mt-2" />
+
+<!-- GOOD - using flex to center -->
+<div class="flex items-center">
+  <Icon />
+</div>
+
+<!-- ALLOWED - optical adjustment with documentation -->
+<!-- Pattern 2: Flex Row Start - mt-0.5 for baseline alignment -->
+<Icon class="mt-0.5 shrink-0" />
+```
+
+---
+
+### AL004: Consistent Icon Gaps
+
+**Severity:** Warning
+
+**Check:** Icon + text combinations should use consistent gap values based on size
+
+**Gap Scale:**
+| Context | Gap |
+|---------|-----|
+| Small buttons (sm) | `gap-1.5` |
+| Medium buttons (md) | `gap-2` |
+| Large buttons (lg) | `gap-2` |
+| List items | `gap-2` or `gap-3` |
+| Alert/card headers | `gap-3` |
+
+**Detection:** Mixed gap values without size-based justification

@@ -95,6 +95,19 @@
 ## Design Tokens (Required)
 
 - [ ] No raw Tailwind colors (bg-blue-500)
-- [ ] Uses design tokens (bg-primary)
+- [ ] Uses design tokens (bg-primary, text-muted-foreground)
+- [ ] Foreground tokens for colored backgrounds (text-error-foreground)
+- [ ] Disabled tokens for form elements (bg-disabled, text-disabled-foreground)
 - [ ] No hardcoded z-index (use z-modal, z-overlay)
 - [ ] Standard spacing scale only
+
+---
+
+## Alignment (Pixel-Perfect)
+
+- [ ] Input addons use Pattern 3 (inset-y-0 flex items-center), NOT transforms
+- [ ] Icons in flex containers have `shrink-0`
+- [ ] No arbitrary margins for alignment (only `mt-0.5` with documented reason)
+- [ ] Consistent gap values based on size scale
+- [ ] Badges use Pattern 4 (negative positioning)
+- [ ] Buttons use Pattern 5 (inline-flex items-center justify-center)
