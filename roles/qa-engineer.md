@@ -683,6 +683,48 @@ Report format:
 
 ---
 
+## Multi-Agent Suggestion Evaluation
+
+When evaluating suggestions from Copilot or Codex CLI during `/vibe review`:
+
+### Evaluation Criteria
+
+| Criterion | Check Against | Reject If |
+|-----------|--------------|-----------|
+| Architecture alignment | `{{paths.architecture}}18-anti-patterns.md` | Violates documented patterns |
+| Design tokens | `{{paths.architecture}}/_patterns/design-tokens.md` | Uses raw Tailwind colors |
+| Domain language | `{{paths.domain}}GLOSSARY.md` | Uses incorrect terminology |
+| Simplicity | Current implementation | More complex without benefit |
+| Testability | Test pyramid strategy | Harder to test |
+| UI states | 4-state rule | Missing loading/error/empty |
+
+### Accept/Reject Framework
+
+```
+1. Does it follow architecture docs? → NO → REJECT
+2. Is it simpler than current? → NO → Needs strong justification
+3. Does it improve testability? → YES → Strong accept signal
+4. Does it handle edge cases? → YES → Accept if architecture-compliant
+```
+
+### Conflict Resolution Priority
+
+| Priority | Rule |
+|----------|------|
+| 1 | Architecture docs win over all suggestions |
+| 2 | Claude's reasoning wins when architecture silent |
+| 3 | Simpler solution wins when reasoning equal |
+| 4 | User decides when complexity equal |
+
+### Documentation
+
+Document all decisions in `_multi_review.md`:
+- Which suggestions accepted and why
+- Which suggestions rejected and why
+- Final implementation rationale
+
+---
+
 ## Pre-Commit Checklist
 
 **Testing:**

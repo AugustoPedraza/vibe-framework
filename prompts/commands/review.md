@@ -246,3 +246,110 @@ Run code review before creating PR?
 - Don't skip security review for "small" changes
 - Don't ignore warnings repeatedly (fix or document why)
 - Don't review without loading anti-patterns doc
+
+---
+
+## External Multi-Agent Review (`--multi`)
+
+> `/vibe review --multi [FEATURE-ID]` - Get perspectives from Copilot + Codex CLI
+
+### When to Use
+
+| Trigger | Example |
+|---------|---------|
+| Multiple valid approaches | "Could use store, context, or $derived" |
+| Edge cases unclear | "What happens offline?" |
+| Bootstrap patterns | Foundational code that will be copied |
+| Performance-critical | Different optimization strategies |
+
+### Workflow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  1. Claude adds // PERSPECTIVE: markers to complex sections     │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  2. Generate _multi_review.md with questions for each tool      │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+         ┌────────────────────┴────────────────────┐
+         ↓                                         ↓
+┌─────────────────────────────────┐  ┌─────────────────────────────────┐
+│  3a. Copilot (Neovim)           │  │  3b. Codex CLI (Terminal)       │
+│  Open files, enter insert mode  │  │  Run prompts from review file   │
+│  near PERSPECTIVE markers       │  │  codex "prompt"                 │
+└─────────────────────────────────┘  └─────────────────────────────────┘
+         ↓                                         ↓
+         └────────────────────┬────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  4. Claude evaluates all suggestions against architecture       │
+│     - Apply conflict resolution priority                        │
+│     - Document decisions in _multi_review.md                    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Code Markers
+
+Add these to flag sections for external review:
+
+```svelte
+// PERSPECTIVE: Is there a more idiomatic Svelte 5 approach?
+function handleSubmit() { ... }
+
+// PERSPECTIVE: Edge case - what if user is offline?
+async function saveData() { ... }
+```
+
+### _multi_review.md Template
+
+Generated at `{feature_dir}/_multi_review.md`:
+
+```markdown
+# Multi-Agent Review Request
+
+## Context
+Feature: {FEATURE-ID}
+Files: {list of files}
+
+## Copilot Questions (IDE Focus)
+### 1. {title} ({file}:{lines})
+**Question:** {specific question}
+**Look for:** Syntax, idioms, edge cases
+
+## Codex Questions (Research Focus)
+### 1. {topic}
+**Prompt:** codex "{prompt}"
+**Why:** {rationale}
+
+## Collected Suggestions
+### From Copilot
+-
+
+### From Codex
+-
+
+## Final Decision
+{Claude's evaluation}
+```
+
+### Evaluation Criteria
+
+When Claude evaluates external suggestions:
+
+| Priority | Rule |
+|----------|------|
+| 1 | Architecture docs win over all suggestions |
+| 2 | Claude's reasoning wins when architecture silent |
+| 3 | Simpler solution wins when reasoning equal |
+| 4 | User decides when complexity equal |
+
+### Tools Reference
+
+| Tool | How to Use | Best For |
+|------|------------|----------|
+| Copilot | Neovim insert mode near markers | Syntax, Svelte idioms |
+| Codex | `codex "your prompt"` | Industry research, alternatives |
+
+See `~/.claude/vibe-ash-svelte/roles/multi-agent-liaison.md` for full protocol.

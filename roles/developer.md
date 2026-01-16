@@ -1163,6 +1163,63 @@ When making breaking changes, update CHANGELOG.md:
 
 ---
 
+## 10.5 Multi-Perspective Code Review (Optional)
+
+For complex implementations, invoke `/vibe review` to get perspectives from multiple AI tools.
+
+### When to Use Multi-Agent Review
+
+| Trigger | Example |
+|---------|---------|
+| Multiple valid approaches | "Could use store, context, or $derived" |
+| Edge cases unclear | "What happens offline? On reconnection?" |
+| Bootstrap patterns | Foundational code that will be copied |
+| Performance-critical | Different optimization strategies possible |
+
+### Workflow
+
+```
+1. Add // PERSPECTIVE: markers to complex sections
+2. Run /vibe review {FEATURE-ID}
+3. Review in Neovim (Copilot suggestions)
+4. Research in terminal (codex "prompt")
+5. Evaluate all suggestions against architecture
+6. Document decision in _multi_review.md
+```
+
+### Code Markers
+
+```svelte
+// PERSPECTIVE: Is there a more idiomatic Svelte 5 approach?
+function handleSubmit() {
+  // implementation
+}
+
+// PERSPECTIVE: Edge case - what if user is offline?
+async function saveData() {
+  // implementation
+}
+```
+
+### Tools
+
+| Tool | Usage | Best For |
+|------|-------|----------|
+| Claude | `/vibe review` | Architecture alignment, final decisions |
+| Copilot | Neovim insert mode | Syntax, Svelte idioms, edge cases |
+| Codex | `codex "prompt"` | Industry research, alternatives |
+
+### Skip Multi-Agent Review For
+
+- Simple CRUD operations
+- Minor bug fixes
+- Copy/style updates
+- Well-established patterns
+
+See `~/.claude/vibe-ash-svelte/roles/multi-agent-liaison.md` for full protocol.
+
+---
+
 ## 11. Environment Variables Checklist
 
 See `{{paths.architecture}}/_guides/environment-variables.md` for complete guide.
