@@ -30,18 +30,43 @@ Do:
 
 ## Usage
 
+### Core Commands
+
 | Command | What it does |
 |---------|--------------|
 | `/vibe [FEATURE-ID]` | Implement feature (QA -> Designer -> Dev -> QA) |
-| `/vibe quick [desc]` | **NEW** Bug/hotfix mode (condensed 2-phase workflow) |
-| `/vibe pivot` | **NEW** Course correction when implementation diverges |
+| `/vibe quick [desc]` | Bug/hotfix mode (condensed 2-phase workflow) |
+| `/vibe pivot` | Course correction when implementation diverges |
 | `/vibe plan [sprint]` | Plan sprint (Domain -> Designer -> PM) |
 | `/vibe discover [ID]` | Pre-planning discovery for a single feature |
+
+### AI Generation Commands
+
+| Command | What it does |
+|---------|--------------|
+| `/vibe generate [ID]` | **NEW** Generate scaffold from feature spec (ui_spec) |
+| `/vibe lint [path]` | **NEW** UX Governor - validate tokens, states, a11y |
+| `/vibe convert-story [ID]` | **NEW** Convert BMAD story to Vibe feature spec |
+| `/vibe context` | **NEW** Generate project-context.md for BMAD compat |
+
+### BMAD Integration Commands
+
+| Command | What it does |
+|---------|--------------|
+| `/vibe ux-design [ID]` | **NEW** Deep UX exploration (14-step BMAD workflow) |
+| `/vibe research [type]` | **NEW** Market/domain/technical research |
+| `/vibe party` | **NEW** Multi-agent discussion (BMAD Party Mode) |
+
+### Utility Commands
+
+| Command | What it does |
+|---------|--------------|
 | `/vibe debt [desc]` | Capture technical debt with triage |
 | `/vibe review [scope]` | Multi-agent code review with fresh context |
 | `/vibe status` | Show current progress |
 | `/vibe retro` | Capture learnings, extract patterns |
 | `/vibe check` | Validate project structure + template sync |
+| `/vibe sync` | **NEW** Sync epics/features to GitHub Projects |
 | `/vibe --help` | Show command reference |
 
 ---

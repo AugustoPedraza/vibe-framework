@@ -8,18 +8,48 @@
 
 ## COMMANDS
 
+### Core Implementation
+
 | Command | Description |
 |---------|-------------|
 | `/vibe [FEATURE-ID]` | Implement feature (QA -> Designer -> Dev -> QA) |
 | `/vibe quick [desc]` | Bug/hotfix mode (condensed 2-phase workflow) |
 | `/vibe pivot` | Course correction when implementation diverges |
 | `/vibe plan [sprint]` | Plan sprint (Domain -> Designer -> PM) |
-| `/vibe discover [ID]` | Pre-planning discovery (research, wireframe, draft scenarios) |
+| `/vibe discover [ID]` | Pre-planning discovery (research, wireframe, scenarios) |
+
+### AI Generation (NEW)
+
+| Command | Description |
+|---------|-------------|
+| `/vibe generate [ID]` | Generate scaffold from feature spec ui_spec |
+| `/vibe lint [path]` | UX Governor - validate tokens, states, accessibility |
+| `/vibe convert-story [ID]` | Convert BMAD story to Vibe feature spec |
+| `/vibe context` | Generate project-context.md for BMAD compatibility |
+
+### BMAD Integration (NEW)
+
+| Command | Description |
+|---------|-------------|
+| `/vibe ux-design [ID]` | Deep UX exploration (14-step BMAD workflow) |
+| `/vibe research [type]` | Market/domain/technical research |
+| `/vibe party` | Multi-agent discussion (BMAD Party Mode) |
+| `/vibe sync` | Sync epics/features to GitHub Projects |
+
+### Utilities
+
+| Command | Description |
+|---------|-------------|
 | `/vibe check` | Validate project structure + template sync status |
 | `/vibe debt [desc]` | Capture technical debt with triage decision |
 | `/vibe review [scope]` | Multi-agent code review (fresh context) |
 | `/vibe status` | Show current progress |
 | `/vibe retro` | Capture learnings, extract reusable patterns |
+
+### Migration
+
+| Command | Description |
+|---------|-------------|
 | `/vibe migrate init` | Initialize migration project (analyze current state) |
 | `/vibe migrate [FEATURE]` | Create migration spec for existing feature |
 | `/vibe migrate status` | Show migration progress |
@@ -35,11 +65,28 @@
 ## EXAMPLES
 
 ```bash
+# Core Implementation
 /vibe AUTH-001                    # Implement login feature
 /vibe quick "fix login button"    # Quick bug fix (condensed workflow)
 /vibe pivot                       # Course correction when stuck
 /vibe plan sprint-1               # Plan Sprint 1 features
 /vibe discover AUTH-003           # Discovery phase for password reset
+
+# AI Generation (NEW)
+/vibe generate AUTH-001           # Generate scaffold from spec
+/vibe lint                        # Validate all components
+/vibe lint assets/svelte/         # Validate specific path
+/vibe convert-story 1.2           # Convert BMAD Story 1.2 to Vibe spec
+/vibe context                     # Regenerate project-context.md
+
+# BMAD Integration (NEW)
+/vibe ux-design DEC-001           # Deep UX exploration for decisions
+/vibe research market "chat apps" # Market research
+/vibe research technical "pubsub" # Technical spike
+/vibe party                       # Multi-agent discussion
+/vibe sync                        # Sync to GitHub Projects
+
+# Utilities
 /vibe check                       # Validate project structure
 /vibe debt "Need error handling"  # Capture tech debt item
 /vibe review                      # Review staged changes
@@ -48,7 +95,7 @@
 /vibe retro                       # Run retrospective with pattern extraction
 /vibe status                      # Show implementation progress
 
-# Migration commands (for existing projects)
+# Migration (for existing projects)
 /vibe migrate init                # Analyze and document current state
 /vibe migrate PROFILE             # Create migration spec for profile feature
 /vibe migrate status              # Show migration progress
