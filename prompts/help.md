@@ -36,6 +36,14 @@
 | `/vibe party` | Multi-agent discussion (BMAD Party Mode) |
 | `/vibe sync` | Sync epics/features to GitHub Projects |
 
+### Spec-Driven (OpenSpec-Inspired)
+
+| Command | Description |
+|---------|-------------|
+| `/vibe explore [topic]` | Think through ideas without committing to structure |
+| `/vibe validate [ID]` | Validate feature spec completeness and consistency |
+| `/vibe archive [ID]` | Archive completed feature, merge deltas into specs |
+
 ### Utilities
 
 | Command | Description |
@@ -85,6 +93,14 @@
 /vibe research technical "pubsub" # Technical spike
 /vibe party                       # Multi-agent discussion
 /vibe sync                        # Sync to GitHub Projects
+
+# Spec-Driven (OpenSpec-Inspired)
+/vibe explore "social login"      # Think through ideas
+/vibe explore --from-spec AUTH-001 # Explore extensions
+/vibe validate AUTH-001           # Check spec completeness
+/vibe validate --fix              # Auto-fix minor issues
+/vibe archive AUTH-001            # Archive and merge to specs
+/vibe archive --dry-run           # Preview archive changes
 
 # Utilities
 /vibe check                       # Validate project structure

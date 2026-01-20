@@ -206,9 +206,26 @@ ui_spec:
 | **Frontend** | {pattern} | {notes} |
 | **Testing** | {pattern} | {notes} |
 
+## Domain Changes
+
+> For features modifying existing domain specs, track changes here or in separate `delta.md`.
+
+**Affects:** `specs/domains/{domain}.md`
+
+| Change Type | Requirement | Summary |
+|-------------|-------------|---------|
+| ADDED | {name} | {brief description} |
+| MODIFIED | {name} | {what changed} |
+| REMOVED | {name} | {why removed} |
+
+See `DELTA-TEMPLATE.md` for detailed change tracking format.
+
+---
+
 ## Notes
 
 - MVP: {what's included in MVP}
 - Defer: {what's deferred to later}
 - Depends: {dependencies on other features}
 - Technical: {implementation notes}
+- Breaking: {any breaking changes to existing behavior}

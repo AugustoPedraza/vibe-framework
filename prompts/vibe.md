@@ -57,6 +57,14 @@ Do:
 | `/vibe research [type]` | **NEW** Market/domain/technical research |
 | `/vibe party` | **NEW** Multi-agent discussion (BMAD Party Mode) |
 
+### Spec-Driven Commands (OpenSpec-Inspired)
+
+| Command | What it does |
+|---------|--------------|
+| `/vibe explore [topic]` | **NEW** Think through ideas without committing to structure |
+| `/vibe validate [ID]` | **NEW** Validate feature spec completeness and consistency |
+| `/vibe archive [ID]` | **NEW** Archive completed feature, merge deltas into specs |
+
 ### Utility Commands
 
 | Command | What it does |
@@ -118,6 +126,73 @@ Do:
 |  [r] Read pattern  [s] Skip  [a] Apply all                           |
 +---------------------------------------------------------------------+
 ```
+
+---
+
+## Specs vs Changes Architecture (OpenSpec-Inspired)
+
+> Separate authoritative specifications from change proposals.
+
+### Directory Structure
+
+```
+{project}/
+├── .claude/
+│   ├── specs/                    # Source of truth (what IS)
+│   │   ├── domains/              # Domain specifications
+│   │   │   ├── auth.md           # Auth domain spec
+│   │   │   └── {domain}.md       # Other domains
+│   │   ├── api.md                # API contracts
+│   │   └── events.md             # Domain events
+│   │
+│   └── features/                 # Change proposals (what will CHANGE)
+│       ├── active/               # In progress
+│       │   └── AUTH-001/
+│       │       ├── spec.md       # Feature specification
+│       │       └── delta.md      # Changes to domain specs
+│       │
+│       └── archived/             # Completed features
+│           └── AUTH-001/
+```
+
+### Delta Tracking
+
+For features that modify existing domain behavior, create `delta.md`:
+
+```markdown
+## ADDED Requirements
+### {Requirement Name}
+The system SHALL {behavior}.
+
+## MODIFIED Requirements
+### {Requirement Name}
+**Was:** {previous behavior}
+**Now:** {new behavior}
+
+## REMOVED Requirements
+### {Requirement Name}
+Removed because: {rationale}
+```
+
+See: `templates/features/DELTA-TEMPLATE.md` for full template
+
+### Lifecycle
+
+```
+/vibe explore → Create spec → /vibe validate → /vibe [ID] → /vibe archive
+       ↓              ↓              ↓              ↓              ↓
+   Thinking    Draft spec      Check ready    Implement    Merge to specs
+```
+
+### When to Use Each Command
+
+| Situation | Command |
+|-----------|---------|
+| New idea, unsure of scope | `/vibe explore` |
+| Ready to formalize feature | Create spec in `features/active/` |
+| Before starting implementation | `/vibe validate [ID]` |
+| Implementation work | `/vibe [ID]` |
+| Feature complete, ready to finalize | `/vibe archive [ID]` |
 
 ---
 
@@ -500,7 +575,15 @@ Repeat for all scenarios.
 7. If score >= 3.0 -> Offer to create PR
 8. **CHECKPOINT** - Wait for Enter
 9. Create PR with scenario checklist + quality score
-10. Offer retro: "Quick retro? [Enter] Yes [s] Skip"
+10. Offer post-completion options:
+    ```
+    Feature implementation complete!
+
+    [p] Create PR
+    [a] Archive feature (merge deltas to specs)
+    [r] Quick retro (extract patterns)
+    [c] Continue (skip all)
+    ```
 
 **E2E HARD BLOCK:** If feature is a critical path (auth, payment, real-time) and E2E tests don't exist or fail, do NOT proceed to PR. Go back and add E2E tests.
 
@@ -920,3 +1003,30 @@ Load command: `~/.claude/vibe-ash-svelte/prompts/commands/debt.md`
 | PM | `agile-pm.md` | Issues, dependencies |
 | DevOps | `devops.md` | CI/CD, deployment |
 | Review | `code-reviewer.md` | Security, patterns |
+
+---
+
+## Command Loading Reference
+
+| Command | Prompt File |
+|---------|-------------|
+| `/vibe explore` | `prompts/commands/explore.md` |
+| `/vibe validate` | `prompts/commands/validate.md` |
+| `/vibe archive` | `prompts/commands/archive.md` |
+| `/vibe discover` | `prompts/commands/discover.md` |
+| `/vibe quick` | `prompts/commands/quick.md` |
+| `/vibe pivot` | `prompts/commands/pivot.md` |
+| `/vibe debt` | `prompts/commands/debt.md` |
+| `/vibe review` | `prompts/commands/review.md` |
+| `/vibe status` | `prompts/commands/status.md` |
+| `/vibe retro` | `prompts/commands/retro.md` |
+| `/vibe check` | `prompts/commands/check.md` |
+| `/vibe plan` | `prompts/commands/plan.md` |
+| `/vibe generate` | `prompts/commands/generate.md` |
+| `/vibe lint` | `prompts/commands/lint.md` |
+| `/vibe convert-story` | `prompts/commands/convert-story.md` |
+| `/vibe context` | `prompts/commands/context.md` |
+| `/vibe ux-design` | `prompts/commands/ux-design.md` |
+| `/vibe research` | `prompts/commands/research.md` |
+| `/vibe party` | `prompts/commands/party.md` |
+| `/vibe sync` | `prompts/commands/sync.md` |

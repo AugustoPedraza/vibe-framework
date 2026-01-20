@@ -59,6 +59,9 @@
 | `/vibe migrate init` | Initialize migration project (analyze current state) |
 | `/vibe migrate [FEATURE]` | Create migration spec for existing feature |
 | `/vibe migrate status` | Show migration progress |
+| `/vibe explore [topic]` | Think through ideas without committing (OpenSpec-inspired) |
+| `/vibe validate [ID]` | Validate feature spec completeness before implementation |
+| `/vibe archive [ID]` | Archive completed feature, merge deltas into specs |
 | `/vibe --help` | Show command reference |
 
 ---
@@ -261,6 +264,138 @@ During retrospective (`/vibe retro`):
 
 ---
 
+## Spec-Driven Development (OpenSpec-Inspired)
+
+The framework supports **spec-driven development** with clear separation between authoritative specifications and change proposals.
+
+### Core Concept: Specs vs Changes
+
+```
+specs/           ← Source of truth (what IS)
+features/        ← Change proposals (what will CHANGE)
+```
+
+### Directory Structure
+
+```
+{project}/.claude/
+├── specs/                    # Authoritative specifications
+│   ├── domains/              # Domain specs (auth, billing, etc.)
+│   │   ├── auth.md
+│   │   └── users.md
+│   ├── api.md                # API contracts
+│   └── events.md             # Domain events
+│
+└── features/
+    ├── active/               # In-progress features
+    │   └── AUTH-001/
+    │       ├── spec.md       # Feature specification
+    │       └── delta.md      # Changes to domain specs
+    │
+    └── archived/             # Completed features
+        └── AUTH-001/
+```
+
+### Spec-Driven Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/vibe explore [topic]` | Think through ideas before committing to structure |
+| `/vibe validate [ID]` | Check spec completeness before implementation |
+| `/vibe archive [ID]` | Finalize feature, merge deltas into authoritative specs |
+
+### Complete Workflow
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  1. EXPLORE                                                          │
+│     /vibe explore "social login"                                     │
+│     → Think through scope, edge cases, related specs                 │
+│     → No files created until ready                                   │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│  2. FORMALIZE                                                        │
+│     Create spec in features/active/AUTH-003/                         │
+│     → spec.md (feature specification)                                │
+│     → delta.md (ADDED/MODIFIED/REMOVED domain changes)               │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│  3. VALIDATE                                                         │
+│     /vibe validate AUTH-003                                          │
+│     → Check structure completeness                                   │
+│     → Verify scenarios have Given/When/Then                          │
+│     → Confirm UX states defined                                      │
+│     → Check consistency with existing specs                          │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│  4. IMPLEMENT                                                        │
+│     /vibe AUTH-003                                                   │
+│     → Full 4-phase workflow (QA → Designer → Dev → QA)               │
+│     → TDD implementation                                             │
+│     → Quality scoring                                                │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│  5. ARCHIVE                                                          │
+│     /vibe archive AUTH-003                                           │
+│     → Verify all tests pass                                          │
+│     → Merge delta.md into specs/domains/auth.md                      │
+│     → Move feature to archived/                                      │
+│     → Create living documentation                                    │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Delta Tracking
+
+For brownfield features (modifying existing behavior), create `delta.md`:
+
+```markdown
+## ADDED Requirements
+
+### OAuth Integration
+The system SHALL support OAuth 2.0 providers.
+
+#### Scenario: Google OAuth Login
+- Given a user clicks "Sign in with Google"
+- When they complete the OAuth flow
+- Then they SHALL be authenticated
+
+## MODIFIED Requirements
+
+### Session Duration
+**Was:** Sessions expire after 24 hours
+**Now:** Sessions SHALL expire after 7 days for "remember me"
+
+## REMOVED Requirements
+
+### SMS Password Reset
+Removed because: Security concerns with SMS interception
+```
+
+### When to Use Each Command
+
+| Situation | Command |
+|-----------|---------|
+| New idea, unsure of scope | `/vibe explore` |
+| Ready to formalize | Create spec manually |
+| Before starting implementation | `/vibe validate` |
+| Implementation work | `/vibe [ID]` |
+| Feature complete | `/vibe archive` |
+
+### Templates
+
+| Template | Location | Purpose |
+|----------|----------|---------|
+| Domain Spec | `templates/specs/DOMAIN-TEMPLATE.md` | New domain specifications |
+| API Spec | `templates/specs/API-TEMPLATE.md` | API documentation |
+| Feature Spec | `templates/features/FEATURE-TEMPLATE.md` | Feature specifications |
+| Delta | `templates/features/DELTA-TEMPLATE.md` | Change tracking |
+
+---
+
 ## Structure
 
 ```
@@ -275,6 +410,9 @@ During retrospective (`/vibe retro`):
 │       ├── pivot.md    # Course correction when stuck
 │       ├── plan.md     # Sprint planning (parallel features)
 │       ├── discover.md # Feature discovery (parallel research)
+│       ├── explore.md  # Think through ideas (OpenSpec-inspired)
+│       ├── validate.md # Validate spec completeness
+│       ├── archive.md  # Archive feature, merge to specs
 │       ├── debt.md     # Technical debt capture
 │       ├── review.md   # Multi-agent code review (parallel)
 │       ├── status.md   # Progress display
@@ -285,7 +423,12 @@ During retrospective (`/vibe retro`):
 │   ├── designer.md
 │   ├── qa-engineer.md
 │   ├── domain-architect.md
-│   └── agile-pm.md
+│   ├── agile-pm.md
+│   ├── multi-agent-liaison.md
+│   └── _shared/        # Shared content across roles
+│       ├── architecture-refs.md
+│       ├── thinking-triggers.md
+│       └── platform-constraints.md
 ├── checklists/
 │   ├── ux-pwa.md
 │   ├── accessibility.md
@@ -293,6 +436,7 @@ During retrospective (`/vibe retro`):
 ├── patterns/
 │   ├── README.md
 │   ├── TEMPLATE.md
+│   ├── index.json      # Semantic pattern index (RAG-lite)
 │   ├── backend/
 │   ├── frontend/
 │   ├── pwa/
@@ -302,8 +446,20 @@ During retrospective (`/vibe retro`):
 │   │   ├── _current/   # Templates for current state docs
 │   │   └── _target/    # Templates for target state docs
 │   ├── features/
+│   │   ├── FEATURE-TEMPLATE.md
+│   │   ├── DELTA-TEMPLATE.md   # Change tracking (OpenSpec)
 │   │   └── MIGRATE-TEMPLATE.md
+│   ├── specs/          # Authoritative spec templates
+│   │   ├── README.md
+│   │   ├── DOMAIN-TEMPLATE.md
+│   │   └── API-TEMPLATE.md
+│   ├── handoffs/       # Structured phase handoffs
+│   │   ├── qa-to-designer.json
+│   │   └── designer-to-developer.json
+│   ├── checkpoint-schema.json
 │   └── migration.md    # Progress tracking template
+├── docs/
+│   └── openspec-comparison.md  # OpenSpec analysis
 └── config/
     └── vibe.config.schema.json
 ```
