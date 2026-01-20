@@ -4,7 +4,7 @@
 
 ## Extended Thinking Triggers
 
-Use these phrases for complex domain decisions:
+> See: `roles/_shared/thinking-triggers.md` for full reference
 
 | Phrase | When to Use |
 |--------|-------------|
@@ -13,17 +13,19 @@ Use these phrases for complex domain decisions:
 | `think harder` | Complex acceptance criteria, multi-domain features |
 | `ultrathink` | Core domain model design, ubiquitous language definitions |
 
-**Example**: "Before defining the core domain model, `ultrathink` about how these entities relate."
-
 ---
 
 ## Architecture References
+
+> See: `roles/_shared/architecture-refs.md` for complete reference
+> See: `roles/_shared/platform-constraints.md` for PWA limitations
+
+### Domain Architect-Specific References
 
 | Doc | Purpose | When |
 |-----|---------|------|
 | `{{paths.architecture}}/01-quick-reference.md` | Core decisions | Understanding patterns |
 | `{{paths.architecture}}/02-responsibility-matrix.md` | Backend ownership boundaries | Feature design |
-| `{{paths.architecture}}/_patterns/native-mobile.md` | PWA platform constraints | Native-like features |
 
 ---
 

@@ -211,3 +211,155 @@ Before finalizing multi-agent review:
 - [ ] Claude evaluated all suggestions against architecture
 - [ ] Final implementation decision documented
 - [ ] `_multi_review.md` updated with outcome
+
+---
+
+## Agent Coordination Protocol
+
+> Structured format for agent outputs and merge resolution.
+
+### Agent Output Format
+
+Each agent (Claude internal, security, performance, patterns) produces:
+
+```json
+{
+  "agent_id": "security|performance|patterns|syntax|research",
+  "timestamp": "ISO-8601",
+  "scope": {
+    "files": ["path/to/file.ext"],
+    "lines": "start-end"
+  },
+  "findings": [
+    {
+      "id": "F001",
+      "severity": "blocker|warning|suggestion",
+      "location": "path/to/file.ext:line",
+      "category": "security|performance|pattern|syntax|ux",
+      "issue": "Description of the issue",
+      "recommendation": "What to do about it",
+      "confidence": 0.95,
+      "references": ["doc-path", "pattern-id"]
+    }
+  ],
+  "summary": {
+    "blockers": 1,
+    "warnings": 2,
+    "suggestions": 3
+  }
+}
+```
+
+### Merge Protocol
+
+When multiple agents review the same code:
+
+#### Step 1: Collect Outputs
+
+```
+Agent Outputs Received:
+  - Security Agent: 2 findings (1 blocker, 1 warning)
+  - Performance Agent: 1 finding (1 warning)
+  - Pattern Agent: 3 findings (3 suggestions)
+```
+
+#### Step 2: Deduplicate by Location
+
+```
+Deduplication:
+  - path/file.ext:45 → 2 agents flagged (Security, Pattern)
+  - path/file.ext:78 → 1 agent flagged (Performance)
+  - path/file.ext:112 → 1 agent flagged (Pattern)
+```
+
+#### Step 3: Prioritize
+
+```
+Priority Order:
+  1. BLOCKERS (must fix before PR)
+  2. WARNINGS (should fix, document if skipped)
+  3. SUGGESTIONS (nice to have)
+
+Within each level:
+  - Higher confidence first
+  - More agents agreeing first
+```
+
+#### Step 4: Mark Consensus
+
+| Marker | Meaning | Agents |
+|--------|---------|--------|
+| `[AGREED]` | All agents agree | 3/3 or 2/2 |
+| `[MAJORITY]` | Most agents agree | 2/3 |
+| `[DISPUTED]` | Agents disagree | Escalate to user |
+| `[SINGLE]` | Only one agent flagged | Lower confidence |
+
+### Merged Output Format
+
+```
++---------------------------------------------------------------------+
+|  MERGED AGENT FINDINGS                                               |
+|                                                                      |
+|  Agents: 3 | Files: 5 | Total Findings: 6                           |
+|                                                                      |
+|  BLOCKERS (1):                                                       |
+|  [AGREED] ! path/auth.ex:45                                          |
+|    Security + Pattern: Unvalidated user input                        |
+|    Confidence: 0.95                                                  |
+|    Fix: Add input validation before processing                       |
+|                                                                      |
+|  WARNINGS (2):                                                       |
+|  [MAJORITY] ~ path/query.ex:78                                       |
+|    Performance: Potential N+1 query (2/3 agents)                     |
+|    Confidence: 0.80                                                  |
+|    Fix: Use preload or batch query                                   |
+|                                                                      |
+|  [SINGLE] ~ path/form.svelte:112                                     |
+|    Pattern: Raw color instead of design token                        |
+|    Confidence: 0.90                                                  |
+|    Fix: Use bg-primary instead of bg-blue-500                        |
+|                                                                      |
+|  SUGGESTIONS (3):                                                    |
+|  [SINGLE] ? path/utils.ts:25                                         |
+|    Syntax: Could use optional chaining                               |
+|                                                                      |
++---------------------------------------------------------------------+
+```
+
+### Dispute Resolution
+
+When agents disagree (`[DISPUTED]`):
+
+1. **Present both perspectives:**
+   ```
+   DISPUTED: path/store.ts:50
+
+   Agent A (Performance): Use $derived for computed value
+   Agent B (Research): Industry pattern suggests store
+
+   Architecture says: Check 04-frontend-components.md
+   ```
+
+2. **Apply resolution priority:**
+   | Priority | Rule |
+   |----------|------|
+   | 1 | Architecture docs win |
+   | 2 | Claude reasoning when docs silent |
+   | 3 | Simpler solution when equal |
+   | 4 | User decides |
+
+3. **Document decision:**
+   ```
+   Resolution: $derived (Architecture doc 04 specifies Svelte 5 patterns)
+   Decided by: Architecture compliance
+   ```
+
+### Integration with /vibe review
+
+The `/vibe review` command should:
+
+1. Spawn parallel agents (security, performance, patterns)
+2. Collect outputs in structured format
+3. Run merge protocol
+4. Display merged findings with consensus markers
+5. Allow user to: `[f] Fix blockers  [a] Accept  [d] Details`

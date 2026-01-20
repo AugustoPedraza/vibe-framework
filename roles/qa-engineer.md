@@ -21,6 +21,11 @@ When writing tests for a feature:
 
 ## Architecture References (READ FIRST)
 
+> See: `roles/_shared/architecture-refs.md` for complete architecture reference
+> See: `roles/_shared/platform-constraints.md` for PWA platform test requirements
+
+### QA-Specific References
+
 | Doc | Purpose | When |
 |-----|---------|------|
 | `{{paths.architecture}}/_guides/testing.md` | Test pyramid, coverage, E2E | **Always** |
@@ -742,3 +747,81 @@ Document all decisions in `_multi_review.md`:
 - [ ] Statement coverage >= 80%
 - [ ] Branch coverage >= 60%
 - [ ] New code has corresponding tests
+
+---
+
+## Implementation Quality Score
+
+> **Produce a numeric quality score at the end of QA Validation phase.**
+
+### Scoring Rubric
+
+| Category | Weight | Score (0-5) | Criteria |
+|----------|--------|-------------|----------|
+| **Test Coverage** | 20% | ___ | 5: >90% | 4: 80-90% | 3: 70-80% | 2: 60-70% | 1: <60% |
+| **Pattern Compliance** | 15% | ___ | 5: All patterns followed | 3: Minor deviations | 1: Major anti-patterns |
+| **UX States (4-state)** | 15% | ___ | 5: All 4 states (loading/empty/error/success) | 3: Missing 1 | 1: Missing 2+ |
+| **Accessibility** | 15% | ___ | 5: WCAG AA compliant | 3: Minor issues | 1: Major violations |
+| **Error Handling** | 15% | ___ | 5: All paths handled | 3: Happy path only | 1: Silent failures |
+| **Code Clarity** | 10% | ___ | 5: Self-documenting | 3: Some complexity | 1: Hard to follow |
+| **Performance** | 10% | ___ | 5: Optimized | 3: Adequate | 1: Known issues |
+
+### Calculation
+
+```
+Total = (TestCov × 0.20) + (Patterns × 0.15) + (UXStates × 0.15) +
+        (A11y × 0.15) + (Errors × 0.15) + (Clarity × 0.10) + (Perf × 0.10)
+```
+
+### Score Thresholds
+
+| Score | Rating | Action |
+|-------|--------|--------|
+| **4.5 - 5.0** | Excellent | Ready for PR |
+| **4.0 - 4.4** | Good | Ready with minor polish |
+| **3.0 - 3.9** | Acceptable | Address warnings before PR |
+| **< 3.0** | Needs Work | BLOCK: Fix issues before proceeding |
+
+### Score Report Format
+
+```
++---------------------------------------------------------------------+
+|  IMPLEMENTATION QUALITY SCORE                                        |
+|                                                                      |
+|  Feature: [FEATURE-ID]                                               |
+|                                                                      |
+|  | Category           | Weight | Score | Weighted |                  |
+|  |--------------------|--------|-------|----------|                  |
+|  | Test Coverage      |   20%  |  4.5  |   0.90   |                  |
+|  | Pattern Compliance |   15%  |  5.0  |   0.75   |                  |
+|  | UX States          |   15%  |  4.0  |   0.60   |                  |
+|  | Accessibility      |   15%  |  4.0  |   0.60   |                  |
+|  | Error Handling     |   15%  |  4.5  |   0.68   |                  |
+|  | Code Clarity       |   10%  |  4.0  |   0.40   |                  |
+|  | Performance        |   10%  |  4.0  |   0.40   |                  |
+|  |--------------------|--------|-------|----------|                  |
+|  | TOTAL              |  100%  |       |   4.33   |                  |
+|                                                                      |
+|  Rating: GOOD - Ready with minor polish                              |
+|                                                                      |
+|  Recommendations:                                                    |
+|  - Consider adding skeleton for initial load state                   |
+|  - Add aria-label to icon-only search button                         |
+|                                                                      |
++---------------------------------------------------------------------+
+```
+
+### When to Apply
+
+- **Always** at end of QA Validation phase (Phase 4)
+- **Optionally** during `/vibe review` for existing code
+- **Required** before creating PR
+
+### Blockers by Category
+
+| Category | Blocker Threshold |
+|----------|-------------------|
+| Test Coverage | Score < 3 (below 70%) |
+| UX States | Score < 3 (missing 2+ states) |
+| Error Handling | Score < 3 (silent failures) |
+| Accessibility | Score < 2 (WCAG violations)

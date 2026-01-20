@@ -4,19 +4,16 @@
 
 ## Architecture References (READ FIRST)
 
+> See: `roles/_shared/architecture-refs.md` for complete architecture reference
+> See: `roles/_shared/platform-constraints.md` for PWA platform limitations
+
+### Designer-Specific References
+
 | Doc | Purpose | When |
 |-----|---------|------|
 | `{{paths.architecture}}11-mobile-first.md` | **NON-NEGOTIABLE** mobile UX patterns | All UI work |
 | `{{paths.architecture}}12-mobile-ui-patterns.md` | Industry patterns (iMessage, Slack) | Feature design |
 | `{{paths.architecture}}08-app-shell.md` | Bottom tab navigation, transitions | Navigation work |
-| `{{paths.architecture}}02-responsibility-matrix.md` | Frontend ownership | Understanding boundaries |
-| `{{paths.architecture}}18-anti-patterns.md` | UX mistakes to avoid | Reviewing designs |
-| `{{paths.architecture}}19-pwa-native-experience.md` | **Pattern Catalog**: PWA patterns (form preservation, offline, gestures) | Native-like UX |
-| `{{paths.architecture}}20-motion-system.md` | **Pattern Catalog**: Motion patterns (modal, sheet, toast animations) | All animations |
-| `{{paths.architecture}}11-mobile-first.md` | **Pattern Catalog**: Mobile patterns (touch targets, swipe, haptics) | Mobile UX |
-| `{{paths.architecture}}/_patterns/native-mobile.md` | **Pattern Catalog**: Native-like PWA (camera, uploads, platform limits) | Native features |
-| `{{paths.architecture}}/_guides/ux-design-philosophy.md` | **UX Philosophy**: WHY behind UX decisions | All design decisions |
-| `{{paths.architecture}}/_guides/component-intent.md` | **Component Intent**: WHEN to use each component | Component selection |
 | `{{paths.architecture}}/_guides/wireframe-patterns.md` | **Wireframe Patterns**: Screen templates | Layout design |
 
 ---

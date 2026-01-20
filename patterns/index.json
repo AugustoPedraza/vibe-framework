@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "version": "1.0.0",
+  "description": "Semantic pattern index for AI-assisted retrieval",
+  "last_updated": "2026-01-20",
+  "patterns": [
+    {
+      "id": "async-result-extraction",
+      "name": "AsyncResult Status Extraction",
+      "path": "backend/async-result-extraction.md",
+      "category": "backend",
+      "tags": ["elixir", "phoenix", "liveview", "assign_async"],
+      "triggers": ["AsyncResult", "loading state", "assign_async", "status extraction"],
+      "problem_keywords": ["async states", "loading/error/success", "pattern matching", "LiveView assigns"],
+      "solution_summary": "Pattern matching function to extract status and data from Phoenix LiveView AsyncResult structs",
+      "reusability_score": 6,
+      "related": ["liveview-navigation"],
+      "usage_stats": {
+        "times_used": 1,
+        "success_rate": 1.0,
+        "feedback": ["Discovered in Syna / HOME-001"]
+      }
+    },
+    {
+      "id": "liveview-navigation",
+      "name": "LiveView Navigation with Direction Tracking",
+      "path": "frontend/liveview-navigation.md",
+      "category": "frontend",
+      "tags": ["phoenix", "liveview", "livesvelte", "svelte", "typescript", "pwa"],
+      "triggers": ["live navigation", "pushHistoryPatch", "WebSocket navigation", "SPA navigation"],
+      "problem_keywords": ["page reload", "WebSocket disconnect", "navigation direction", "history patch"],
+      "solution_summary": "Navigation utility using LiveView pushHistoryPatch for WebSocket-based SPA navigation with direction tracking",
+      "reusability_score": 6,
+      "related": ["directional-transitions", "async-result-extraction"],
+      "usage_stats": {
+        "times_used": 1,
+        "success_rate": 1.0,
+        "feedback": ["Discovered in Syna / HOME-001"]
+      }
+    },
+    {
+      "id": "directional-transitions",
+      "name": "Directional Screen Transitions",
+      "path": "ux/directional-transitions.md",
+      "category": "ux",
+      "tags": ["css", "svelte", "typescript", "pwa", "accessibility"],
+      "triggers": ["page transition", "screen animation", "forward/back", "navigation animation"],
+      "problem_keywords": ["abrupt transitions", "spatial context", "native app feel", "slide animation"],
+      "solution_summary": "CSS animations coordinated with sessionStorage direction tracking for native-like forward/back navigation transitions",
+      "reusability_score": 5,
+      "related": ["liveview-navigation"],
+      "usage_stats": {
+        "times_used": 1,
+        "success_rate": 1.0,
+        "feedback": ["Discovered in Syna / HOME-001"]
+      }
+    }
+  ],
+  "categories": {
+    "backend": {
+      "description": "Elixir/Phoenix/Ash patterns",
+      "path": "backend/"
+    },
+    "frontend": {
+      "description": "Svelte/TypeScript/LiveSvelte patterns",
+      "path": "frontend/"
+    },
+    "ux": {
+      "description": "User experience, animations, interactions",
+      "path": "ux/"
+    },
+    "pwa": {
+      "description": "Progressive Web App patterns",
+      "path": "pwa/"
+    }
+  },
+  "retrieval_guide": {
+    "description": "How AI should use this index for pattern retrieval",
+    "steps": [
+      "1. Parse user request for keywords matching 'triggers' or 'problem_keywords'",
+      "2. Filter patterns by relevant 'category' and 'tags'",
+      "3. Rank by 'reusability_score' (higher = more broadly applicable)",
+      "4. Check 'related' patterns for complementary solutions",
+      "5. Consider 'usage_stats.success_rate' for proven patterns"
+    ],
+    "score_thresholds": {
+      "high": 5,
+      "medium": 3,
+      "low": 1
+    }
+  }
+}

@@ -186,31 +186,78 @@ Use single-agent review when:
 - User explicitly requests single review
 - Only one concern area (e.g., `--security` flag only)
 
-### Parallel Review Output
+### Parallel Review Output (with Consensus Markers)
 
 ```
 +---------------------------------------------------------------------+
 |  PARALLEL REVIEW COMPLETE                                            |
 |                                                                      |
-|  Agents: 3 completed                                                 |
-|  Files reviewed: [count]                                             |
+|  Agents: 3 | Files: [count] | Findings: [total]                      |
 |                                                                      |
-|  SECURITY AGENT:                                                     |
-|  ! [file:line] Unvalidated user input                                |
+|  MERGED FINDINGS (deduplicated, prioritized):                        |
 |                                                                      |
-|  PERFORMANCE AGENT:                                                  |
-|  ~ [file:line] Potential N+1 query                                   |
+|  BLOCKERS (must fix):                                                |
+|  [AGREED] ! auth.ex:45                                               |
+|    Security + Pattern: Unvalidated user input                        |
+|    Confidence: 0.95 | Agents: 2/3                                    |
 |                                                                      |
-|  PATTERN AGENT:                                                      |
-|  ~ [file:line] Raw color instead of design token                     |
+|  WARNINGS (should fix):                                              |
+|  [MAJORITY] ~ query.ex:78                                            |
+|    Performance: Potential N+1 query                                  |
+|    Confidence: 0.80 | Agents: 2/3                                    |
 |                                                                      |
-|  MERGED BLOCKERS: 1                                                  |
-|  MERGED WARNINGS: 2                                                  |
-|  MERGED SUGGESTIONS: 0                                               |
+|  [SINGLE] ~ form.svelte:112                                          |
+|    Pattern: Raw color (bg-blue-500 → bg-primary)                     |
+|    Confidence: 0.90 | Agents: 1/3                                    |
+|                                                                      |
+|  SUGGESTIONS (consider):                                             |
+|  [SINGLE] ? utils.ts:25                                              |
+|    Syntax: Use optional chaining                                     |
+|                                                                      |
+|  CONSENSUS SUMMARY:                                                  |
+|  [AGREED]: 1 | [MAJORITY]: 1 | [SINGLE]: 2 | [DISPUTED]: 0           |
 |                                                                      |
 |  [f] Fix blockers  [a] Accept with warnings  [d] Details             |
 +---------------------------------------------------------------------+
 ```
+
+### Consensus Markers
+
+| Marker | Meaning | Weight |
+|--------|---------|--------|
+| `[AGREED]` | All agents agree | High confidence |
+| `[MAJORITY]` | Most agents agree (2/3) | Medium confidence |
+| `[SINGLE]` | One agent flagged | Lower confidence |
+| `[DISPUTED]` | Agents disagree | Requires user decision |
+
+### Dispute Resolution
+
+When `[DISPUTED]` findings exist:
+
+```
++---------------------------------------------------------------------+
+|  DISPUTED FINDING                                                    |
+|                                                                      |
+|  Location: store.ts:50                                               |
+|                                                                      |
+|  Agent A (Performance):                                              |
+|    Use $derived for computed value                                   |
+|    Reason: Reduces re-computation                                    |
+|                                                                      |
+|  Agent B (Research):                                                 |
+|    Use external store                                                |
+|    Reason: Industry pattern for shared state                         |
+|                                                                      |
+|  Architecture check: 04-frontend-components.md                       |
+|  → Specifies: Use Svelte 5 $derived for computed values              |
+|                                                                      |
+|  Resolution: $derived (Architecture compliance)                      |
+|                                                                      |
+|  [a] Accept resolution  [o] Override  [s] Skip                       |
++---------------------------------------------------------------------+
+```
+
+See: `roles/multi-agent-liaison.md` for full Agent Coordination Protocol
 
 ---
 

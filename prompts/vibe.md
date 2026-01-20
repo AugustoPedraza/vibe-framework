@@ -92,6 +92,33 @@ Do:
 - `{{paths.architecture}}/_anti-patterns/` - What NOT to do
 - `~/.claude/vibe-ash-svelte/patterns/` - Reusable patterns
 
+### Pattern Retrieval (RAG-Lite)
+
+**Before implementation, query the pattern index:**
+
+1. Read `~/.claude/vibe-ash-svelte/patterns/index.json`
+2. Match feature requirements against pattern `triggers` and `problem_keywords`
+3. Suggest relevant patterns by `reusability_score` (5+ = highly recommended)
+4. Check `related` patterns for complementary solutions
+5. Note `usage_stats.success_rate` for proven patterns
+
+**Display suggested patterns:**
+```
++---------------------------------------------------------------------+
+|  RELEVANT PATTERNS FOUND                                             |
+|                                                                      |
+|  1. [BACKEND] AsyncResult Status Extraction (score: 6)               |
+|     Triggers: assign_async, loading state                            |
+|     Path: patterns/backend/async-result-extraction.md                |
+|                                                                      |
+|  2. [UX] Directional Screen Transitions (score: 5)                   |
+|     Triggers: page transition, navigation animation                  |
+|     Path: patterns/ux/directional-transitions.md                     |
+|                                                                      |
+|  [r] Read pattern  [s] Skip  [a] Apply all                           |
++---------------------------------------------------------------------+
+```
+
 ---
 
 ## Project Validation (REQUIRED - Session Start)
@@ -160,6 +187,92 @@ Which option?
 
 After successful validation, note that validation passed for this session.
 Do NOT re-validate on subsequent /vibe commands in the same conversation.
+
+---
+
+## Checkpoint Persistence (Session Continuity)
+
+> Save implementation state to resume across sessions.
+
+### Checkpoint Location
+
+```
+{project}/.claude/checkpoints/{FEATURE-ID}.json
+```
+
+### When to Save Checkpoint
+
+Save checkpoint automatically:
+- After each phase completes (QA, Designer, Developer scenarios)
+- When encountering a blocker
+- Before suggesting `/clear`
+- At each CHECKPOINT prompt
+
+### Checkpoint Save
+
+```json
+{
+  "feature_id": "AUTH-001",
+  "current_phase": "developer",
+  "current_scenario": 2,
+  "total_scenarios": 3,
+  "phases_completed": {...},
+  "files_modified": [...],
+  "patterns_used": [...],
+  "updated_at": "ISO-8601"
+}
+```
+
+See: `templates/checkpoint-schema.json` for full schema
+
+### Resume Flow
+
+On `/vibe [FEATURE-ID]`, check for existing checkpoint:
+
+```
++---------------------------------------------------------------------+
+|  CHECKPOINT FOUND                                                    |
+|                                                                      |
+|  Feature: AUTH-001 - User Login                                      |
+|  Last Phase: Developer (Scenario 2 of 3)                             |
+|  Last Updated: 2026-01-20 11:15:00                                   |
+|                                                                      |
+|  Files Modified:                                                     |
+|    - lib/accounts/resources/user.ex (created)                        |
+|    - components/features/auth/LoginForm.svelte (created)             |
+|                                                                      |
+|  Tests: 4 passing, 1 failing                                         |
+|  Patterns Used: async-result-extraction                              |
+|                                                                      |
+|  [r] Resume from checkpoint                                          |
+|  [s] Start fresh (overwrites checkpoint)                             |
+|  [v] View checkpoint details                                         |
++---------------------------------------------------------------------+
+```
+
+### Resume Actions by Phase
+
+| Phase | Resume Action |
+|-------|---------------|
+| QA Test Gen | Re-display test stubs, proceed to Designer |
+| Designer | Re-display handoff, proceed to Readiness Gate |
+| Developer (mid) | Load scenario N, run test, continue TDD cycle |
+| QA Validation | Re-run tests, recalculate quality score |
+
+### Checkpoint Cleanup
+
+Delete checkpoint when:
+- Feature completes successfully (PR created)
+- User explicitly starts fresh
+- Feature is abandoned (manual delete)
+
+### Display in Status
+
+```
+Current Feature: AUTH-001
+  Phase: Developer (Scenario 2 of 3)
+  Checkpoint: .claude/checkpoints/AUTH-001.json (saved 5 min ago)
+```
 
 ---
 
@@ -249,7 +362,17 @@ Display when switching roles:
    - [ ] Offline behavior test (if PWA)
    - [ ] Accessibility (aria-labels, focus management)
 6. Generate test stubs
-7. **CHECKPOINT** - Wait for Enter
+7. **Generate QA → Designer Handoff** (structured JSON)
+   ```json
+   {
+     "feature_id": "[ID]",
+     "scenarios": [...],
+     "ux_requirements": { "loading": true, "error": true, "empty": true, "success": true },
+     "e2e_required": true/false
+   }
+   ```
+   See: `templates/handoffs/qa-to-designer.json` for full schema
+8. **CHECKPOINT** - Wait for Enter
 
 ### Phase 2: Designer (UX Verification)
 
@@ -269,7 +392,18 @@ Display when switching roles:
    - [ ] Touch targets >= 44px
    - [ ] Loading/error/empty states specified
    - [ ] Haptic feedback points identified (if mobile)
-6. **CHECKPOINT** - Wait for Enter
+6. **Generate Designer → Developer Handoff** (structured JSON)
+   ```json
+   {
+     "feature_id": "[ID]",
+     "components": [{"name": "...", "type": "new|existing|modify"}],
+     "ui_states": ["loading", "error", "empty", "success"],
+     "patterns_suggested": ["pattern-id-from-index"],
+     "design_tokens": { "colors": [...], "spacing": [...], "motion": [...] }
+   }
+   ```
+   See: `templates/handoffs/designer-to-developer.json` for full schema
+7. **CHECKPOINT** - Wait for Enter
 
 ### Readiness Gate (HARD BLOCK)
 
@@ -358,10 +492,15 @@ Repeat for all scenarios.
    - [ ] No raw colors (design tokens only)
    - [ ] No hardcoded z-index
    - [ ] PWA manifest valid (if PWA)
-6. If all pass -> Offer to create PR
-7. **CHECKPOINT** - Wait for Enter
-8. Create PR with scenario checklist
-9. Offer retro: "Quick retro? [Enter] Yes [s] Skip"
+6. **Calculate Implementation Quality Score** (see `qa-engineer.md`)
+   - Score each category (0-5): Test Coverage, Pattern Compliance, UX States, Accessibility, Error Handling, Code Clarity, Performance
+   - Apply weights and calculate total
+   - Display score report with recommendations
+   - **BLOCK if score < 3.0** - return to Developer phase
+7. If score >= 3.0 -> Offer to create PR
+8. **CHECKPOINT** - Wait for Enter
+9. Create PR with scenario checklist + quality score
+10. Offer retro: "Quick retro? [Enter] Yes [s] Skip"
 
 **E2E HARD BLOCK:** If feature is a critical path (auth, payment, real-time) and E2E tests don't exist or fail, do NOT proceed to PR. Go back and add E2E tests.
 
@@ -483,6 +622,79 @@ This looks like a [bug fix]. Use quick workflow? [Y/n]
 - Use Explore agent for codebase questions (fresher context)
 - Batch related edits in single phase
 - Don't re-read architecture docs if already loaded this session
+
+---
+
+## Context Load Monitoring
+
+> Track and display context usage to optimize /clear timing.
+
+### Context Load by Phase
+
+| Phase | Typical Load | Primary Files |
+|-------|-------------|---------------|
+| QA Engineer | ~15% | Feature spec, QA role, test guide |
+| Designer | ~20% | Feature spec, Designer role, checklists, wireframe patterns |
+| Developer | ~35% | Feature spec, Dev role, patterns, architecture refs |
+| QA Validation | ~25% | Test results, QA role, quality checklist |
+| Retro | ~20% | Learnings, pattern index, implementation files |
+
+### Context Indicators
+
+Display with `/vibe status`:
+
+| Indicator | Load % | Meaning |
+|-----------|--------|---------|
+| `[LIGHT]` | 0-25% | Plenty of room |
+| `[MODERATE]` | 26-50% | Normal operation |
+| `[HEAVY]` | 51-75% | Consider clearing before next feature |
+| `[CRITICAL]` | 76-100% | Clear after current task |
+
+### Automatic /clear Recommendations
+
+Display `/clear` suggestion when:
+
+| Condition | Recommendation |
+|-----------|----------------|
+| After completing feature | **Always** - "Run /clear before starting next feature" |
+| Before different feature type | **Suggest** - "Different feature type, /clear recommended" |
+| After 3+ iterations on same issue | **Suggest** - "Multiple iterations, context may be stale" |
+| Load indicator is CRITICAL | **Warn** - "Context load critical, /clear after this task" |
+| After sprint planning | **Always** - "Planning complete, /clear before implementation" |
+
+### Context Load Estimation
+
+Estimate context load based on files read this session:
+
+```
+Base Load:
+  + Role file loaded: +5%
+  + Feature spec read: +3%
+  + Architecture doc: +2-5% (varies by size)
+  + Pattern file: +2%
+  + Code file read: +1-3%
+
+Multipliers:
+  × File re-reads: × 0.5 (cached)
+  × Large files (>500 lines): × 1.5
+```
+
+### Display Format (in checkpoints)
+
+```
++---------------------------------------------------------------------+
+|  [PHASE] COMPLETE                                                    |
+|                                                                      |
+|  Context Load: [MODERATE] ~35%                                       |
+|  Files loaded this session: 12                                       |
+|                                                                      |
+|  [Summary of what was done]                                          |
+|                                                                      |
+|  Next: [What's coming]                                               |
+|                                                                      |
+|  Press Enter to continue...                                          |
++---------------------------------------------------------------------+
+```
 
 ### When to Recommend Context Clear
 

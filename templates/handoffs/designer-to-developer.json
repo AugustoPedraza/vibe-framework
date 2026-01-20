@@ -1,0 +1,182 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Designer to Developer Handoff",
+  "description": "Structured data passed from Designer phase to Developer phase",
+  "type": "object",
+  "required": ["feature_id", "components", "ui_states"],
+  "properties": {
+    "feature_id": {
+      "type": "string",
+      "description": "Feature identifier (e.g., AUTH-001)",
+      "pattern": "^[A-Z]+-[0-9]+$"
+    },
+    "components": {
+      "type": "array",
+      "description": "Components to be implemented or used",
+      "items": {
+        "type": "object",
+        "required": ["name", "type"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Component name (e.g., 'LoginForm')"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["existing", "new", "modify"],
+            "description": "Whether to use existing, create new, or modify"
+          },
+          "path": {
+            "type": "string",
+            "description": "Path for existing/modified components"
+          },
+          "props": {
+            "type": "array",
+            "description": "Props the component should accept",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "type": { "type": "string" },
+                "required": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ui_states": {
+      "type": "array",
+      "description": "UI states to implement",
+      "items": {
+        "type": "string",
+        "enum": ["loading", "error", "empty", "success", "offline", "disabled"]
+      }
+    },
+    "patterns_suggested": {
+      "type": "array",
+      "description": "Patterns from index.json recommended for this feature",
+      "items": {
+        "type": "string",
+        "description": "Pattern ID from patterns/index.json"
+      }
+    },
+    "design_tokens": {
+      "type": "object",
+      "description": "Specific design tokens to use",
+      "properties": {
+        "colors": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Color tokens (e.g., 'primary', 'error')"
+        },
+        "spacing": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Spacing tokens (e.g., 'p-4', 'gap-6')"
+        },
+        "motion": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Motion presets (e.g., 'motion.modal', 'motion.toast')"
+        }
+      }
+    },
+    "interactions": {
+      "type": "array",
+      "description": "User interactions to implement",
+      "items": {
+        "type": "object",
+        "properties": {
+          "trigger": {
+            "type": "string",
+            "description": "What triggers the interaction (tap, swipe, long-press)"
+          },
+          "action": {
+            "type": "string",
+            "description": "What should happen"
+          },
+          "feedback": {
+            "type": "string",
+            "description": "User feedback (haptic, visual, audio)"
+          }
+        }
+      }
+    },
+    "wireframe_reference": {
+      "type": "string",
+      "description": "Path to wireframe or description reference"
+    },
+    "accessibility": {
+      "type": "object",
+      "description": "Accessibility requirements",
+      "properties": {
+        "aria_labels": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "focus_order": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "keyboard_shortcuts": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "responsive_breakpoints": {
+      "type": "array",
+      "description": "Breakpoints with specific behavior",
+      "items": {
+        "type": "object",
+        "properties": {
+          "breakpoint": { "type": "string" },
+          "behavior": { "type": "string" }
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional context for Developer"
+    }
+  },
+  "example": {
+    "feature_id": "AUTH-001",
+    "components": [
+      {
+        "name": "LoginForm",
+        "type": "new",
+        "path": "components/features/auth/LoginForm.svelte",
+        "props": [
+          { "name": "onSuccess", "type": "() => void", "required": true },
+          { "name": "onError", "type": "(error: string) => void", "required": false }
+        ]
+      },
+      {
+        "name": "Button",
+        "type": "existing",
+        "path": "$lib/components/ui/Button.svelte"
+      }
+    ],
+    "ui_states": ["loading", "error", "success"],
+    "patterns_suggested": ["async-result-extraction"],
+    "design_tokens": {
+      "colors": ["primary", "error", "muted"],
+      "spacing": ["p-4", "gap-4", "mt-6"],
+      "motion": ["motion.modal.enter", "motion.modal.exit"]
+    },
+    "interactions": [
+      {
+        "trigger": "tap submit button",
+        "action": "validate and submit form",
+        "feedback": "button shows loading spinner"
+      }
+    ],
+    "accessibility": {
+      "aria_labels": ["Email input", "Password input", "Submit button"],
+      "focus_order": ["email", "password", "forgot-password", "submit"]
+    },
+    "notes": "Form should preserve input on validation error. Use inline error messages, not toasts."
+  }
+}

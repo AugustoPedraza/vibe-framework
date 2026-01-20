@@ -6,7 +6,7 @@
 
 ## Extended Thinking Triggers
 
-Use these phrases for complex decisions:
+> See: `roles/_shared/thinking-triggers.md` for full reference
 
 | Phrase | When to Use |
 |--------|-------------|
@@ -15,11 +15,11 @@ Use these phrases for complex decisions:
 | `think harder` | Complex refactoring, architecture decisions |
 | `ultrathink` | Bootstrap patterns, foundational code that will be copied |
 
-**Example**: "Before implementing this bootstrap feature, `think harder` about the patterns we're establishing."
-
 ---
 
 ## Architecture References (READ FIRST)
+
+> See: `roles/_shared/architecture-refs.md` for complete reference
 
 Before implementing any feature, read these docs:
 

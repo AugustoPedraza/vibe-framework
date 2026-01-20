@@ -97,6 +97,83 @@ If user reviews:
   - `[k]` Keep in sprint
   - `[d]` Delete (remove completely)
 
+## Step 2.7: Pattern Usage Feedback
+
+> Collect feedback on patterns used during implementation to improve pattern index.
+
+If patterns were used this session (from checkpoint or handoffs):
+
+```
++---------------------------------------------------------------------+
+|  PATTERN USAGE FEEDBACK                                              |
+|                                                                      |
+|  Patterns used this session:                                         |
+|                                                                      |
+|  1. async-result-extraction                                          |
+|     Used in: lib/syna_web/live/home_live.ex                          |
+|     How well did it work?                                            |
+|       [5] Perfect - no adaptation needed                             |
+|       [4] Good - minor tweaks                                        |
+|       [3] OK - needed some adaptation                                |
+|       [2] Rough - significant changes required                       |
+|       [1] Poor - didn't really apply                                 |
+|     Feedback (optional): _______________                             |
+|                                                                      |
+|  2. liveview-navigation                                              |
+|     Used in: assets/lib/utils/navigation.ts                          |
+|     How well did it work? [1-5]: ___                                 |
+|     Feedback (optional): _______________                             |
+|                                                                      |
+|  [s] Skip feedback                                                   |
++---------------------------------------------------------------------+
+```
+
+### Update Pattern Index with Feedback
+
+For each pattern with feedback:
+
+1. **Read current stats** from `patterns/index.json`
+2. **Update usage_stats**:
+   ```json
+   "usage_stats": {
+     "times_used": previous + 1,
+     "success_rate": weighted_average(previous_rate, new_score/5),
+     "feedback": [...previous, "new feedback text"]
+   }
+   ```
+3. **Write updated index**
+
+### Success Rate Calculation
+
+```
+new_success_rate = (previous_rate × previous_uses + (score/5)) / (previous_uses + 1)
+```
+
+Example:
+- Previous: 80% success rate, used 4 times
+- New feedback: score 4 (80%)
+- New rate: (0.8 × 4 + 0.8) / 5 = 0.8 (80%)
+
+### Low Success Rate Alert
+
+If pattern success_rate drops below 0.6 (60%):
+
+```
+⚠️  Pattern "async-result-extraction" has low success rate (55%)
+
+Recent feedback:
+  - "Needed heavy adaptation for list items"
+  - "Pattern didn't fit pagination scenario"
+
+Consider:
+  [1] Review and update pattern
+  [2] Add variant for different use cases
+  [3] Mark as deprecated
+  [4] Keep as-is for now
+```
+
+---
+
 ## Step 3: Apply Changes
 
 ### Documentation Improvements
@@ -169,13 +246,38 @@ Date: [Date]
    - Use Pattern File Template above
    - Replace domain-specific terms with generic names
 
-2. **Update patterns index**
+2. **Update pattern index (index.json)**
+   - Read `~/.claude/vibe-ash-svelte/patterns/index.json`
+   - Add new pattern entry with:
+     ```json
+     {
+       "id": "{pattern-name}",
+       "name": "{Pattern Title}",
+       "path": "{category}/{pattern-name}.md",
+       "category": "{category}",
+       "tags": ["tag1", "tag2"],
+       "triggers": ["keyword1", "keyword2"],
+       "problem_keywords": ["problem1", "problem2"],
+       "solution_summary": "Brief description of what the pattern does",
+       "reusability_score": {calculated_score},
+       "related": ["{related-pattern-ids}"],
+       "usage_stats": {
+         "times_used": 1,
+         "success_rate": 1.0,
+         "feedback": ["Discovered in {Project} / {Feature-ID}"]
+       }
+     }
+     ```
+   - Update `last_updated` timestamp
+
+3. **Update patterns README**
    - Edit `~/.claude/vibe-ash-svelte/patterns/README.md`
    - Add entry to appropriate category table
 
-3. **Remind user to commit**
+4. **Remind user to commit**
    ```
    Pattern extracted: patterns/{category}/{pattern-name}.md
+   Index updated: patterns/index.json
 
    To share with other projects:
      cd ~/.claude/vibe-ash-svelte

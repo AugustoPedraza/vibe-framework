@@ -6,14 +6,16 @@
 
 ## Architecture References
 
+> See: `roles/_shared/architecture-refs.md` for complete reference
+> See: `roles/_shared/platform-constraints.md` for PWA platform limitations
+
+### PM-Specific References
+
 | Doc | Purpose | When |
 |-----|---------|------|
-| `{{paths.architecture}}/01-quick-reference.md` | Core decisions | Understanding constraints |
-| `{{paths.architecture}}/02-responsibility-matrix.md` | Frontend vs backend ownership | Task splitting |
 | `{{paths.domain}}/index.md` | Sprint overview & KPIs | Sprint planning |
 | `{{paths.domain}}/GLOSSARY.md` | Domain terms | Issue writing |
-| `{{paths.architecture}}/_patterns/native-mobile.md` | Platform constraints | Native feature scoping |
-| `{{paths.architecture}}/_guides/ux-design-philosophy.md` | UX principles (thumb zone, complexity limits) | Writing feature specs |
+| `{{paths.architecture}}/_guides/ux-design-philosophy.md` | UX principles | Writing feature specs |
 
 ---
 

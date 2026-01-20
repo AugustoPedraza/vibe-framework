@@ -8,6 +8,7 @@
 +======================================================================+
 |  VIBE STATUS                                                         |
 |  Project: {{project.name}}                                           |
+|  Context: [MODERATE] ~40%                                            |
 +======================================================================+
 
 Current Sprint: [sprint-name]
@@ -20,6 +21,12 @@ Features:
 Current Feature: AUTH-002
   Phase: Developer (Scenario 2 of 3)
   Tests: 2 passing, 1 failing
+
+Context Load:
+  Files loaded: 15
+  Roles active: developer, qa-engineer
+  Patterns referenced: 2
+  ⚠️  Recommendation: Clear after completing this feature
 
 Recent Activity:
   * Completed LoginForm component
@@ -55,3 +62,30 @@ Read from:
 | `[>]` | In progress |
 | `[ ]` | Pending |
 | `[!]` | Blocked |
+
+## Context Load Indicators
+
+| Indicator | Load % | Action |
+|-----------|--------|--------|
+| `[LIGHT]` | 0-25% | Continue normally |
+| `[MODERATE]` | 26-50% | Normal operation |
+| `[HEAVY]` | 51-75% | Plan /clear after feature |
+| `[CRITICAL]` | 76-100% | /clear after current task |
+
+### Context Load Calculation
+
+Estimate based on session activity:
+- Each role loaded: +5%
+- Each feature spec: +3%
+- Each architecture doc: +2-5%
+- Each pattern: +2%
+- Each code file: +1-3%
+- Re-reads: ×0.5 (cached)
+
+### Clear Recommendations
+
+Show recommendation when:
+- Load is HEAVY or CRITICAL
+- Feature just completed
+- Multiple iterations on same issue
+- Before starting different feature type
