@@ -58,13 +58,13 @@ When implementing a feature:
 
 | Pattern | Description | Tags |
 |---------|-------------|------|
-| (none yet) | Patterns will appear here after retrospectives | - |
+| [async-result-extraction](backend/async-result-extraction.md) | Safely extract status from assign_async results | `elixir` `liveview` |
 
 ### Frontend Patterns
 
 | Pattern | Description | Tags |
 |---------|-------------|------|
-| (none yet) | Patterns will appear here after retrospectives | - |
+| [liveview-navigation](frontend/liveview-navigation.md) | App-like navigation with LiveView WebSocket | `liveview` `svelte` `pwa` |
 
 ### PWA Patterns
 
@@ -76,7 +76,7 @@ When implementing a feature:
 
 | Pattern | Description | Tags |
 |---------|-------------|------|
-| (none yet) | Patterns will appear here after retrospectives | - |
+| [directional-transitions](ux/directional-transitions.md) | Direction-aware screen animations | `css` `pwa` `a11y` |
 
 ---
 
