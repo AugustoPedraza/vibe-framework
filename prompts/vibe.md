@@ -417,11 +417,11 @@ Display when switching roles:
 
 **Trigger:** `/vibe [FEATURE-ID]`
 
-### Phase 1: QA Engineer (Test Generation)
+### Phase 1: QA Engineer (Test-First Development)
 
 ```
 +======================================================================+
-|  QA ENGINEER PHASE                                                   |
+|  QA ENGINEER PHASE - WRITING ACTUAL TESTS                            |
 |  Feature: [ID] - [Title]                                             |
 +======================================================================+
 ```
@@ -436,18 +436,32 @@ Display when switching roles:
    - [ ] Empty state test
    - [ ] Offline behavior test (if PWA)
    - [ ] Accessibility (aria-labels, focus management)
-6. Generate test stubs
-7. **Generate QA → Designer Handoff** (structured JSON)
+6. **WRITE ACTUAL TEST FILES** (TDD - Tests First):
+   - Backend: Write ExUnit tests in `test/` directory
+   - Frontend: Write Vitest tests in `assets/svelte/**/*.test.ts`
+   - E2E (if required): Write Playwright tests in `assets/tests/e2e/`
+   - **Tests MUST be executable and initially FAILING**
+7. **RUN TESTS** to verify they fail (RED state):
+   ```bash
+   mix test test/path/to/feature_test.exs  # Backend
+   cd assets && npm test -- --run           # Frontend
+   cd assets && npx playwright test         # E2E
+   ```
+   Display test output showing failures
+8. **Generate QA → Designer Handoff** (structured JSON)
    ```json
    {
      "feature_id": "[ID]",
      "scenarios": [...],
+     "test_files_created": ["test/...", "assets/..."],
+     "tests_failing": 5,
      "ux_requirements": { "loading": true, "error": true, "empty": true, "success": true },
      "e2e_required": true/false
    }
    ```
    See: `templates/handoffs/qa-to-designer.json` for full schema
-8. **CHECKPOINT** - Wait for Enter
+9. **HARD BLOCK if no tests written** - Cannot proceed without executable tests
+10. **CHECKPOINT** - Wait for Enter
 
 ### Phase 2: Designer (UX Verification)
 
@@ -517,18 +531,22 @@ Options:
 
 **Do NOT proceed to Developer phase until all checks pass.**
 
-### Phase 3: Developer (Implementation)
+### Phase 3: Developer (TDD Implementation)
 
 ```
 +======================================================================+
-|  DEVELOPER PHASE                                                     |
+|  DEVELOPER PHASE - TDD CYCLE                                         |
 |  Implementing: [ID] - [Scenario Name]                                |
 +======================================================================+
 ```
 
 For EACH scenario:
 1. Load role: `~/.claude/vibe-ash-svelte/roles/developer.md`
-2. Run test -> Show **RED** failure
+2. **RUN TEST** - Execute the specific test file written in QA phase:
+   ```bash
+   mix test test/path/to/feature_test.exs --seed 0
+   ```
+   **Show RED failure output** - If test doesn't exist or doesn't fail, STOP.
 3. Propose implementation approach
 4. **Implement incrementally** (only what this scenario needs)
 5. **UX Implementation Checklist:**
@@ -537,9 +555,20 @@ For EACH scenario:
    - [ ] Safe area insets respected
    - [ ] Animation uses motion tokens
    - [ ] `prefers-reduced-motion` respected
-6. Run test -> Show **GREEN** pass
-7. **CHECKPOINT** - Wait for Enter
+6. **RUN TEST AGAIN** - Execute same test:
+   ```bash
+   mix test test/path/to/feature_test.exs --seed 0
+   ```
+   **Show GREEN pass output** - If test still fails, iterate on implementation
+7. **RUN FULL TEST SUITE** to check for regressions:
+   ```bash
+   mix test
+   ```
+8. **CHECKPOINT** - Wait for Enter
+   - Display: Tests before (X failing) → Tests after (all passing)
    - For **bootstrap features**, show "Patterns Established" summary
+
+**HARD BLOCK**: If tests don't pass, cannot proceed to next scenario.
 
 **YAGNI Reminder**: If you're creating something the current scenario doesn't test, STOP.
 
@@ -554,30 +583,67 @@ Repeat for all scenarios.
 +======================================================================+
 ```
 
-1. Run unit tests -> Show results
-2. Run integration tests -> Show results
+1. **RUN ALL TESTS** - Execute complete test suites:
+   ```bash
+   # Backend tests
+   mix test
+
+   # Frontend tests
+   cd assets && npm test -- --run
+
+   # E2E tests (if applicable)
+   cd assets && npx playwright test
+   ```
+   **Display actual test output** - Show pass/fail counts and any failures
+
+2. **TEST COVERAGE REPORT**:
+   ```bash
+   mix test --cover
+   cd assets && npm test -- --coverage --run
+   ```
+   Display coverage percentages for new code
+
 3. **E2E Verification (MANDATORY for critical paths):**
    - [ ] Check if feature requires E2E (see QA role checklist)
    - [ ] If E2E required: tests exist in `assets/tests/e2e/`
    - [ ] If E2E required: run `npx playwright test` -> Show results
    - [ ] E2E covers: login/logout, cross-page nav, real-time, payments
-4. Run quality checks -> Show results
+
+4. **Run quality checks**:
+   ```bash
+   just check  # Format + Credo + Dialyzer + Sobelow
+   cd assets && npm run verify  # Lint + type check
+   ```
+   Show results
+
 5. **UX Verification:**
    - [ ] Component lint passes
    - [ ] No raw colors (design tokens only)
    - [ ] No hardcoded z-index
    - [ ] PWA manifest valid (if PWA)
-6. **Calculate Implementation Quality Score** (see `qa-engineer.md`)
+
+6. **HARD BLOCK CONDITIONS** (Cannot proceed if ANY fail):
+   - [ ] All tests pass (0 failures)
+   - [ ] No new test files were deleted or skipped
+   - [ ] Coverage on new code >= 80%
+   - [ ] `just check` passes
+
+7. **Calculate Implementation Quality Score** (see `qa-engineer.md`)
    - Score each category (0-5): Test Coverage, Pattern Compliance, UX States, Accessibility, Error Handling, Code Clarity, Performance
    - Apply weights and calculate total
    - Display score report with recommendations
    - **BLOCK if score < 3.0** - return to Developer phase
-7. If score >= 3.0 -> Offer to create PR
-8. **CHECKPOINT** - Wait for Enter
-9. Create PR with scenario checklist + quality score
-10. Offer post-completion options:
+
+8. If score >= 3.0 -> Offer to create PR
+9. **CHECKPOINT** - Wait for Enter
+10. Create PR with scenario checklist + quality score + test results summary
+11. Offer post-completion options:
     ```
     Feature implementation complete!
+
+    Tests: X passing, 0 failing
+    Coverage: XX% (new code)
+    Quality Score: X.X/5.0
 
     [p] Create PR
     [a] Archive feature (merge deltas to specs)

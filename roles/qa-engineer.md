@@ -1,6 +1,24 @@
 # QA Engineer Role
 
-> Focus: Testing strategy, quality assurance, consistency, and maintainability.
+> Focus: **Writing actual executable tests**, quality assurance, consistency, and maintainability.
+
+---
+
+## CRITICAL: Write Tests, Don't Just Document
+
+> **QA Phase MUST produce executable test files, not just test requirements.**
+
+The QA phase is NOT about:
+- ❌ Listing what tests are needed
+- ❌ Describing test scenarios in documentation
+- ❌ Creating test "stubs" that are empty
+
+The QA phase IS about:
+- ✅ Writing actual test files with real assertions
+- ✅ Running tests to verify they FAIL (RED state)
+- ✅ Ensuring tests are executable by the Developer phase
+
+**If you haven't written a test file and run it, you haven't done TDD.**
 
 ---
 
@@ -12,8 +30,9 @@ When writing tests for a feature:
 
 1. **Read the feature spec first** - `{{paths.features}}/{area}/{ID}.md`
 2. **Each scenario = one test (or test group)** - Map Given/When/Then -> AAA
-3. **Test only what exists** - Don't write tests for unimplemented code
-4. **Infrastructure tests come from features** - Tests appear when features need them
+3. **WRITE the test file** - Not just document it
+4. **RUN the test** - Verify it fails (RED)
+5. **Infrastructure tests come from features** - Tests appear when features need them
 
 **YAGNI for Tests**: If the scenario doesn't require it, don't test for it yet.
 
@@ -153,18 +172,150 @@ assets/tests/e2e/
 - **Then** message appears in the list
 ```
 
-Maps to test:
+Maps to **ACTUAL TEST FILE** (QA Engineer writes):
 
+```elixir
+# test/syna_web/live/chat_live_test.exs
+defmodule SynaWeb.ChatLiveTest do
+  use SynaWeb.ConnCase, async: true
+  import Phoenix.LiveViewTest
+
+  describe "Scenario: Send message" do
+    setup [:create_user, :create_project]
+
+    test "sends message and displays in list", %{conn: conn, project: project} do
+      # Given: user is in project chat
+      {:ok, view, _html} = live(conn, ~p"/projects/#{project.id}/chat")
+
+      # When: they type and send a message
+      view
+      |> form("#message-form", message: %{content: "Hello world"})
+      |> render_submit()
+
+      # Then: message appears in the list
+      assert has_element?(view, "[data-testid='message-list']", "Hello world")
+    end
+  end
+end
 ```
-test "sends message and displays in list"
-  # Given: user in project chat
-  [setup code]
 
-  # When: type and send message
-  [action code]
+**RUN THE TEST** to verify it fails:
+```bash
+mix test test/syna_web/live/chat_live_test.exs
+# Expected output: 1 test, 1 failure (RED)
+```
 
-  # Then: message appears
-  [assertion code]
+---
+
+## Test File Templates
+
+### Backend Test (ExUnit + LiveView)
+
+```elixir
+# test/syna_web/live/{feature}_live_test.exs
+defmodule SynaWeb.{Feature}LiveTest do
+  use SynaWeb.ConnCase, async: true
+  import Phoenix.LiveViewTest
+
+  describe "{FEATURE-ID}: {Scenario Name}" do
+    setup [:create_user]  # Add fixtures as needed
+
+    test "{scenario description}", %{conn: conn, user: user} do
+      # Given: {precondition}
+      # Setup code here
+
+      # When: {action}
+      {:ok, view, _html} = live(conn, ~p"/path")
+      # Action code here
+
+      # Then: {expected outcome}
+      assert has_element?(view, "[data-testid='...']")
+    end
+  end
+end
+```
+
+### Frontend Test (Vitest + Testing Library)
+
+```typescript
+// assets/svelte/components/features/{feature}/__tests__/{Component}.test.ts
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/svelte';
+import Component from '../Component.svelte';
+
+describe('{FEATURE-ID}: {Scenario Name}', () => {
+  it('should {expected behavior} when {condition}', async () => {
+    // Given: {precondition}
+    const props = { /* ... */ };
+
+    // When: {action}
+    render(Component, { props });
+    await fireEvent.click(screen.getByTestId('button'));
+
+    // Then: {expected outcome}
+    expect(screen.getByTestId('result')).toBeInTheDocument();
+  });
+});
+```
+
+### E2E Test (Playwright)
+
+```typescript
+// assets/tests/e2e/{feature}.spec.ts
+import { test, expect } from '@playwright/test';
+
+test.describe('{FEATURE-ID}: {Feature Name}', () => {
+  test('{scenario description}', async ({ page }) => {
+    // Given: {precondition}
+    await page.goto('/login');
+    await page.fill('[data-testid="email"]', 'test@example.com');
+    await page.fill('[data-testid="password"]', 'password');
+    await page.click('[data-testid="submit"]');
+
+    // When: {action}
+    await page.click('[data-testid="action-button"]');
+
+    // Then: {expected outcome}
+    await expect(page.getByTestId('result')).toBeVisible();
+  });
+});
+```
+
+---
+
+## Test Execution Commands
+
+**Always run tests after writing them to verify RED state:**
+
+```bash
+# Backend (Elixir/ExUnit)
+mix test test/path/to/feature_test.exs
+
+# Frontend (Vitest)
+cd assets && npm test -- --run path/to/Component.test.ts
+
+# E2E (Playwright)
+cd assets && npx playwright test tests/e2e/feature.spec.ts
+
+# All tests
+mix test && cd assets && npm test -- --run && npx playwright test
+```
+
+**Expected QA Phase Output:**
+```
++---------------------------------------------------------------------+
+|  QA ENGINEER PHASE COMPLETE                                          |
+|                                                                      |
+|  Test Files Created:                                                 |
+|    ✓ test/syna_web/live/home_live_test.exs                          |
+|    ✓ assets/svelte/components/features/homes/__tests__/...          |
+|                                                                      |
+|  Test Execution (RED state verified):                                |
+|    Backend: 5 tests, 5 failures ✓                                    |
+|    Frontend: 3 tests, 3 failures ✓                                   |
+|                                                                      |
+|  Ready for: Designer Phase                                           |
++---------------------------------------------------------------------+
 ```
 
 ---
@@ -602,6 +753,25 @@ Test at these viewport widths to cover all breakpoints:
 ---
 
 ## Anti-Patterns to Avoid
+
+### NOT Writing Actual Tests (CRITICAL)
+
+```
+// BAD - Just documenting what tests are needed
+// "We need to test that the drawer opens when clicked"
+// "Test the loading state"
+// This is NOT TDD!
+
+// GOOD - Actually writing the test file
+// test/syna_web/live/home_live_test.exs
+test "opens address drawer when menu clicked" do
+  {:ok, view, _html} = live(conn, ~p"/homes/#{home.id}")
+  view |> element("[data-testid='address-drawer-button']") |> render_click()
+  assert has_element?(view, "[data-testid='address-drawer']")
+end
+```
+
+**If you wrote test requirements but not test files, go back and write the actual tests.**
 
 ### Testing Implementation Details
 
