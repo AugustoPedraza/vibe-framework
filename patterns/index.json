@@ -2,8 +2,42 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "version": "1.0.0",
   "description": "Semantic pattern index for AI-assisted retrieval",
-  "last_updated": "2026-01-20",
+  "last_updated": "2026-01-21",
   "patterns": [
+    {
+      "id": "swipe-drawer",
+      "name": "Swipe-to-Close Drawer",
+      "path": "frontend/swipe-drawer.md",
+      "category": "frontend",
+      "tags": ["svelte5", "typescript", "pwa", "mobile", "gestures", "accessibility"],
+      "triggers": ["drawer", "side panel", "swipe gesture", "mobile navigation"],
+      "problem_keywords": ["native feel", "swipe to dismiss", "safe areas", "touch gesture"],
+      "solution_summary": "Mobile-native side drawer with swipe gesture support, safe area handling, and smooth animations",
+      "reusability_score": 6,
+      "related": ["user-scoped-cache"],
+      "usage_stats": {
+        "times_used": 1,
+        "success_rate": 1.0,
+        "feedback": ["Discovered in Syna / HOME-002"]
+      }
+    },
+    {
+      "id": "user-scoped-cache",
+      "name": "User-Scoped Cache with TTL",
+      "path": "pwa/user-scoped-cache.md",
+      "category": "pwa",
+      "tags": ["typescript", "pwa", "offline", "localStorage", "caching"],
+      "triggers": ["cache", "offline", "stale-while-revalidate", "localStorage"],
+      "problem_keywords": ["user data leak", "stale cache", "storage quota", "SSR crash"],
+      "solution_summary": "LocalStorage cache with user isolation, TTL expiration, and silent failure handling",
+      "reusability_score": 5,
+      "related": ["swipe-drawer"],
+      "usage_stats": {
+        "times_used": 1,
+        "success_rate": 1.0,
+        "feedback": ["Discovered in Syna / HOME-002"]
+      }
+    },
     {
       "id": "async-result-extraction",
       "name": "AsyncResult Status Extraction",
