@@ -98,6 +98,79 @@ Before creating anything, ask:
 
 Each feature adds only what it needs. Infrastructure emerges from features.
 
+### Micro-Iteration Workflow (REQUIRED for Vibe Coding)
+
+> **One baby step at a time. Verify visually. Then iterate.**
+
+When building UI features with AI assistance, avoid implementing multiple concerns at once. Broad feedback across scrolling, navigation, format, header, etc. becomes unmanageable.
+
+#### The Pattern
+
+```
+┌─────────────────────────────────────────┐
+│  1. SINGLE FOCUS                        │
+│     One concern only per iteration      │
+│     Example: "Just the message bubble"  │
+├─────────────────────────────────────────┤
+│  2. STOP AND SHOW                       │
+│     Implement minimal change            │
+│     Wait for manual/visual verification │
+├─────────────────────────────────────────┤
+│  3. CONFIRM OR FIX                      │
+│     User says "good, next" or "adjust X"│
+│     No moving forward until confirmed   │
+├─────────────────────────────────────────┤
+│  4. ITERATE                             │
+│     Move to next slice only after       │
+│     previous is verified                │
+└─────────────────────────────────────────┘
+```
+
+#### Example: Building a Messaging List
+
+| Step | Focus | What Gets Built | Wait For |
+|------|-------|-----------------|----------|
+| 1 | Message bubble | Single hardcoded bubble | Visual check |
+| 2 | Bubble variants | Sent vs received styling | Visual check |
+| 3 | List container | Scroll container, multiple bubbles | Scroll test |
+| 4 | Header | Chat header with back button | Visual check |
+| 5 | Timestamps | Time display between messages | Visual check |
+| 6 | Real data | Connect to LiveView props | Functional test |
+
+#### Anti-Pattern: Big Bang Implementation
+
+```
+❌ DON'T: Implement header + list + scroll + format +
+         navigation + timestamps all at once
+
+   Result: "Scrolling is broken, header is wrong,
+            timestamps look off, back button doesn't work"
+
+✅ DO: One slice → verify → next slice → verify
+```
+
+#### Scoping Questions
+
+Before implementing, ask:
+- **What is the ONE thing** this iteration should accomplish?
+- **How will we verify** it works? (visual check, interaction, data)
+- **What are we NOT touching** yet?
+
+#### When User Gives Broad Feedback
+
+If feedback spans multiple concerns, **pause and scope**:
+
+```
+User: "The chat looks wrong - scrolling, bubbles, and header all need work"
+
+Response: "Let's tackle one at a time. Which should we fix first?
+1. Scrolling behavior
+2. Message bubble styling
+3. Header layout
+
+Pick one and we'll verify before moving to the next."
+```
+
 ### Bootstrap Features (Early Iterations)
 
 Early features establish foundational patterns. When implementing a bootstrap feature:
