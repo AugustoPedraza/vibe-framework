@@ -253,6 +253,56 @@
         "success_rate": null,
         "feedback": []
       }
+    },
+    {
+      "id": "component-folder-structure",
+      "name": "Component Folder Structure",
+      "path": "ux/component-folder-structure.md",
+      "category": "ux",
+      "tags": ["svelte5", "typescript", "component-architecture", "organization"],
+      "triggers": ["folder structure", "component organization", "index.svelte", "barrel exports"],
+      "problem_keywords": ["flat files", "unclear hierarchy", "component grouping", "folder organization"],
+      "solution_summary": "Organize Svelte components into folders that mirror visual composition hierarchy with index.svelte as main",
+      "reusability_score": 6,
+      "related": ["motion-presets", "async-media-loading"],
+      "embeddings_hint": "component folder structure organization index svelte barrel export composition hierarchy nested",
+      "synonyms": ["component organization", "folder pattern", "nested components", "component hierarchy"],
+      "anti_patterns": ["Flat file structure for complex components", "Exposing internal components in barrel", "Folder per tiny component"],
+      "applicability": {
+        "stack_requires": ["svelte5"],
+        "file_patterns": ["*.svelte", "index.ts"],
+        "code_patterns": ["export { default", "from './", "index.svelte"]
+      },
+      "usage_stats": {
+        "times_used": 1,
+        "success_rate": 1.0,
+        "feedback": ["Discovered in Syna / CONV-002"]
+      }
+    },
+    {
+      "id": "typing-aware-scroll",
+      "name": "Typing-Aware Scroll Behavior",
+      "path": "ux/typing-aware-scroll.md",
+      "category": "ux",
+      "tags": ["svelte5", "typescript", "chat", "realtime", "scroll", "ux"],
+      "triggers": ["chat scroll", "auto scroll", "new messages indicator", "scroll to bottom"],
+      "problem_keywords": ["scroll position", "disorienting scroll", "message arrival", "typing scroll"],
+      "solution_summary": "Context-sensitive scroll behavior based on user intent (typing vs receiving) with new messages indicator",
+      "reusability_score": 5,
+      "related": ["motion-presets", "liveview-navigation"],
+      "embeddings_hint": "scroll behavior chat messages auto scroll new messages indicator scroll position bottom typing",
+      "synonyms": ["smart scroll", "chat scroll", "auto-scroll", "scroll management"],
+      "anti_patterns": ["Always auto-scroll on new message", "Never auto-scroll", "Ignoring user scroll position"],
+      "applicability": {
+        "stack_requires": ["svelte5"],
+        "file_patterns": ["*.svelte"],
+        "code_patterns": ["scrollTo", "scrollHeight", "scrollTop", "isAtBottom"]
+      },
+      "usage_stats": {
+        "times_used": 1,
+        "success_rate": 1.0,
+        "feedback": ["Discovered in Syna / CONV-002"]
+      }
     }
   ],
   "categories": {
