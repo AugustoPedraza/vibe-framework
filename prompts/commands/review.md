@@ -261,6 +261,221 @@ See: `roles/multi-agent-liaison.md` for full Agent Coordination Protocol
 
 ---
 
+## DRY Analysis Phase
+
+> Detect code duplication and recommend extraction
+
+### When to Run
+
+DRY analysis runs automatically as part of comprehensive review (`--all`) or can be triggered explicitly:
+
+```
+/vibe review --dry              # DRY analysis only
+/vibe review --all              # Includes DRY analysis
+```
+
+### Detection Rules
+
+<!-- AI:DECISION_TREE dry_analysis -->
+```yaml
+dry_analysis:
+  scan_for:
+    - code_blocks_similarity: ">= 70%"
+    - function_names_similar: "edit distance <= 2"
+    - repeated_patterns: ">= 3 occurrences"
+  thresholds:
+    block:
+      similarity: ">= 90%"
+      lines: ">= 10"
+      action: "MUST extract to shared module"
+    warn:
+      similarity: ">= 70%"
+      lines: ">= 5"
+      action: "SHOULD consider extraction"
+    note:
+      similarity: ">= 50%"
+      lines: ">= 3"
+      action: "Consider if pattern emerges"
+  ignore:
+    - test_fixtures
+    - generated_code
+    - configuration_files
+```
+<!-- /AI:DECISION_TREE -->
+
+### DRY Report Format
+
+```
++---------------------------------------------------------------------+
+|  DRY ANALYSIS                                                        |
+|                                                                      |
+|  Scope: [files analyzed]                                             |
+|                                                                      |
+|  BLOCKERS (must extract):                                            |
+|  ! [92% similar, 15 lines]                                           |
+|    file_a.ex:45-60 <-> file_b.ex:23-38                               |
+|    Recommendation: Extract to lib/shared/validator.ex                |
+|                                                                      |
+|  WARNINGS (should extract):                                          |
+|  ~ [78% similar, 8 lines]                                            |
+|    component_a.svelte:12-20 <-> component_b.svelte:8-16              |
+|    Recommendation: Extract to shared component or utility            |
+|                                                                      |
+|  NOTES (monitor):                                                    |
+|  ? [55% similar, 4 lines]                                            |
+|    utils/a.ts:5-8 <-> utils/b.ts:10-13                               |
+|    Note: Second occurrence, extract on third                         |
+|                                                                      |
+|  Rule of Three Tracking:                                             |
+|  - "email validation pattern": 2 occurrences (1 more triggers refactor)
+|  - "loading state handler": 3 occurrences (READY FOR EXTRACTION)     |
+|                                                                      |
++---------------------------------------------------------------------+
+```
+
+### Extraction Recommendations
+
+| Duplication Type | Extraction Target |
+|------------------|-------------------|
+| Elixir functions | Shared module in domain |
+| Svelte logic | Utility function in `$lib/utils` |
+| Svelte UI | Shared component |
+| CSS patterns | Design token or utility class |
+| Test setup | Shared fixture or factory |
+
+---
+
+## Orthogonality Analysis Phase
+
+> Detect coupling violations and domain boundary breaches
+
+### When to Run
+
+```
+/vibe review --orthogonality    # Orthogonality analysis only
+/vibe review --all              # Includes orthogonality analysis
+```
+
+### Coupling Detection
+
+<!-- AI:DECISION_TREE orthogonality_analysis -->
+```yaml
+orthogonality_analysis:
+  metrics:
+    coupling_score:
+      description: "0 = fully decoupled, 1 = fully coupled"
+      calculation: "cross_boundary_imports / total_imports"
+      thresholds:
+        excellent: "< 0.2"
+        acceptable: "0.2 - 0.4"
+        warning: "0.4 - 0.6"
+        blocker: ">= 0.6"
+
+  domain_boundaries:
+    accounts:
+      allowed_imports: ["Ash", "AshPostgres", "Ecto"]
+      forbidden_imports: ["Projects", "Conversations", "Billing"]
+      allowed_callers: ["Web", "API"]
+
+    projects:
+      allowed_imports: ["Ash", "AshPostgres", "Accounts"]
+      forbidden_imports: ["Conversations", "Billing"]
+      note: "May reference Accounts for ownership"
+
+    conversations:
+      allowed_imports: ["Ash", "AshPostgres", "Accounts", "Projects"]
+      forbidden_imports: ["Billing"]
+      note: "Messages belong to projects"
+
+    web:
+      allowed_imports: ["all domains"]
+      forbidden_imports: []
+      note: "Web layer can call any domain"
+
+  violations:
+    cross_domain_query:
+      description: "Domain A directly queries Domain B resources"
+      severity: "blocker"
+      fix: "Use domain function, not direct query"
+
+    circular_dependency:
+      description: "Domain A imports B, B imports A"
+      severity: "blocker"
+      fix: "Extract shared concept or use events"
+
+    leaky_abstraction:
+      description: "Implementation details exposed across boundary"
+      severity: "warning"
+      fix: "Add proper interface function"
+```
+<!-- /AI:DECISION_TREE -->
+
+### Fan-In/Fan-Out Analysis
+
+```
++---------------------------------------------------------------------+
+|  FAN ANALYSIS                                                        |
+|                                                                      |
+|  High Fan-Out (many dependencies):                                   |
+|  ! UserController.ex: 8 dependencies                                 |
+|    -> Accounts, Projects, Notifications, Billing, Reports...         |
+|    Risk: Changes ripple outward, hard to test                        |
+|    Suggestion: Split into focused controllers                        |
+|                                                                      |
+|  High Fan-In (many dependents):                                      |
+|  ~ User.ex: 12 modules depend on this                                |
+|    Risk: Changes break many consumers                                |
+|    Suggestion: Ensure stable interface, consider versioning          |
+|                                                                      |
+|  Coupling Score: 0.35 (Acceptable)                                   |
+|                                                                      |
++---------------------------------------------------------------------+
+```
+
+### Orthogonality Report Format
+
+```
++---------------------------------------------------------------------+
+|  ORTHOGONALITY ANALYSIS                                              |
+|                                                                      |
+|  Overall Coupling Score: 0.42 (Warning)                              |
+|                                                                      |
+|  BLOCKERS (must fix):                                                |
+|  ! Cross-domain query                                                |
+|    projects_live.ex:45 directly queries Accounts.User                |
+|    Fix: Use Accounts.get_user/1 instead of Ash.read!                 |
+|                                                                      |
+|  ! Circular dependency detected                                      |
+|    Accounts -> Projects -> Accounts                                  |
+|    Fix: Extract shared concept or use events                         |
+|                                                                      |
+|  WARNINGS (should fix):                                              |
+|  ~ Domain boundary violation                                         |
+|    Conversations.Message imports Projects.Channel                    |
+|    Suggestion: Depend on interface, not implementation               |
+|                                                                      |
+|  METRICS:                                                            |
+|  | Domain        | Coupling | Fan-In | Fan-Out |                     |
+|  |---------------|----------|--------|---------|                     |
+|  | Accounts      |   0.15   |   12   |    3    |                     |
+|  | Projects      |   0.38   |    8   |    5    |                     |
+|  | Conversations |   0.52   |    4   |    6    |                     |
+|                                                                      |
+|  [f] Fix blockers  [i] Ignore with reason  [d] Details               |
++---------------------------------------------------------------------+
+```
+
+### When to Block
+
+| Condition | Action |
+|-----------|--------|
+| Coupling score >= 0.6 | Block PR |
+| Circular dependency | Block PR |
+| Cross-domain direct query | Block PR |
+| High fan-out (>6) new module | Warning, suggest split |
+
+---
+
 ## Integration with /vibe Workflow
 
 ### During Implementation

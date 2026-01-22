@@ -171,6 +171,157 @@ Response: "Let's tackle one at a time. Which should we fix first?
 Pick one and we'll verify before moving to the next."
 ```
 
+---
+
+## Refactoring Triggers
+
+> Know when to refactor and how much thinking to apply
+
+### Rule of Three
+
+The fundamental rule for when to abstract:
+
+| Occurrence | Action |
+|------------|--------|
+| First time | Just do it. Implement directly. |
+| Second time | Note the duplication. Add a comment or TODO. |
+| Third time | **Refactor.** Extract to shared module/component. |
+
+**Don't abstract prematurely.** Duplication is better than the wrong abstraction.
+
+### Refactoring Decision Tree
+
+<!-- AI:DECISION_TREE refactoring_triggers -->
+```yaml
+refactoring_triggers:
+  triggers:
+    - trigger: "duplication"
+      indicators:
+        - ">= 3 occurrences of same code"
+        - ">= 70% similarity across >= 5 lines"
+      thinking_level: "think_hard"
+      action: "Extract to shared module or component"
+      checklist:
+        - "Identify all occurrences"
+        - "Ensure tests cover all uses"
+        - "Extract with clear interface"
+        - "Update all call sites"
+        - "Run tests"
+
+    - trigger: "long_function"
+      indicators:
+        - "> 25 lines"
+        - "> 3 levels of nesting"
+        - "> 5 local variables"
+      thinking_level: "think"
+      action: "Extract methods for logical sections"
+      checklist:
+        - "Identify logical groupings"
+        - "Name extracted functions clearly"
+        - "Keep original function as orchestrator"
+
+    - trigger: "shotgun_surgery"
+      indicators:
+        - "Single change requires editing > 3 files"
+        - "Related changes scattered across codebase"
+      thinking_level: "think_harder"
+      action: "Consolidate related logic"
+      checklist:
+        - "Map all affected files"
+        - "Identify common concept"
+        - "Create focused module"
+        - "Move related code together"
+
+    - trigger: "feature_envy"
+      indicators:
+        - "Function uses more data from other module than its own"
+        - "Frequent dot chaining into other structs"
+      thinking_level: "think_hard"
+      action: "Move function to module that owns the data"
+      checklist:
+        - "Identify which module owns the data"
+        - "Move function to owner module"
+        - "Update callers"
+
+    - trigger: "primitive_obsession"
+      indicators:
+        - "Same group of primitives passed together"
+        - "Repeated validation of primitives"
+      thinking_level: "think"
+      action: "Create value object or struct"
+      checklist:
+        - "Define struct with validations"
+        - "Add constructor function"
+        - "Replace primitives at boundaries"
+
+    - trigger: "speculative_generality"
+      indicators:
+        - "Abstractions with single implementation"
+        - "Unused parameters 'for future use'"
+        - "Complex inheritance with no variation"
+      thinking_level: "think"
+      action: "Remove unused abstraction, simplify"
+      checklist:
+        - "Verify no other uses exist"
+        - "Inline the abstraction"
+        - "Remove unused parameters"
+
+  never_refactor_when:
+    - "Under time pressure (creates bugs)"
+    - "Without test coverage (unsafe)"
+    - "When feature is still evolving"
+    - "For aesthetic reasons only"
+```
+<!-- /AI:DECISION_TREE -->
+
+### Code Smell Detection
+
+| Smell | How to Spot | Refactoring |
+|-------|-------------|-------------|
+| **Long Function** | > 25 lines, needs scrolling | Extract Method |
+| **Long Parameter List** | > 4 parameters | Introduce Parameter Object |
+| **Duplicated Code** | Same code in 3+ places | Extract Function/Component |
+| **Data Clumps** | Same 3+ fields appear together | Extract Struct |
+| **Feature Envy** | Method uses other class more than own | Move Method |
+| **Divergent Change** | One module changes for unrelated reasons | Split Module |
+| **Shotgun Surgery** | One change touches many modules | Consolidate |
+| **Dead Code** | Unreachable or unused code | Delete |
+| **Speculative Generality** | "Might need later" abstractions | Inline/Remove |
+
+### Safe Refactoring Process
+
+```
+1. VERIFY TEST COVERAGE
+   - Run coverage report
+   - If < 80%, write characterization tests first
+
+2. MAKE ONE CHANGE
+   - Single responsibility per commit
+   - Don't mix refactoring with features
+
+3. RUN TESTS
+   - All tests must pass
+   - Watch for timing-dependent failures
+
+4. COMMIT
+   - "refactor(scope): description"
+   - Small, atomic commits
+
+5. REPEAT
+   - One smell at a time
+   - Stop when tests green
+```
+
+### Refactoring Anti-Patterns
+
+| Anti-Pattern | Why It's Bad | Do Instead |
+|--------------|--------------|------------|
+| Big Bang refactor | High risk, hard to review | Small incremental changes |
+| Refactoring without tests | Can't verify correctness | Add tests first |
+| Mixing refactor + feature | Unclear what changed | Separate commits |
+| Premature abstraction | Wrong abstraction | Wait for Rule of Three |
+| Refactoring during crunch | Bugs under pressure | Wait for calm period |
+
 ### Bootstrap Features (Early Iterations)
 
 Early features establish foundational patterns. When implementing a bootstrap feature:

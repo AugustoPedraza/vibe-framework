@@ -900,6 +900,344 @@ Document all decisions in `_multi_review.md`:
 
 ---
 
+## Property-Based Testing
+
+> Test properties that hold for all valid inputs, not just examples
+
+### When to Use Property Tests
+
+<!-- AI:DECISION_TREE property_test -->
+```yaml
+property_test_decision:
+  description: "Determine if property-based testing is appropriate"
+  rules:
+    - condition: "function_is_pure AND has_inverse"
+      action: "write_roundtrip_property"
+      example: "encode/decode, serialize/deserialize"
+
+    - condition: "function_has_mathematical_property"
+      action: "write_invariant_property"
+      example: "sort is idempotent, list length positive"
+
+    - condition: "function_handles_user_input"
+      action: "write_fuzzing_property"
+      example: "parser, validator, sanitizer"
+
+    - condition: "function_has_boundary_behavior"
+      action: "write_boundary_property"
+      example: "empty list, max int, unicode edge cases"
+
+  skip_when:
+    - "function has side effects"
+    - "function depends on external state"
+    - "function is trivial (< 3 lines)"
+    - "function is I/O bound"
+```
+<!-- /AI:DECISION_TREE -->
+
+### Elixir StreamData Patterns
+
+#### Roundtrip Property (Encode/Decode)
+
+```elixir
+# test/properties/serialization_test.exs
+defmodule SerializationPropertyTest do
+  use ExUnit.Case
+  use ExUnitProperties
+
+  property "JSON roundtrip preserves data" do
+    check all map <- map_of(string(:alphanumeric), integer()) do
+      encoded = Jason.encode!(map)
+      decoded = Jason.decode!(encoded)
+      assert decoded == map
+    end
+  end
+
+  property "base64 roundtrip preserves binary" do
+    check all binary <- binary() do
+      encoded = Base.encode64(binary)
+      decoded = Base.decode64!(encoded)
+      assert decoded == binary
+    end
+  end
+end
+```
+
+#### Invariant Property (Always True)
+
+```elixir
+property "sorting is idempotent" do
+  check all list <- list_of(integer()) do
+    sorted = Enum.sort(list)
+    assert Enum.sort(sorted) == sorted
+  end
+end
+
+property "list length is always non-negative" do
+  check all list <- list_of(term()) do
+    assert length(list) >= 0
+  end
+end
+
+property "filter never increases list size" do
+  check all list <- list_of(integer()),
+            pred <- one_of([constant(&(&1 > 0)), constant(&(&1 < 0))]) do
+    assert length(Enum.filter(list, pred)) <= length(list)
+  end
+end
+```
+
+#### Fuzzing Property (Never Crashes)
+
+```elixir
+property "email validation never crashes" do
+  check all input <- string(:printable) do
+    # Should return {:ok, _} or {:error, _}, never crash
+    result = MyApp.Validators.validate_email(input)
+    assert match?({:ok, _}, result) or match?({:error, _}, result)
+  end
+end
+
+property "URL parser handles any input" do
+  check all input <- one_of([string(:printable), binary()]) do
+    # May return nil for invalid URLs, but should never crash
+    _result = URI.parse(input)
+    assert true  # If we get here, no crash occurred
+  end
+end
+```
+
+#### Boundary Property (Edge Cases)
+
+```elixir
+property "pagination handles edge cases" do
+  check all page <- integer(1..1000),
+            per_page <- integer(1..100),
+            total <- integer(0..10_000) do
+    result = MyApp.Pagination.calculate(page, per_page, total)
+
+    assert result.offset >= 0
+    assert result.limit > 0
+    assert result.total_pages >= 0
+  end
+end
+```
+
+### TypeScript fast-check Patterns
+
+#### Roundtrip Property
+
+```typescript
+import * as fc from 'fast-check';
+
+describe('JSON serialization', () => {
+  it('roundtrip preserves objects', () => {
+    fc.assert(
+      fc.property(
+        fc.jsonValue(),
+        (value) => {
+          const serialized = JSON.stringify(value);
+          const deserialized = JSON.parse(serialized);
+          expect(deserialized).toEqual(value);
+        }
+      )
+    );
+  });
+});
+```
+
+#### Invariant Property
+
+```typescript
+describe('array operations', () => {
+  it('sort is idempotent', () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.integer()),
+        (arr) => {
+          const sorted = [...arr].sort((a, b) => a - b);
+          const sortedAgain = [...sorted].sort((a, b) => a - b);
+          expect(sortedAgain).toEqual(sorted);
+        }
+      )
+    );
+  });
+
+  it('filter never increases length', () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.integer()),
+        fc.func(fc.boolean()),
+        (arr, predicate) => {
+          expect(arr.filter(predicate).length).toBeLessThanOrEqual(arr.length);
+        }
+      )
+    );
+  });
+});
+```
+
+#### Fuzzing Property
+
+```typescript
+describe('form validation', () => {
+  it('email validator never throws', () => {
+    fc.assert(
+      fc.property(
+        fc.string(),
+        (input) => {
+          // Should not throw, regardless of input
+          expect(() => validateEmail(input)).not.toThrow();
+        }
+      )
+    );
+  });
+
+  it('handles unicode in names', () => {
+    fc.assert(
+      fc.property(
+        fc.unicodeString(),
+        (name) => {
+          const result = validateName(name);
+          expect(result).toHaveProperty('valid');
+        }
+      )
+    );
+  });
+});
+```
+
+### Integration with Test Pyramid
+
+| Test Type | Coverage | Property Tests |
+|-----------|----------|----------------|
+| Unit | Core logic | Roundtrip, Invariant |
+| Integration | Boundaries | Fuzzing |
+| E2E | Critical paths | Manual selection |
+
+Property tests supplement, not replace, example-based tests:
+- Use examples for documentation and specific scenarios
+- Use properties for exhaustive validation of invariants
+
+---
+
+## Mutation Testing
+
+> Verify tests actually catch bugs by introducing mutations
+
+### When to Run Mutation Tests
+
+| Trigger | Run Mutation Testing |
+|---------|---------------------|
+| Critical business logic | After tests pass, before merge |
+| Security-sensitive code | Mandatory before release |
+| Post-refactoring | Verify tests still effective |
+| Low confidence in tests | Diagnostic tool |
+
+### Score Thresholds
+
+| Score | Rating | Action |
+|-------|--------|--------|
+| >= 90% | Excellent | Tests are effective |
+| 80-89% | Good | Review surviving mutants |
+| 70-79% | Acceptable | Add tests for gaps |
+| < 70% | **BLOCK** | Tests not catching bugs |
+
+### Elixir Mutation Testing (Muzak Pro)
+
+```bash
+# Run mutation testing
+mix muzak --only lib/myapp/accounts.ex
+
+# Run for critical module with strict threshold
+mix muzak --only lib/myapp/billing.ex --min-score 90
+```
+
+#### Interpreting Results
+
+```
++---------------------------------------------------------------------+
+|  MUTATION TESTING RESULTS                                            |
+|                                                                      |
+|  Module: MyApp.Billing                                               |
+|  Mutation Score: 85%                                                 |
+|                                                                      |
+|  KILLED: 34/40 mutants (tests caught the bug)                        |
+|  SURVIVED: 6/40 mutants (tests missed the bug)                       |
+|                                                                      |
+|  SURVIVING MUTANTS:                                                  |
+|                                                                      |
+|  1. billing.ex:45 - Replaced `>` with `>=`                           |
+|     Original: if amount > 0                                          |
+|     Mutant:   if amount >= 0                                         |
+|     Impact: Zero amounts incorrectly processed                       |
+|     Fix: Add test for amount = 0                                     |
+|                                                                      |
+|  2. billing.ex:78 - Removed function call                            |
+|     Original: notify_user(user, charge)                              |
+|     Mutant:   (removed)                                              |
+|     Impact: Notifications silently skipped                           |
+|     Fix: Assert notification was sent                                |
+|                                                                      |
++---------------------------------------------------------------------+
+```
+
+### Common Surviving Mutations and Fixes
+
+| Mutation Type | Survives When | Fix |
+|---------------|---------------|-----|
+| Boundary mutation (`>` to `>=`) | No boundary tests | Add tests for exact boundary values |
+| Removed function call | Side effect not asserted | Assert side effects (mocks, DB state) |
+| Constant replacement | Hardcoded values not tested | Test with different constant values |
+| Negation (`!` removed) | Only happy path tested | Add negative test cases |
+| Return value mutation | Return value not checked | Assert specific return values |
+
+### Adding Tests for Surviving Mutants
+
+```elixir
+# Original code with potential mutation survival
+def apply_discount(amount, percentage) when percentage > 0 do
+  amount - (amount * percentage / 100)
+end
+
+# Original test (mutant `> 0` to `>= 0` survives)
+test "applies 10% discount" do
+  assert apply_discount(100, 10) == 90
+end
+
+# Fixed test (kills the mutant)
+test "applies 10% discount" do
+  assert apply_discount(100, 10) == 90
+end
+
+test "zero percentage returns original amount" do
+  assert_raise FunctionClauseError, fn ->
+    apply_discount(100, 0)
+  end
+end
+```
+
+### Mutation Testing Checklist
+
+- [ ] Run on critical paths (auth, billing, data mutations)
+- [ ] Score >= 80% for all critical modules
+- [ ] Review all surviving mutants
+- [ ] Add tests for meaningful survivors
+- [ ] Document accepted survivors with rationale
+- [ ] Re-run after adding tests to confirm kills
+
+### When NOT to Use Mutation Testing
+
+| Skip When | Reason |
+|-----------|--------|
+| Generated code | Mutations meaningless |
+| Configuration files | No logic to test |
+| UI styling | Visual, not logical |
+| Third-party wrappers | Testing upstream |
+| Performance-critical hot paths | Too slow |
+
+---
+
 ## Pre-Commit Checklist
 
 **Testing:**

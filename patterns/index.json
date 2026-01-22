@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "version": "1.0.0",
-  "description": "Semantic pattern index for AI-assisted retrieval",
-  "last_updated": "2026-01-21",
+  "version": "1.1.0",
+  "description": "Semantic pattern index for AI-assisted retrieval with RAG optimization",
+  "last_updated": "2026-01-22",
   "patterns": [
     {
       "id": "async-image-fade-in",
@@ -15,6 +15,14 @@
       "solution_summary": "Track loaded state and apply opacity transition for smooth image appearance",
       "reusability_score": 5,
       "related": ["async-media-loading"],
+      "embeddings_hint": "image loading animation fade opacity transition smooth appearance lazy load progressive",
+      "synonyms": ["image fade in", "progressive image loading", "smooth image transition"],
+      "anti_patterns": ["No fallback for slow connections", "Missing loading state", "Abrupt visibility change"],
+      "applicability": {
+        "stack_requires": ["svelte5"],
+        "file_patterns": ["*.svelte"],
+        "code_patterns": ["<img", "loading="]
+      },
       "usage_stats": {
         "times_used": 1,
         "success_rate": 1.0,
@@ -32,6 +40,14 @@
       "solution_summary": "Layered motion system with tokens, semantic presets, and automatic reduced-motion support",
       "reusability_score": 6,
       "related": ["directional-transitions", "async-image-fade-in"],
+      "embeddings_hint": "animation duration timing easing motion reduced-motion accessibility transition tokens design system",
+      "synonyms": ["animation tokens", "motion system", "transition presets", "animation design tokens"],
+      "anti_patterns": ["Hardcoded animation values", "Ignoring reduced-motion", "Inconsistent timing across components"],
+      "applicability": {
+        "stack_requires": ["svelte5", "css"],
+        "file_patterns": ["*.svelte", "*.css"],
+        "code_patterns": ["transition:", "animation:", "@keyframes"]
+      },
       "usage_stats": {
         "times_used": 1,
         "success_rate": 1.0,
@@ -49,6 +65,14 @@
       "solution_summary": "Idempotent resource retrieval using read_one with proper error handling to create if not found",
       "reusability_score": 5,
       "related": ["async-result-extraction"],
+      "embeddings_hint": "ash framework get_or_create upsert find_or_create idempotent resource first_or_create",
+      "synonyms": ["find or create", "upsert", "ensure resource exists", "first or create"],
+      "anti_patterns": ["Using read_one! which raises on not found", "Race condition between read and create", "Not handling concurrent creation"],
+      "applicability": {
+        "stack_requires": ["elixir", "ash"],
+        "file_patterns": ["*.ex"],
+        "code_patterns": ["Ash.read_one", "Ash.create"]
+      },
       "usage_stats": {
         "times_used": 1,
         "success_rate": 1.0,
@@ -65,7 +89,15 @@
       "problem_keywords": ["content jump", "broken image", "loading indicator", "image fallback"],
       "solution_summary": "Polished image loading with lazy loading, fade-in animations, skeleton placeholders, and graceful fallbacks",
       "reusability_score": 7,
-      "related": ["swipe-drawer", "user-scoped-cache"],
+      "related": ["swipe-drawer", "user-scoped-cache", "async-image-fade-in"],
+      "embeddings_hint": "image media loading skeleton placeholder fallback lazy intersection observer progressive enhancement",
+      "synonyms": ["media loader", "image placeholder", "skeleton loading", "lazy image"],
+      "anti_patterns": ["No placeholder causing layout shift", "Missing error fallback", "Blocking page load on images"],
+      "applicability": {
+        "stack_requires": ["svelte5"],
+        "file_patterns": ["*.svelte"],
+        "code_patterns": ["<img", "loading=\"lazy\"", "IntersectionObserver"]
+      },
       "usage_stats": {
         "times_used": 1,
         "success_rate": 1.0,
@@ -83,6 +115,14 @@
       "solution_summary": "Mobile-native side drawer with swipe gesture support, safe area handling, and smooth animations",
       "reusability_score": 6,
       "related": ["user-scoped-cache", "async-media-loading"],
+      "embeddings_hint": "drawer sidebar swipe gesture touch mobile navigation panel slide dismiss close",
+      "synonyms": ["side drawer", "slide panel", "mobile drawer", "gesture drawer", "swipe menu"],
+      "anti_patterns": ["No swipe gesture on mobile", "Ignoring safe areas", "Instant open/close without animation"],
+      "applicability": {
+        "stack_requires": ["svelte5"],
+        "file_patterns": ["*.svelte"],
+        "code_patterns": ["touchstart", "touchmove", "touchend", "transform"]
+      },
       "usage_stats": {
         "times_used": 1,
         "success_rate": 1.0,
@@ -100,6 +140,14 @@
       "solution_summary": "LocalStorage cache with user isolation, TTL expiration, and silent failure handling",
       "reusability_score": 5,
       "related": ["swipe-drawer"],
+      "embeddings_hint": "cache localStorage sessionStorage TTL expiration user isolation offline storage persistence",
+      "synonyms": ["local cache", "browser cache", "client cache", "offline cache"],
+      "anti_patterns": ["Caching without user scoping", "No TTL expiration", "Crashing on quota exceeded", "SSR localStorage access"],
+      "applicability": {
+        "stack_requires": ["typescript"],
+        "file_patterns": ["*.ts", "*.svelte"],
+        "code_patterns": ["localStorage", "sessionStorage", "getItem", "setItem"]
+      },
       "usage_stats": {
         "times_used": 1,
         "success_rate": 1.0,
@@ -117,6 +165,14 @@
       "solution_summary": "Pattern matching function to extract status and data from Phoenix LiveView AsyncResult structs",
       "reusability_score": 6,
       "related": ["liveview-navigation"],
+      "embeddings_hint": "phoenix liveview async_result assign_async loading error success status pattern matching",
+      "synonyms": ["async result helper", "liveview async", "loading state extraction"],
+      "anti_patterns": ["Accessing AsyncResult fields directly", "Not handling all states", "Blocking in mount"],
+      "applicability": {
+        "stack_requires": ["elixir", "phoenix", "liveview"],
+        "file_patterns": ["*_live.ex"],
+        "code_patterns": ["assign_async", "AsyncResult", "%Phoenix.LiveView.AsyncResult"]
+      },
       "usage_stats": {
         "times_used": 1,
         "success_rate": 1.0,
@@ -134,6 +190,14 @@
       "solution_summary": "Navigation utility using LiveView pushHistoryPatch for WebSocket-based SPA navigation with direction tracking",
       "reusability_score": 6,
       "related": ["directional-transitions", "async-result-extraction"],
+      "embeddings_hint": "liveview navigation router push_patch live_patch spa websocket client-side navigation",
+      "synonyms": ["live navigation", "spa navigation", "client navigation", "push patch"],
+      "anti_patterns": ["Using window.location for navigation", "Full page reload", "Losing WebSocket connection"],
+      "applicability": {
+        "stack_requires": ["phoenix", "liveview", "svelte"],
+        "file_patterns": ["*.svelte", "*.ts"],
+        "code_patterns": ["pushHistoryPatch", "live_patch", "navigate"]
+      },
       "usage_stats": {
         "times_used": 1,
         "success_rate": 1.0,
@@ -150,45 +214,106 @@
       "problem_keywords": ["abrupt transitions", "spatial context", "native app feel", "slide animation"],
       "solution_summary": "CSS animations coordinated with sessionStorage direction tracking for native-like forward/back navigation transitions",
       "reusability_score": 5,
-      "related": ["liveview-navigation"],
+      "related": ["liveview-navigation", "motion-presets"],
+      "embeddings_hint": "page transition navigation animation slide forward back direction spatial context native feel",
+      "synonyms": ["page animation", "route transition", "navigation transition", "screen transition"],
+      "anti_patterns": ["Same transition for forward and back", "No transition causing disorientation", "Ignoring reduced-motion"],
+      "applicability": {
+        "stack_requires": ["svelte", "css"],
+        "file_patterns": ["*.svelte", "*.css"],
+        "code_patterns": ["@keyframes", "animation:", "sessionStorage"]
+      },
       "usage_stats": {
         "times_used": 1,
         "success_rate": 1.0,
         "feedback": ["Discovered in Syna / HOME-001"]
+      }
+    },
+    {
+      "id": "design-by-contract",
+      "name": "Design by Contract",
+      "path": "backend/design-by-contract.md",
+      "category": "backend",
+      "tags": ["elixir", "ash", "typescript", "validation", "testing"],
+      "triggers": ["precondition", "postcondition", "invariant", "contract", "validation"],
+      "problem_keywords": ["invalid input", "unexpected output", "inconsistent state", "debugging", "runtime error"],
+      "solution_summary": "Enforce function contracts using preconditions, postconditions, and invariants with Ash validations and type specs",
+      "reusability_score": 5,
+      "related": ["ash-get-or-create"],
+      "embeddings_hint": "design by contract precondition postcondition invariant validation assertion guard clause",
+      "synonyms": ["contract programming", "defensive programming", "input validation", "function contracts"],
+      "anti_patterns": ["No input validation", "Silent failures", "Inconsistent error handling", "Overly defensive code everywhere"],
+      "applicability": {
+        "stack_requires": ["elixir"],
+        "file_patterns": ["*.ex"],
+        "code_patterns": ["when is_", "@spec", "validate", "guard"]
+      },
+      "usage_stats": {
+        "times_used": 0,
+        "success_rate": null,
+        "feedback": []
       }
     }
   ],
   "categories": {
     "backend": {
       "description": "Elixir/Phoenix/Ash patterns",
-      "path": "backend/"
+      "path": "backend/",
+      "stack": ["elixir", "phoenix", "ash"]
     },
     "frontend": {
       "description": "Svelte/TypeScript/LiveSvelte patterns",
-      "path": "frontend/"
+      "path": "frontend/",
+      "stack": ["svelte5", "typescript", "livesvelte"]
     },
     "ux": {
       "description": "User experience, animations, interactions",
-      "path": "ux/"
+      "path": "ux/",
+      "stack": ["css", "svelte5", "accessibility"]
     },
     "pwa": {
       "description": "Progressive Web App patterns",
-      "path": "pwa/"
+      "path": "pwa/",
+      "stack": ["typescript", "service-worker", "offline"]
     }
   },
   "retrieval_guide": {
     "description": "How AI should use this index for pattern retrieval",
     "steps": [
-      "1. Parse user request for keywords matching 'triggers' or 'problem_keywords'",
-      "2. Filter patterns by relevant 'category' and 'tags'",
-      "3. Rank by 'reusability_score' (higher = more broadly applicable)",
-      "4. Check 'related' patterns for complementary solutions",
-      "5. Consider 'usage_stats.success_rate' for proven patterns"
+      "1. Parse user request for keywords matching 'triggers', 'problem_keywords', or 'embeddings_hint'",
+      "2. Check 'synonyms' for alternative phrasings of the request",
+      "3. Filter patterns by relevant 'category' and 'tags'",
+      "4. Verify 'applicability.stack_requires' matches the project stack",
+      "5. Check 'applicability.file_patterns' and 'code_patterns' for contextual relevance",
+      "6. Rank by 'reusability_score' (higher = more broadly applicable)",
+      "7. Check 'related' patterns for complementary solutions",
+      "8. Consider 'usage_stats.success_rate' for proven patterns",
+      "9. Review 'anti_patterns' to understand what NOT to do"
     ],
     "score_thresholds": {
       "high": 5,
       "medium": 3,
       "low": 1
+    },
+    "embedding_usage": {
+      "description": "How to use embeddings_hint for semantic search",
+      "method": "Concatenate embeddings_hint with name and solution_summary for embedding generation",
+      "similarity_threshold": 0.7
     }
+  },
+  "schema_version": {
+    "current": "1.1.0",
+    "changes": [
+      {
+        "version": "1.1.0",
+        "date": "2026-01-22",
+        "description": "Added RAG optimization fields: embeddings_hint, synonyms, anti_patterns, applicability"
+      },
+      {
+        "version": "1.0.0",
+        "date": "2026-01-21",
+        "description": "Initial pattern index"
+      }
+    ]
   }
 }
