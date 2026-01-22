@@ -59,24 +59,27 @@ When implementing a feature:
 | Pattern | Description | Tags |
 |---------|-------------|------|
 | [async-result-extraction](backend/async-result-extraction.md) | Safely extract status from assign_async results | `elixir` `liveview` |
+| [ash-get-or-create](backend/ash-get-or-create.md) | Idempotent resource retrieval that creates if not found | `elixir` `ash` |
 
 ### Frontend Patterns
 
 | Pattern | Description | Tags |
 |---------|-------------|------|
 | [liveview-navigation](frontend/liveview-navigation.md) | App-like navigation with LiveView WebSocket | `liveview` `svelte` `pwa` |
+| [async-image-fade-in](frontend/async-image-fade-in.md) | Smooth fade-in when async images load | `svelte5` `css` `pwa` |
 
 ### PWA Patterns
 
 | Pattern | Description | Tags |
 |---------|-------------|------|
-| (none yet) | Patterns will appear here after retrospectives | - |
+| [user-scoped-cache](pwa/user-scoped-cache.md) | LocalStorage cache with user isolation and TTL | `typescript` `pwa` |
 
 ### UX Patterns
 
 | Pattern | Description | Tags |
 |---------|-------------|------|
 | [directional-transitions](ux/directional-transitions.md) | Direction-aware screen animations | `css` `pwa` `a11y` |
+| [motion-presets](ux/motion-presets.md) | Centralized animation presets with reduced-motion support | `svelte5` `a11y` |
 
 ---
 

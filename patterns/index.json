@@ -5,6 +5,74 @@
   "last_updated": "2026-01-21",
   "patterns": [
     {
+      "id": "async-image-fade-in",
+      "name": "Async Image Fade-In",
+      "path": "frontend/async-image-fade-in.md",
+      "category": "frontend",
+      "tags": ["svelte5", "typescript", "css-transitions", "pwa", "images"],
+      "triggers": ["image fade", "lazy load fade", "image transition", "smooth image load"],
+      "problem_keywords": ["image pop-in", "abrupt image", "image flash", "jarring load"],
+      "solution_summary": "Track loaded state and apply opacity transition for smooth image appearance",
+      "reusability_score": 5,
+      "related": ["async-media-loading"],
+      "usage_stats": {
+        "times_used": 1,
+        "success_rate": 1.0,
+        "feedback": ["Discovered in Syna / CONV-001"]
+      }
+    },
+    {
+      "id": "motion-presets",
+      "name": "Motion Preset System",
+      "path": "ux/motion-presets.md",
+      "category": "ux",
+      "tags": ["svelte5", "typescript", "css-custom-properties", "a11y", "animation"],
+      "triggers": ["animation system", "motion tokens", "transition presets", "stagger animation"],
+      "problem_keywords": ["inconsistent animation", "hardcoded duration", "reduced motion", "animation rhythm"],
+      "solution_summary": "Layered motion system with tokens, semantic presets, and automatic reduced-motion support",
+      "reusability_score": 6,
+      "related": ["directional-transitions", "async-image-fade-in"],
+      "usage_stats": {
+        "times_used": 1,
+        "success_rate": 1.0,
+        "feedback": ["Discovered in Syna / CONV-001"]
+      }
+    },
+    {
+      "id": "ash-get-or-create",
+      "name": "Ash Get-or-Create",
+      "path": "backend/ash-get-or-create.md",
+      "category": "backend",
+      "tags": ["elixir", "ash", "ecto", "idempotent"],
+      "triggers": ["get or create", "ensure exists", "default resource", "upsert"],
+      "problem_keywords": ["not found create", "idempotent", "race condition", "read_one vs read_one!"],
+      "solution_summary": "Idempotent resource retrieval using read_one with proper error handling to create if not found",
+      "reusability_score": 5,
+      "related": ["async-result-extraction"],
+      "usage_stats": {
+        "times_used": 1,
+        "success_rate": 1.0,
+        "feedback": ["Discovered in Syna / CONV-001"]
+      }
+    },
+    {
+      "id": "async-media-loading",
+      "name": "Async Media Loading",
+      "path": "frontend/async-media-loading.md",
+      "category": "frontend",
+      "tags": ["svelte5", "typescript", "pwa", "ux", "accessibility", "images"],
+      "triggers": ["image loading", "lazy load", "thumbnail", "avatar", "cover image"],
+      "problem_keywords": ["content jump", "broken image", "loading indicator", "image fallback"],
+      "solution_summary": "Polished image loading with lazy loading, fade-in animations, skeleton placeholders, and graceful fallbacks",
+      "reusability_score": 7,
+      "related": ["swipe-drawer", "user-scoped-cache"],
+      "usage_stats": {
+        "times_used": 1,
+        "success_rate": 1.0,
+        "feedback": ["Discovered in Syna / HOME-002"]
+      }
+    },
+    {
       "id": "swipe-drawer",
       "name": "Swipe-to-Close Drawer",
       "path": "frontend/swipe-drawer.md",
@@ -14,7 +82,7 @@
       "problem_keywords": ["native feel", "swipe to dismiss", "safe areas", "touch gesture"],
       "solution_summary": "Mobile-native side drawer with swipe gesture support, safe area handling, and smooth animations",
       "reusability_score": 6,
-      "related": ["user-scoped-cache"],
+      "related": ["user-scoped-cache", "async-media-loading"],
       "usage_stats": {
         "times_used": 1,
         "success_rate": 1.0,
