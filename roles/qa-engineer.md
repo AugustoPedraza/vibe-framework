@@ -1333,3 +1333,353 @@ Total = (TestCov × 0.20) + (Patterns × 0.15) + (UXStates × 0.15) +
 | UX States | Score < 3 (missing 2+ states) |
 | Error Handling | Score < 3 (silent failures) |
 | Accessibility | Score < 2 (WCAG violations)
+
+---
+
+## Industry Principles
+
+> Distilled wisdom from foundational texts that complement our existing patterns.
+
+### From Testing Best Practices (Aggregated)
+
+**Test Behavior Not Implementation**: Tests should survive refactoring
+
+- **Why**: Implementation details change; behavior contracts should not
+- **Apply when**: Test asserts internal state instead of observable outcome
+<!-- AI:PRINCIPLE source="testing-practices" id="behavior-not-implementation" -->
+
+**One Assertion Per Concept**: Multiple assertions OK if testing one logical thing
+
+- **Why**: Clear test failures; one concept = one reason to fail
+- **Apply when**: Test has multiple unrelated assertions
+<!-- AI:PRINCIPLE source="testing-practices" id="one-assertion" -->
+
+**FIRST Properties**: Fast, Independent, Repeatable, Self-validating, Timely
+
+- **Why**: Tests that violate FIRST become maintenance burdens
+- **Apply when**: Tests are slow, flaky, or dependent on order
+<!-- AI:PRINCIPLE source="testing-practices" id="first-properties" -->
+
+**Avoid Test Interdependence**: Each test should set up its own state
+
+- **Why**: Shared state causes cascade failures and ordering bugs
+- **Apply when**: Tests share setup or depend on previous tests
+<!-- AI:PRINCIPLE source="testing-practices" id="no-interdependence" -->
+
+**Test at the Right Level**: Unit for logic, integration for boundaries, E2E for critical paths
+
+- **Why**: Wrong level = slow tests, false confidence, or missed bugs
+- **Apply when**: Choosing test type for new functionality
+<!-- AI:PRINCIPLE source="testing-practices" id="right-level" -->
+
+### From Philosophy of Software Design (Ousterhout)
+
+**Tests Reveal Design Problems**: Hard to test = bad interface design
+
+- **Why**: Testability is a proxy for API quality; awkward tests signal awkward design
+- **Apply when**: Test setup is complex or tests are brittle
+<!-- AI:PRINCIPLE source="philosophy-software-design" id="tests-reveal-design" -->
+
+**Don't Test Implementation Details**: Test the contract, not the code
+
+- **Why**: Internal refactoring shouldn't break tests
+- **Apply when**: Test references private methods or internal state
+<!-- AI:PRINCIPLE source="philosophy-software-design" id="test-contract" -->
+
+---
+
+## Stack-Specific Testing Principles
+
+> Testing patterns for Elixir/Ash/Phoenix and Svelte/Vitest.
+
+### From Elixir/ExUnit Patterns
+
+**Async Tests by Default**: Use `async: true` unless sharing database state
+
+- **Why**: Async tests run in parallel; synchronous tests are 5-10x slower
+- **Apply when**: Test doesn't depend on specific database state from other tests
+```elixir
+# GOOD: Async (default for most tests)
+defmodule MyApp.AccountsTest do
+  use MyApp.DataCase, async: true
+end
+
+# When async: false is needed
+# - Tests that truncate tables
+# - Tests with global state (GenServer, ETS)
+```
+<!-- AI:PRINCIPLE source="exunit" id="async-default" -->
+
+**Setup Blocks for Fixtures**: Use `setup` and `setup_all` for test data
+
+- **Why**: Explicit setup is clearer than implicit; each test documents its needs
+- **Apply when**: Multiple tests need the same data
+```elixir
+describe "user authentication" do
+  setup do
+    user = insert(:user, email: "test@example.com")
+    %{user: user}
+  end
+
+  test "validates password", %{user: user} do
+    # user available from setup
+  end
+end
+```
+<!-- AI:PRINCIPLE source="exunit" id="setup-blocks" -->
+
+**Pattern Match Assertions**: Use pattern matching in assertions, not equality
+
+- **Why**: Pattern matching shows structure; equality hides it
+- **Apply when**: Asserting on structured data like tuples or maps
+```elixir
+# WRONG: Equality assertion hides structure
+assert result == {:ok, %User{email: "test@example.com"}}
+
+# RIGHT: Pattern match shows expected shape
+assert {:ok, %User{email: "test@example.com"}} = result
+```
+<!-- AI:PRINCIPLE source="exunit" id="pattern-match-assertions" -->
+
+### From Ash Testing Patterns
+
+**Test Actions, Not Internals**: Test Ash through public action APIs
+
+- **Why**: Actions are the contract; internal implementation may change
+- **Apply when**: Testing any Ash resource behavior
+```elixir
+# WRONG: Testing internal changeset
+changeset = User.changeset(%User{}, params)
+assert changeset.valid?
+
+# RIGHT: Test through action
+assert {:ok, %User{}} = Accounts.create_user(params)
+assert {:error, %Ash.Error.Invalid{}} = Accounts.create_user(bad_params)
+```
+<!-- AI:PRINCIPLE source="ash-testing" id="test-actions" -->
+
+**Actor Context in Tests**: Always pass actor when testing authorized actions
+
+- **Why**: Policies depend on actor; missing actor = false positives
+- **Apply when**: Testing any action with policies
+```elixir
+# Test with actor
+test "user can read own profile", %{user: user} do
+  assert {:ok, _} = Accounts.get_user(user.id, actor: user)
+end
+
+# Test authorization failure
+test "user cannot read others profile", %{user: user, other_user: other} do
+  assert {:error, %Ash.Error.Forbidden{}} =
+    Accounts.get_user(other.id, actor: user)
+end
+```
+<!-- AI:PRINCIPLE source="ash-testing" id="actor-context" -->
+
+**Use Ash.Seed for Test Data**: Prefer Ash.Seed over factories for Ash resources
+
+- **Why**: Ash.Seed respects validations and changes; factories bypass them
+- **Apply when**: Creating test data for Ash resources
+```elixir
+# Create test data through Ash
+Ash.Seed.seed!(User, %{
+  email: "test@example.com",
+  name: "Test User"
+})
+```
+<!-- AI:PRINCIPLE source="ash-testing" id="ash-seed" -->
+
+### From Phoenix LiveView Testing
+
+**Render Then Assert**: Always wait for render before asserting
+
+- **Why**: LiveView updates are async; asserting too early misses changes
+- **Apply when**: Testing any LiveView behavior
+```elixir
+# WRONG: Assert immediately
+view |> element("button") |> render_click()
+assert has_element?(view, ".result")  # Might fail
+
+# RIGHT: Wait for re-render
+view |> element("button") |> render_click()
+html = render(view)  # Forces re-render
+assert html =~ "result"
+```
+<!-- AI:PRINCIPLE source="liveview-testing" id="render-then-assert" -->
+
+**Test Async Assigns**: Use assert_async for assign_async results
+
+- **Why**: Async assigns load after mount; must wait for completion
+- **Apply when**: Testing views with assign_async
+```elixir
+test "loads messages async", %{conn: conn} do
+  {:ok, view, _html} = live(conn, ~p"/chat")
+
+  # Initial state shows loading
+  assert has_element?(view, "[data-loading]")
+
+  # Wait for async to complete
+  assert_async(view, :messages)
+
+  # Now messages are loaded
+  assert has_element?(view, "[data-testid='message-list']")
+end
+```
+<!-- AI:PRINCIPLE source="liveview-testing" id="test-async-assigns" -->
+
+**Test Push Events**: Verify push_event reaches Svelte
+
+- **Why**: Push events are the LiveView-to-Svelte bridge
+- **Apply when**: Testing LiveView → Svelte communication
+```elixir
+test "pushes message to Svelte", %{conn: conn} do
+  {:ok, view, _html} = live(conn, ~p"/chat")
+
+  view |> form("#message-form", message: %{content: "Hello"}) |> render_submit()
+
+  # Assert event was pushed
+  assert_push_event(view, "message:sent", %{content: "Hello"})
+end
+```
+<!-- AI:PRINCIPLE source="liveview-testing" id="test-push-events" -->
+
+### From Svelte/Vitest Testing
+
+**Testing Library Over Direct Access**: Use @testing-library/svelte, not component internals
+
+- **Why**: Testing library tests user behavior; direct access tests implementation
+- **Apply when**: Testing any Svelte component
+```typescript
+// WRONG: Accessing internals
+const component = new Component({ target: document.body });
+expect(component.$$.ctx[0]).toBe('value');
+
+// RIGHT: Testing library
+render(Component, { props: { value: 'test' } });
+expect(screen.getByText('test')).toBeInTheDocument();
+```
+<!-- AI:PRINCIPLE source="svelte-testing" id="testing-library" -->
+
+**User Event Over Fire Event**: Use @testing-library/user-event for interactions
+
+- **Why**: userEvent simulates real user behavior; fireEvent is low-level
+- **Apply when**: Testing user interactions like clicks, typing
+```typescript
+import userEvent from '@testing-library/user-event';
+
+// WRONG: fireEvent is low-level
+fireEvent.click(button);
+fireEvent.change(input, { target: { value: 'text' } });
+
+// RIGHT: userEvent simulates real user
+const user = userEvent.setup();
+await user.click(button);
+await user.type(input, 'text');
+```
+<!-- AI:PRINCIPLE source="svelte-testing" id="user-event" -->
+
+**Mock Stores, Not Components**: Mock Svelte stores for isolation
+
+- **Why**: Store mocks test component logic; component mocks hide bugs
+- **Apply when**: Component depends on shared stores
+```typescript
+import { writable } from 'svelte/store';
+import { messages } from '$lib/stores/messages';
+
+vi.mock('$lib/stores/messages', () => ({
+  messages: writable([
+    { id: '1', content: 'Test message' }
+  ])
+}));
+
+test('renders messages from store', () => {
+  render(MessageList);
+  expect(screen.getByText('Test message')).toBeInTheDocument();
+});
+```
+<!-- AI:PRINCIPLE source="svelte-testing" id="mock-stores" -->
+
+**Test Props Changes**: Verify component reacts to prop updates
+
+- **Why**: Svelte reactivity should update UI when props change
+- **Apply when**: Component behavior depends on prop values
+```typescript
+test('updates when props change', async () => {
+  const { component } = render(Counter, { props: { count: 0 } });
+
+  expect(screen.getByText('Count: 0')).toBeInTheDocument();
+
+  await component.$set({ count: 5 });
+
+  expect(screen.getByText('Count: 5')).toBeInTheDocument();
+});
+```
+<!-- AI:PRINCIPLE source="svelte-testing" id="test-props-changes" -->
+
+### From Playwright E2E Patterns
+
+**Page Objects for Reuse**: Encapsulate page interactions in page objects
+
+- **Why**: Page objects reduce duplication; changes affect one place
+- **Apply when**: Same page interactions used in multiple tests
+```typescript
+// tests/pages/login.ts
+export class LoginPage {
+  constructor(private page: Page) {}
+
+  async login(email: string, password: string) {
+    await this.page.fill('[data-testid="email"]', email);
+    await this.page.fill('[data-testid="password"]', password);
+    await this.page.click('[data-testid="submit"]');
+  }
+}
+
+// tests/auth.spec.ts
+test('user can login', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await loginPage.login('user@test.com', 'password');
+  await expect(page).toHaveURL('/dashboard');
+});
+```
+<!-- AI:PRINCIPLE source="playwright" id="page-objects" -->
+
+**Fixtures for Auth State**: Use Playwright fixtures for authenticated tests
+
+- **Why**: Fixtures share auth state; each test doesn't re-login
+- **Apply when**: Multiple tests need authenticated user
+```typescript
+// tests/fixtures/auth.ts
+import { test as base } from '@playwright/test';
+
+export const test = base.extend({
+  authenticatedPage: async ({ page }, use) => {
+    await page.goto('/login');
+    await page.fill('[data-testid="email"]', 'test@example.com');
+    await page.fill('[data-testid="password"]', 'password');
+    await page.click('[data-testid="submit"]');
+    await page.waitForURL('/dashboard');
+    await use(page);
+  }
+});
+
+// Usage
+test('can create project', async ({ authenticatedPage }) => {
+  // Already logged in
+});
+```
+<!-- AI:PRINCIPLE source="playwright" id="fixtures-auth" -->
+
+**Wait for Network Idle**: Use networkidle for data-dependent assertions
+
+- **Why**: SPA data loads async; assertions before load = flaky tests
+- **Apply when**: Page loads data after navigation
+```typescript
+// WRONG: Assert immediately
+await page.goto('/projects');
+expect(await page.locator('.project').count()).toBe(3);
+
+// RIGHT: Wait for network idle
+await page.goto('/projects', { waitUntil: 'networkidle' });
+expect(await page.locator('.project').count()).toBe(3);
+```
+<!-- AI:PRINCIPLE source="playwright" id="wait-network-idle" -->

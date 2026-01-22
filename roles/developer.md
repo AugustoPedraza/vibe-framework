@@ -1689,3 +1689,473 @@ iex -S mix            # Interactive shell
 - [ ] No CSS anti-patterns (z-index, colors, spacing)
 - [ ] Uses design tokens (not raw Tailwind)
 - [ ] Mobile layout considerations (100dvh, safe areas)
+
+---
+
+## 15. Industry Principles
+
+> Distilled wisdom from foundational texts that complement our existing patterns.
+
+### From Clean Code (Robert Martin)
+
+**Function Arguments**: ≤3 arguments; more = extract object
+
+- **Why**: Many arguments increase complexity and make testing harder
+- **Apply when**: Function has 4+ parameters
+<!-- AI:PRINCIPLE source="clean-code" id="function-arguments" -->
+
+**Function Length**: If you need a comment to explain a section, extract it
+
+- **Why**: Comments explaining code sections signal the section should be its own function
+- **Apply when**: You're about to write a comment like "// Now we do X"
+<!-- AI:PRINCIPLE source="clean-code" id="function-length" -->
+
+**Command-Query Separation**: Functions either DO something OR return something, never both
+
+- **Why**: Mixing commands and queries creates confusion about side effects
+- **Apply when**: A function both changes state AND returns a value
+<!-- AI:PRINCIPLE source="clean-code" id="command-query" -->
+
+**Boy Scout Rule**: Leave code cleaner than you found it
+
+- **Why**: Small improvements compound; entropy is the default
+- **Apply when**: Touching any code, even for unrelated changes
+<!-- AI:PRINCIPLE source="clean-code" id="boy-scout" -->
+
+**Newspaper Metaphor**: High-level at top, details below
+
+- **Why**: Readers should understand intent before implementation
+- **Apply when**: Organizing functions within a module
+<!-- AI:PRINCIPLE source="clean-code" id="newspaper" -->
+
+### From Philosophy of Software Design (Ousterhout)
+
+**Deep vs Shallow Modules**: Simple interface, complex implementation > complex interface, simple implementation
+
+- **Why**: Interface complexity leaks everywhere; implementation complexity is contained
+- **Apply when**: Designing any module, component, or API
+<!-- AI:PRINCIPLE source="philosophy-software-design" id="deep-modules" -->
+
+**Define Errors Out of Existence**: Design APIs where errors can't happen rather than handling them
+
+- **Why**: The best error handling is avoiding errors entirely
+- **Apply when**: Designing function signatures or API contracts
+<!-- AI:PRINCIPLE source="philosophy-software-design" id="define-errors-out" -->
+
+**Strategic vs Tactical**: Invest 10-20% extra time for cleaner design; tactical debt compounds
+
+- **Why**: Quick hacks accumulate; strategic investment pays dividends
+- **Apply when**: Feeling pressure to cut corners
+<!-- AI:PRINCIPLE source="philosophy-software-design" id="strategic-vs-tactical" -->
+
+**Complexity is Incremental**: Death by a thousand cuts; every "small hack" matters
+
+- **Why**: No single decision causes complexity; the accumulation does
+- **Apply when**: Justifying "just this once" shortcuts
+<!-- AI:PRINCIPLE source="philosophy-software-design" id="complexity-incremental" -->
+
+**Information Hiding**: Modules should hide complexity, not expose it
+
+- **Why**: Internal details should never leak through interfaces
+- **Apply when**: Deciding what to export from a module
+<!-- AI:PRINCIPLE source="philosophy-software-design" id="information-hiding" -->
+
+### From Pragmatic Programmer (Hunt & Thomas)
+
+**Orthogonality**: Changes in one area shouldn't require changes elsewhere
+
+- **Why**: Coupled code multiplies the cost of every change
+- **Apply when**: A change ripples across multiple files unexpectedly
+<!-- AI:PRINCIPLE source="pragmatic-programmer" id="orthogonality" -->
+
+**Tracer Bullets**: Build thin end-to-end slices first to validate architecture
+
+- **Why**: Early integration reveals assumptions; late integration reveals surprises
+- **Apply when**: Starting a new feature or system
+<!-- AI:PRINCIPLE source="pragmatic-programmer" id="tracer-bullets" -->
+
+**Good Enough Software**: Know when to stop; perfect is enemy of shipped
+
+- **Why**: Diminishing returns on polish; users need working software
+- **Apply when**: Gold-plating beyond requirements
+<!-- AI:PRINCIPLE source="pragmatic-programmer" id="good-enough" -->
+
+**Don't Repeat Yourself**: Every piece of knowledge has a single, unambiguous representation
+
+- **Why**: Duplicated knowledge diverges; single source stays consistent
+- **Apply when**: Same logic exists in multiple places
+<!-- AI:PRINCIPLE source="pragmatic-programmer" id="dry" -->
+
+### From Refactoring (Fowler)
+
+**When NOT to Refactor**: Don't refactor if deadline critical, code works and won't change, or rewrite is cheaper
+
+- **Why**: Refactoring has costs; not all code deserves investment
+- **Apply when**: Feeling urge to "clean up" stable code
+<!-- AI:PRINCIPLE source="refactoring" id="when-not-to" -->
+
+**Refactoring Triggers**: Long method, feature envy, data clumps, primitive obsession, divergent change
+
+- **Why**: These code smells signal structural problems worth addressing
+- **Apply when**: Code exhibits these specific patterns
+<!-- AI:PRINCIPLE source="refactoring" id="triggers" -->
+
+---
+
+## 16. Elixir/Ash/Phoenix Principles
+
+> Stack-specific wisdom for idiomatic, maintainable Elixir applications.
+
+### From Elixir Best Practices
+
+**Let It Crash**: Don't defend against every error; let supervisors handle recovery
+
+- **Why**: Defensive coding hides bugs; crashes surface them; supervisors restart cleanly
+- **Apply when**: Tempted to wrap everything in try/rescue
+```elixir
+# WRONG: Hiding problems
+def get_user(id) do
+  try do
+    Repo.get!(User, id)
+  rescue
+    _ -> nil
+  end
+end
+
+# RIGHT: Let it crash, handle at boundaries
+def get_user(id), do: Repo.get(User, id)
+```
+<!-- AI:PRINCIPLE source="elixir-practices" id="let-it-crash" -->
+
+**Pipelines Over Nesting**: Use |> for data transformations, not nested calls
+
+- **Why**: Pipelines read top-to-bottom like prose; nesting reads inside-out
+- **Apply when**: More than 2 function calls on the same data
+```elixir
+# WRONG: Nested
+format(normalize(validate(params)))
+
+# RIGHT: Pipeline
+params |> validate() |> normalize() |> format()
+```
+<!-- AI:PRINCIPLE source="elixir-practices" id="pipelines" -->
+
+**Pattern Match Early**: Destructure in function heads, not function bodies
+
+- **Why**: Pattern matching in heads is declarative; guards are for constraints
+- **Apply when**: Function behavior depends on input structure
+```elixir
+# WRONG: Conditional in body
+def handle_result(result) do
+  if result.ok?, do: handle_success(result), else: handle_error(result)
+end
+
+# RIGHT: Pattern match in head
+def handle_result({:ok, value}), do: handle_success(value)
+def handle_result({:error, reason}), do: handle_error(reason)
+```
+<!-- AI:PRINCIPLE source="elixir-practices" id="pattern-match-early" -->
+
+**With for Happy Path**: Use `with` for sequential operations that can fail
+
+- **Why**: Avoids deeply nested case statements; explicit about failure handling
+- **Apply when**: Multiple operations that each return {:ok, _} or {:error, _}
+```elixir
+with {:ok, user} <- Accounts.get_user(id),
+     {:ok, project} <- Projects.get_project(project_id),
+     :ok <- Policies.can_access?(user, project) do
+  {:ok, project}
+else
+  {:error, :not_found} -> {:error, "Resource not found"}
+  {:error, :unauthorized} -> {:error, "Access denied"}
+end
+```
+<!-- AI:PRINCIPLE source="elixir-practices" id="with-happy-path" -->
+
+### From Ash Framework Patterns
+
+**Actions Are Verbs**: Name actions after what they DO, not what they return
+
+- **Why**: Actions represent domain operations; verbs communicate intent
+- **Apply when**: Defining Ash actions
+```elixir
+# WRONG: Noun-based
+actions do
+  create :user_creation
+  update :status_update
+end
+
+# RIGHT: Verb-based
+actions do
+  create :register
+  update :change_status
+end
+```
+<!-- AI:PRINCIPLE source="ash-framework" id="actions-verbs" -->
+
+**Policies Over Callbacks**: Use Ash policies, not Phoenix plugs or manual checks
+
+- **Why**: Policies are declarative, composable, and tested with Ash
+- **Apply when**: Any authorization logic
+```elixir
+# WRONG: Manual check in LiveView
+def handle_event("delete", _, socket) do
+  if can_delete?(socket.assigns.current_user, socket.assigns.resource) do
+    # ...
+  end
+end
+
+# RIGHT: Policy on action
+policies do
+  policy action(:delete) do
+    authorize_if relates_to_actor_via(:owner)
+  end
+end
+```
+<!-- AI:PRINCIPLE source="ash-framework" id="policies-over-callbacks" -->
+
+**Calculations for Derived Data**: Use Ash calculations, not virtual fields or manual computation
+
+- **Why**: Calculations are lazy-loaded, filterable, and cacheable
+- **Apply when**: Any computed value that depends on resource data
+```elixir
+calculations do
+  calculate :full_name, :string, expr(first_name <> " " <> last_name)
+  calculate :unread_count, :integer, expr(count(messages, query: [filter: expr(not read)]))
+end
+```
+<!-- AI:PRINCIPLE source="ash-framework" id="calculations-derived" -->
+
+**Changesets Are Transformations**: Changesets validate AND transform; use them for both
+
+- **Why**: Changesets are pipelines of validations and changes
+- **Apply when**: Any data mutation through Ash
+```elixir
+create :register do
+  accept [:email, :name, :password]
+
+  change fn changeset, _ ->
+    changeset
+    |> Ash.Changeset.change_attribute(:email, &String.downcase/1)
+    |> Ash.Changeset.change_attribute(:name, &String.trim/1)
+  end
+end
+```
+<!-- AI:PRINCIPLE source="ash-framework" id="changesets-transform" -->
+
+### From Phoenix/LiveView Patterns
+
+**Thin LiveViews**: LiveViews are orchestrators, not business logic containers
+
+- **Why**: Fat LiveViews are untestable; domain logic belongs in domains
+- **Apply when**: LiveView exceeds 100 lines or contains business rules
+```elixir
+# WRONG: Business logic in LiveView
+def handle_event("submit", params, socket) do
+  # 50 lines of validation and processing...
+end
+
+# RIGHT: Delegate to domain
+def handle_event("submit", params, socket) do
+  case Accounts.register_user(params, actor: socket.assigns.current_user) do
+    {:ok, user} -> {:noreply, redirect(socket, to: ~p"/welcome")}
+    {:error, error} -> {:noreply, assign(socket, :error, error)}
+  end
+end
+```
+<!-- AI:PRINCIPLE source="phoenix-liveview" id="thin-liveviews" -->
+
+**assign_async for Data Loading**: Never block mount; use assign_async
+
+- **Why**: Blocking mount delays first paint; async loading shows skeleton immediately
+- **Apply when**: Any data fetching in mount
+```elixir
+# WRONG: Blocking
+def mount(_, _, socket) do
+  messages = Messages.list_all()  # Blocks!
+  {:ok, assign(socket, messages: messages)}
+end
+
+# RIGHT: Async
+def mount(_, _, socket) do
+  {:ok, assign_async(socket, :messages, fn -> Messages.list_all() end)}
+end
+```
+<!-- AI:PRINCIPLE source="phoenix-liveview" id="assign-async" -->
+
+**push_event for Svelte**: Use push_event to communicate with Svelte components
+
+- **Why**: push_event is the bridge between LiveView state and Svelte reactivity
+- **Apply when**: LiveView needs to trigger Svelte behavior
+```elixir
+# Push specific events
+socket |> push_event("message:sent", %{message: message})
+
+# Update Svelte stores
+socket |> push_event("store:update", %{store: "messages", data: messages})
+```
+<!-- AI:PRINCIPLE source="phoenix-liveview" id="push-event-svelte" -->
+
+---
+
+## 17. Svelte 5 Principles
+
+> Svelte 5 runes and modern patterns for reactive, performant components.
+
+### From Svelte 5 Runes Patterns
+
+**$state for Local, $props for External**: Clear separation of owned vs passed data
+
+- **Why**: Ownership clarity prevents mutation bugs and enables optimization
+- **Apply when**: Declaring any reactive variable
+```svelte
+<script>
+  // External - owned by parent
+  let { items, onSelect } = $props();
+
+  // Local - owned by this component
+  let selectedIndex = $state(0);
+  let isExpanded = $state(false);
+</script>
+```
+<!-- AI:PRINCIPLE source="svelte5" id="state-props-separation" -->
+
+**$derived for Computed Values**: Never compute in render; use $derived
+
+- **Why**: $derived caches results; inline computation runs every render
+- **Apply when**: Any value that depends on other reactive values
+```svelte
+<script>
+  let { items, filter } = $props();
+
+  // WRONG: Computed in template
+  // {#each items.filter(i => i.active) as item}
+
+  // RIGHT: $derived
+  const filteredItems = $derived(items.filter(i => i.active));
+</script>
+
+{#each filteredItems as item}
+```
+<!-- AI:PRINCIPLE source="svelte5" id="derived-computed" -->
+
+**$effect for Side Effects**: Effects run after DOM updates; don't use for derived values
+
+- **Why**: Effects are for synchronization with external systems, not computation
+- **Apply when**: Need to sync with localStorage, APIs, or other external state
+```svelte
+<script>
+  let count = $state(0);
+
+  // RIGHT: Sync external system
+  $effect(() => {
+    localStorage.setItem('count', count.toString());
+  });
+
+  // WRONG: Use $derived instead
+  // $effect(() => { doubled = count * 2; });
+</script>
+```
+<!-- AI:PRINCIPLE source="svelte5" id="effect-side-effects" -->
+
+### From Svelte Component Patterns
+
+**Slots Over Props for Content**: Use slots for projected content, not props
+
+- **Why**: Slots are composable; content props create string escaping issues
+- **Apply when**: Component accepts rich content
+```svelte
+<!-- WRONG: Content as prop -->
+<Alert message="<strong>Warning</strong>: Check input" />
+
+<!-- RIGHT: Slot -->
+<Alert>
+  <strong>Warning</strong>: Check input
+</Alert>
+```
+<!-- AI:PRINCIPLE source="svelte-patterns" id="slots-over-props" -->
+
+**Event Forwarding with Callbacks**: Use callback props, not createEventDispatcher
+
+- **Why**: Svelte 5 prefers callback props; they're typed and explicit
+- **Apply when**: Component needs to notify parent
+```svelte
+<script>
+  // WRONG: Old dispatcher pattern
+  // const dispatch = createEventDispatcher();
+  // dispatch('select', item);
+
+  // RIGHT: Callback props
+  let { onSelect } = $props();
+
+  function handleClick(item) {
+    onSelect?.(item);
+  }
+</script>
+```
+<!-- AI:PRINCIPLE source="svelte-patterns" id="callback-props" -->
+
+**CVA for Variant Styling**: Use class-variance-authority, not conditional classes
+
+- **Why**: CVA provides type-safe variants with clear defaults
+- **Apply when**: Component has multiple visual variants
+```svelte
+<script>
+  import { cva } from 'class-variance-authority';
+
+  const button = cva('rounded font-medium transition', {
+    variants: {
+      variant: {
+        primary: 'bg-primary text-primary-foreground',
+        secondary: 'bg-secondary text-secondary-foreground',
+        ghost: 'hover:bg-accent'
+      },
+      size: {
+        sm: 'h-8 px-3 text-sm',
+        md: 'h-10 px-4',
+        lg: 'h-12 px-6'
+      }
+    },
+    defaultVariants: { variant: 'primary', size: 'md' }
+  });
+</script>
+
+<button class={button({ variant, size })}>
+```
+<!-- AI:PRINCIPLE source="svelte-patterns" id="cva-variants" -->
+
+### From Store Patterns
+
+**Stores for Shared State**: Use Svelte stores for cross-component state
+
+- **Why**: Stores provide reactive, subscribable state that works outside components
+- **Apply when**: State needs to be shared across unrelated components
+```typescript
+// Factory pattern for encapsulated stores
+export function createMessageStore() {
+  const { subscribe, set, update } = writable<Message[]>([]);
+
+  return {
+    subscribe,
+    addMessage: (msg: Message) => update(msgs => [...msgs, msg]),
+    clear: () => set([])
+  };
+}
+
+export const messages = createMessageStore();
+```
+<!-- AI:PRINCIPLE source="svelte-patterns" id="stores-shared-state" -->
+
+**Derived Stores for Computed**: Use derived() for values computed from stores
+
+- **Why**: Derived stores update automatically when source stores change
+- **Apply when**: Computed value depends on multiple stores
+```typescript
+import { derived } from 'svelte/store';
+
+export const unreadCount = derived(
+  [messages, currentUser],
+  ([$messages, $user]) => $messages.filter(m => !m.read && m.to === $user.id).length
+);
+```
+<!-- AI:PRINCIPLE source="svelte-patterns" id="derived-stores" -->

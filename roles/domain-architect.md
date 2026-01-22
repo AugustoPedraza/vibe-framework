@@ -192,3 +192,43 @@ For features involving native-like behavior, add this section:
 - Audio/video playback features
 - Real-time features that should work offline
 - Any feature users expect to "just work" like native apps
+
+---
+
+## Industry Principles
+
+> Distilled wisdom from foundational texts that complement our existing patterns.
+
+### From Designing Elixir Systems with OTP (Tate)
+
+**Functional Core, Imperative Shell**: Pure functions inside, I/O at boundaries
+
+- **Why**: Pure functions are testable, predictable, and composable; side effects at edges
+- **Apply when**: Designing domain boundaries or resource structure
+<!-- AI:PRINCIPLE source="designing-elixir-otp" id="functional-core" -->
+
+**Data Pipelines Over State**: Transform data through pipes, don't accumulate state
+
+- **Why**: Pipelines are explicit about transformations; state hides complexity
+- **Apply when**: Designing domain operations or action flows
+<!-- AI:PRINCIPLE source="designing-elixir-otp" id="data-pipelines" -->
+
+**Layers of Responsibility**: Data → Boundary → Core → Boundary → Data
+
+- **Why**: Clear data flow enables reasoning about system behavior
+- **Apply when**: Defining domain architecture or module boundaries
+<!-- AI:PRINCIPLE source="designing-elixir-otp" id="layers-responsibility" -->
+
+### From Philosophy of Software Design (Ousterhout)
+
+**Module Depth**: Interface complexity / functionality ratio should be low
+
+- **Why**: Deep modules hide complexity; shallow modules expose it
+- **Apply when**: Designing domain APIs or resource interfaces
+<!-- AI:PRINCIPLE source="philosophy-software-design" id="module-depth" -->
+
+**Temporal Decomposition is Bad**: Don't organize by "what happens first"; organize by abstraction
+
+- **Why**: Time-based organization scatters related logic across modules
+- **Apply when**: Tempted to name modules "PreProcessor", "PostHandler", etc.
+<!-- AI:PRINCIPLE source="philosophy-software-design" id="temporal-decomposition" -->

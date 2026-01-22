@@ -758,3 +758,93 @@ See `{{paths.domain}}ui-ux/INDUSTRY_RESEARCH.md` for documented patterns.
 - Entry: Fade in 200ms
 - Exit: Slide down 150ms
 ```
+
+---
+
+## Industry Principles
+
+> Distilled wisdom from foundational texts that complement our existing patterns.
+
+### From Don't Make Me Think (Krug)
+
+**Trunk Test**: User should know: what site, what page, main sections, options at this level, where they are
+
+- **Why**: Users arrive disoriented; every screen must orient them instantly
+- **Apply when**: Designing any screen or navigation
+<!-- AI:PRINCIPLE source="dont-make-me-think" id="trunk-test" -->
+
+**Billboard Design**: Design for scanning, not reading; users don't read, they satisfice
+
+- **Why**: Users scan for the first "good enough" option, not the best one
+- **Apply when**: Laying out any text-heavy interface
+<!-- AI:PRINCIPLE source="dont-make-me-think" id="billboard-design" -->
+
+**Omit Needless Words**: Cut 50% of words, then cut 50% again
+
+- **Why**: Every word competes for attention; fewer words = more impact
+- **Apply when**: Writing any UI copy, labels, or instructions
+<!-- AI:PRINCIPLE source="dont-make-me-think" id="omit-words" -->
+
+**Obvious Always Wins**: If something requires thought, it's not obvious enough
+
+- **Why**: Cognitive load is the enemy; thinking = friction = drop-off
+- **Apply when**: Any interaction feels "clever" or requires explanation
+<!-- AI:PRINCIPLE source="dont-make-me-think" id="obvious-wins" -->
+
+**Happy Talk Must Die**: No one reads welcome blurbs; get to the point
+
+- **Why**: Users skip introductory text; only actionable content matters
+- **Apply when**: Tempted to add "Welcome to..." or explanatory paragraphs
+<!-- AI:PRINCIPLE source="dont-make-me-think" id="happy-talk" -->
+
+### From Refactoring UI (Wathan & Schoger)
+
+**Start With Too Much Space**: Easier to remove than add; default to generous whitespace
+
+- **Why**: Cramped designs feel overwhelming; spacious designs feel premium
+- **Apply when**: Initial layout; when UI feels "busy"
+<!-- AI:PRINCIPLE source="refactoring-ui" id="too-much-space" -->
+
+**Establish Visual Hierarchy First**: Size, weight, color in that order
+
+- **Why**: Users need to know what's important before they can scan effectively
+- **Apply when**: Any screen with multiple elements competing for attention
+<!-- AI:PRINCIPLE source="refactoring-ui" id="visual-hierarchy" -->
+
+**Don't Use Grey Text on Colored Backgrounds**: Use same hue at reduced opacity instead
+
+- **Why**: Grey on color looks "dirty"; same-hue opacity looks intentional
+- **Apply when**: Secondary text on colored surfaces
+<!-- AI:PRINCIPLE source="refactoring-ui" id="grey-on-color" -->
+
+**Limit Your Choices**: Pick 2 font sizes, 2 weights; constraints enable consistency
+
+- **Why**: Too many options lead to inconsistency; constraints breed creativity
+- **Apply when**: Defining typography or color systems
+<!-- AI:PRINCIPLE source="refactoring-ui" id="limit-choices" -->
+
+**Balance Weight and Contrast**: Icons next to text should feel equally weighted
+
+- **Why**: Unbalanced elements create visual tension that distracts
+- **Apply when**: Pairing icons with text, badges with labels
+<!-- AI:PRINCIPLE source="refactoring-ui" id="balance-weight" -->
+
+### From Mobile First (Wroblewski)
+
+**Constraints Breed Creativity**: Mobile forces prioritization; embrace it
+
+- **Why**: Limited space forces you to identify what truly matters
+- **Apply when**: Starting any design; desktop-first leads to bloat
+<!-- AI:PRINCIPLE source="mobile-first" id="constraints" -->
+
+**Content Priority First**: What's most important? Show only that on mobile
+
+- **Why**: If it's not essential on mobile, question if it's essential at all
+- **Apply when**: Deciding what to include in any interface
+<!-- AI:PRINCIPLE source="mobile-first" id="content-priority" -->
+
+**Progressive Enhancement**: Mobile base → tablet → desktop additions
+
+- **Why**: Start with core experience; add enhancements for larger screens
+- **Apply when**: Building responsive layouts
+<!-- AI:PRINCIPLE source="mobile-first" id="progressive-enhancement" -->
