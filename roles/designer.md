@@ -848,3 +848,145 @@ See `{{paths.domain}}ui-ux/INDUSTRY_RESEARCH.md` for documented patterns.
 - **Why**: Start with core experience; add enhancements for larger screens
 - **Apply when**: Building responsive layouts
 <!-- AI:PRINCIPLE source="mobile-first" id="progressive-enhancement" -->
+
+---
+
+## Tailwind Responsive & Theming Patterns
+
+> Advanced Tailwind patterns for responsive design and theming.
+
+### Mobile-First Breakpoints (Non-Negotiable)
+
+**Unprefixed = ALL Sizes; Prefixed = That Breakpoint AND UP**
+
+- **Why**: Mobile-first forces prioritization; desktop-first leads to override chains
+- **Apply when**: Writing any responsive styles
+
+| Prefix | Min-width | Mental Model |
+|--------|-----------|--------------|
+| (none) | 0px | "This is the default" |
+| `sm:` | 640px | "At small screens and up" |
+| `md:` | 768px | "At medium screens and up" |
+| `lg:` | 1024px | "At large screens and up" |
+| `xl:` | 1280px | "At extra large screens and up" |
+
+```html
+<!-- WRONG: Redundant, desktop-first thinking -->
+<div class="flex flex-col sm:flex-col md:flex-row lg:flex-row xl:flex-row">
+
+<!-- RIGHT: Mobile-first (only specify when it changes) -->
+<div class="flex flex-col md:flex-row">
+```
+<!-- AI:PRINCIPLE source="tailwind-responsive" id="mobile-first-breakpoints" -->
+
+### Breakpoint Range Targeting
+
+**Use max-* for Upper Bounds**: Target specific breakpoint ranges
+
+- **Why**: Sometimes styles should only apply within a range, not "and up"
+- **Apply when**: Tablet-only or mobile-only styles
+```html
+<!-- Only tablet (md to lg) -->
+<div class="hidden md:block lg:hidden">Tablet only</div>
+
+<!-- Better: Use max variant -->
+<div class="md:max-lg:block">Tablet only</div>
+
+<!-- Mobile only (below sm) -->
+<div class="sm:hidden">Mobile only</div>
+```
+<!-- AI:PRINCIPLE source="tailwind-responsive" id="breakpoint-ranges" -->
+
+### Container Queries for Component-Based Sizing
+
+**Use @container When Component Size Matters More Than Viewport**
+
+- **Why**: Components reused in different contexts need size-aware styling
+- **Apply when**: Sidebar widgets, card layouts, reusable components
+```html
+<!-- Parent becomes a container -->
+<div class="@container">
+  <!-- Children respond to container width, not viewport -->
+  <div class="flex flex-col @md:flex-row @md:gap-4">
+    <img class="w-full @md:w-1/3" />
+    <div class="@md:w-2/3">Content adapts to container</div>
+  </div>
+</div>
+
+<!-- Named containers for nested scenarios -->
+<aside class="@container/sidebar">
+  <div class="@sm/sidebar:grid @sm/sidebar:grid-cols-2">
+    Responds to sidebar width specifically
+  </div>
+</aside>
+```
+<!-- AI:PRINCIPLE source="tailwind-responsive" id="container-queries" -->
+
+### CSS Variables for Theming (Opacity Support)
+
+**Define Colors as Channels, Not Full Values**: Enables opacity modifiers
+
+- **Why**: `bg-primary/50` syntax only works with channel-based colors
+- **Apply when**: Defining any color in your design system
+```css
+/* WRONG: Can't use opacity modifiers */
+:root {
+  --color-primary: rgb(59, 130, 246);
+}
+/* bg-primary/50 won't work! */
+
+/* RIGHT: Define as channels (space-separated) */
+:root {
+  --color-primary: 59 130 246;
+}
+/* Now bg-primary/50 works! */
+```
+
+```javascript
+// tailwind.config.js
+colors: {
+  primary: 'rgb(var(--color-primary) / <alpha-value>)',
+}
+```
+
+```html
+<!-- Now opacity modifiers work -->
+<div class="bg-primary">Full opacity</div>
+<div class="bg-primary/50">50% opacity</div>
+<div class="bg-primary/10">10% opacity (hover states)</div>
+```
+<!-- AI:PRINCIPLE source="tailwind-theming" id="color-channels" -->
+
+### Dark Mode with CSS Variables
+
+**Single Class, Not Double Classes**: Use semantic tokens that adapt
+
+- **Why**: `dark:bg-gray-900` on every element is verbose and error-prone
+- **Apply when**: Any element that needs dark mode support
+```css
+/* Define semantic colors that switch automatically */
+@layer base {
+  :root {
+    --color-background: 255 255 255;
+    --color-foreground: 15 23 42;
+    --color-card: 255 255 255;
+    --color-muted: 241 245 249;
+  }
+
+  .dark {
+    --color-background: 15 23 42;
+    --color-foreground: 248 250 252;
+    --color-card: 30 41 59;
+    --color-muted: 51 65 85;
+  }
+}
+```
+
+```html
+<!-- WRONG: Verbose, error-prone -->
+<div class="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50">
+
+<!-- RIGHT: Semantic tokens that auto-adapt -->
+<div class="bg-background text-foreground">
+```
+<!-- AI:PRINCIPLE source="tailwind-theming" id="dark-mode-variables" -->

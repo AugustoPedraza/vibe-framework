@@ -2159,3 +2159,166 @@ export const unreadCount = derived(
 );
 ```
 <!-- AI:PRINCIPLE source="svelte-patterns" id="derived-stores" -->
+
+---
+
+## 18. Tailwind CSS Patterns
+
+> Utility-first CSS patterns from official docs and Adam Wathan's philosophy.
+
+### Utility-First Mental Model
+
+**Separation of Concerns is About Dependency Direction**: With utilities, HTML depends on CSS (reusable); with semantic CSS, CSS depends on HTML (fragile)
+
+- **Why**: Utilities are infinitely reusable; semantic classes couple to specific HTML structures
+- **Apply when**: Deciding between utilities and custom classes
+```html
+<!-- WRONG: Premature abstraction for single-use element -->
+<nav class="main-nav">...</nav>
+<style>.main-nav { display: flex; ... }</style>
+
+<!-- RIGHT: Utilities for single-use elements -->
+<nav class="flex items-center justify-between px-4 py-3 bg-white shadow-sm">
+```
+<!-- AI:PRINCIPLE source="tailwind" id="utility-first" -->
+
+### @apply Decision Hierarchy
+
+**Exhaust Other Options Before @apply**: utilities → loops → components → @apply (last resort)
+
+- **Why**: @apply recreates CSS problems Tailwind solves; use it only when no component framework
+- **Apply when**: Tempted to use @apply for "cleaner" code
+```css
+/* WRONG: Using @apply just because it "looks cleaner" */
+.card { @apply rounded-lg shadow-md p-4 bg-white; }
+.card-title { @apply text-xl font-bold; }
+
+/* RIGHT: Use a Svelte component instead */
+/* @apply is ONLY for simple elements when you can't use components */
+```
+
+**If You Must Use @apply**:
+```css
+@layer components {
+  .btn-primary {
+    @apply rounded-full bg-primary px-5 py-2 font-semibold text-primary-foreground;
+  }
+}
+```
+<!-- AI:PRINCIPLE source="tailwind" id="apply-hierarchy" -->
+
+### Dynamic Class Anti-Pattern
+
+**Never Construct Class Names Dynamically**: Tailwind purges classes it can't find as complete strings
+
+- **Why**: `bg-${color}-500` is invisible to Tailwind's scanner; classes get purged
+- **Apply when**: Styling based on props or variables
+```typescript
+// WRONG: Tailwind can't detect these classes (they get purged!)
+const color = 'red';
+<div class={`bg-${color}-500`}>
+
+// RIGHT: Use complete class names in a map
+const colorClasses = {
+  red: 'bg-red-500',
+  blue: 'bg-blue-500',
+  green: 'bg-green-500',
+};
+<div class={colorClasses[color]}>
+
+// RIGHT: Or safelist if truly dynamic
+// tailwind.config.js
+safelist: ['bg-red-500', 'bg-blue-500', 'bg-green-500']
+```
+<!-- AI:PRINCIPLE source="tailwind" id="no-dynamic-classes" -->
+
+### Group/Peer Patterns
+
+**Group for Parent-Based Styling**: Style children based on parent state
+
+- **Why**: Enables hover/focus effects that span multiple elements
+- **Apply when**: Child elements should react to parent state
+```html
+<!-- Basic group -->
+<div class="group rounded-lg p-4 hover:bg-accent">
+  <h3 class="group-hover:text-primary">Title</h3>
+  <p class="group-hover:text-muted-foreground">Description</p>
+</div>
+
+<!-- Named groups for nesting -->
+<li class="group/item hover:bg-accent">
+  <span class="group-hover/item:text-primary">Item</span>
+  <button class="invisible group-hover/item:visible">Edit</button>
+</li>
+```
+<!-- AI:PRINCIPLE source="tailwind" id="group-pattern" -->
+
+**Peer for Sibling-Based Styling**: Style elements based on preceding sibling state
+
+- **Why**: Enables form validation feedback without JavaScript
+- **Apply when**: Element should react to sibling state (peer must come BEFORE)
+```html
+<!-- Peer MUST come before elements that reference it -->
+<input type="email" class="peer" placeholder="Email" />
+<p class="invisible peer-invalid:visible text-error text-sm">
+  Please enter a valid email
+</p>
+
+<!-- Named peers for multiple inputs -->
+<input id="draft" class="peer/draft" type="radio" name="status" />
+<input id="published" class="peer/published" type="radio" name="status" />
+<div class="hidden peer-checked/draft:block">Draft options...</div>
+<div class="hidden peer-checked/published:block">Published options...</div>
+```
+<!-- AI:PRINCIPLE source="tailwind" id="peer-pattern" -->
+
+### Arbitrary Values Guidelines
+
+**Use Arbitrary Values for True One-Offs**: `[value]` syntax for values not in your design system
+
+- **Why**: Avoids config bloat for single-use values; keeps design system clean
+- **Apply when**: Value is genuinely one-off (positioning, calc expressions)
+```html
+<!-- OK: Pixel-perfect positioning, truly one-off -->
+<div class="top-[117px]">
+
+<!-- OK: calc() expressions (use _ for spaces) -->
+<div class="h-[calc(100dvh_-_64px)]">
+
+<!-- OK: CSS variables -->
+<div class="bg-[var(--dynamic-color)]">
+
+<!-- WRONG: Should be in config if used repeatedly -->
+<div class="p-[13px] text-[15px] gap-[7px]">
+
+<!-- RIGHT: Add to config for repeated values -->
+/* tailwind.config.js: spacing: { 'header': '64px' } */
+<div class="h-header">
+```
+<!-- AI:PRINCIPLE source="tailwind" id="arbitrary-values" -->
+
+### Class Ordering Convention
+
+**Concentric CSS Order**: Position from outside-in for scannable classes
+
+- **Why**: Consistent ordering makes classes easier to scan and maintain
+- **Apply when**: Writing any utility class string
+```html
+<!-- WRONG: Random ordering -->
+<div class="text-white p-4 flex bg-primary rounded-lg items-center shadow-md">
+
+<!-- RIGHT: Concentric order (outside → inside) -->
+<!-- Layout → Positioning → Box Model → Borders → Background → Typography → Effects -->
+<div class="flex items-center p-4 rounded-lg bg-primary text-white shadow-md">
+```
+
+**Order Reference**:
+1. Layout (`flex`, `grid`, `block`)
+2. Positioning (`relative`, `absolute`, `z-*`)
+3. Box Model (`w-*`, `h-*`, `p-*`, `m-*`)
+4. Borders (`rounded-*`, `border-*`)
+5. Background (`bg-*`)
+6. Typography (`text-*`, `font-*`)
+7. Effects (`shadow-*`, `opacity-*`)
+8. Transitions (`transition-*`, `duration-*`)
+<!-- AI:PRINCIPLE source="tailwind" id="class-order" -->
