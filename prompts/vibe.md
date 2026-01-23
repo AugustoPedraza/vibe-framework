@@ -828,20 +828,134 @@ For EACH scenario:
    ```bash
    mix test
    ```
-8. **CREATE VERIFICATION RECORDS**:
-   - Create `dev-scenario-{N}-pre.json` with pre-implementation test output
-   - Create `dev-scenario-{N}-post.json` with post-implementation test output
-   - Save to `{project}/.claude/verification/{FEATURE-ID}/`
-9. **RUN PITFALL CHECKS** - Verify against project `pitfalls.json`
-   - Display any caught pitfalls
-   - BLOCK if blocker-severity pitfall detected
-10. **RUN PRACTICE COMPLIANCE** - Execute `dev_practice_compliance` checklist
-11. **VERIFICATION GATE** - Display gate status showing:
+
+8. **UI VALIDATION LOOP** (if scenario involves frontend components):
+
+   Read `ui_validation` config from project's `vibe.config.json`.
+   If `ui_validation.enabled` is true and Svelte components were modified:
+
+   **For EACH modified component:**
+
+   a. **Generate validation states** from config:
+      - Get component path from `ui_validation.components[name].path`
+      - Get states from `ui_validation.components[name].states`
+      - Get viewports from `ui_validation.viewports`
+
+   b. **FOR EACH state** (loading, empty, error, success):
+
+      i. **Create temp validation file** (AI creates, validates, deletes):
+         ```html
+         <!-- {project}/{ui_validation.temp_file.path} -->
+         <!DOCTYPE html>
+         <html>
+         <head>
+           <link rel="stylesheet" href="{ui_validation.temp_file.base_css}">
+         </head>
+         <body>
+           <div id="app"></div>
+           <script type="module">
+             import Component from '{component.path}';
+             new Component({
+               target: document.getElementById('app'),
+               props: {state_props}
+             });
+           </script>
+         </body>
+         </html>
+         ```
+
+      ii. **Parallel validation** (if `ui_validation.parallel.enabled`):
+          Spawn agents for each viewport simultaneously
+
+      iii. **MCP Browser inspection** - For each viewport, check:
+           - Touch targets >= `rules.touch_target_min` (44px)
+           - Button heights in `rules.button_heights` ([32, 40, 48])
+           - Spacing on `rules.spacing_grid` (4px) grid
+           - Primary action in `rules.primary_action_zone` (mobile only)
+           - Focus visible on all interactives
+           - No raw Tailwind colors (design tokens only)
+
+      iv. **Collect results**
+
+   c. **Delete temp file** (if `ui_validation.temp_file.cleanup`)
+
+   d. **Display validation report:**
+      ```
+      +---------------------------------------------------------------------+
+      |  UI VALIDATION: ComponentName                                        |
+      |  States: 4 | Viewports: 2 | Checks: 8                                |
+      +---------------------------------------------------------------------+
+      |                                                                      |
+      |              │ mobile (375x812)     │ desktop (1280x800)             |
+      |  ───────────┼──────────────────────┼─────────────────────────────── |
+      |  loading    │ [OK] 6/6 rules       │ [OK] 6/6 rules                 |
+      |  empty      │ [OK] 6/6 rules       │ [OK] 6/6 rules                 |
+      |  error      │ [FAIL] Touch target  │ [OK] 6/6 rules                 |
+      |             │   Retry btn: 36px    │                                |
+      |  success    │ [OK] 6/6 rules       │ [OK] 6/6 rules                 |
+      |                                                                      |
+      |  Status: BLOCKED (1 error)                                           |
+      +---------------------------------------------------------------------+
+      ```
+
+   e. **IF validation fails:**
+
+      - **Auto-fixable** (per `ui_validation.auto_fix`):
+        - `spacing`: Round to nearest grid value → Apply fix, re-validate
+        - `design_tokens`: Replace raw color → Apply fix, re-validate
+        - `aria_labels`: Generate from context → Apply fix, re-validate
+
+      - **Needs human decision** (or `auto_fix.layout: false`):
+        ```
+        +---------------------------------------------------------------------+
+        |  UI VALIDATION BLOCKED                                               |
+        |                                                                      |
+        |  Issue: Touch target too small                                       |
+        |  Component: ErrorState.svelte                                        |
+        |  Element: <Button>Retry</Button>                                     |
+        |  Current: 36x36px                                                    |
+        |  Required: >= 44x44px                                                |
+        |                                                                      |
+        |  AI Assessment:                                                      |
+        |    Button uses size="sm" (32px). Options:                            |
+        |    1. Change to size="md" (40px) + padding                           |
+        |    2. Add min-w-11 min-h-11 classes                                  |
+        |                                                                      |
+        |  [1-2] Apply suggested fix                                           |
+        |  [f] Provide fix hint (describe what to do)                          |
+        |  [s] Skip this rule (add exception)                                  |
+        |  [m] I'll fix manually (pause validation)                            |
+        |  [a] Abort scenario                                                  |
+        +---------------------------------------------------------------------+
+        ```
+
+      - **If user chooses [s] Skip**, record exception:
+        Save to `{project}/.claude/verification/{FEATURE-ID}/ui-exceptions.json`
+
+   f. **Re-validate after fix** (loop back to step b.iii)
+
+   g. **ALL PASS** → Continue to step 9
+
+   **HARD BLOCK** (if `ui_validation.blocking: true`):
+   Cannot proceed until all validation errors resolved or excepted.
+
+9. **CREATE VERIFICATION RECORDS**:
+    - Create `dev-scenario-{N}-pre.json` with pre-implementation test output
+    - Create `dev-scenario-{N}-post.json` with post-implementation test output
+    - Create `ui-validation-scenario-{N}.json` with UI validation results
+    - Save to `{project}/.claude/verification/{FEATURE-ID}/`
+10. **RUN PITFALL CHECKS** - Verify against project `pitfalls.json`
+    - Display any caught pitfalls
+    - BLOCK if blocker-severity pitfall detected
+11. **RUN PRACTICE COMPLIANCE** - Execute `dev_practice_compliance` checklist
+12. **VERIFICATION GATE** - Display gate status showing:
     - Pre/post records exist and show RED → GREEN transition
+    - UI validation results (pass/fail/exceptions)
     - Pitfall check results
     - Practice compliance results
-12. **CHECKPOINT** - Wait for Enter
+13. **CHECKPOINT** - Wait for Enter
     - Display: Tests before (X failing) → Tests after (all passing)
+    - Display: UI Validation (X components, Y states validated)
     - For **bootstrap features**, show "Patterns Established" summary
 
 **HARD BLOCK**: If tests don't pass, cannot proceed to next scenario.
@@ -898,53 +1012,110 @@ Repeat for all scenarios.
    - [ ] No hardcoded z-index
    - [ ] PWA manifest valid (if PWA)
 
-6. **HARD BLOCK CONDITIONS** (Cannot proceed if ANY fail):
+6. **FULL UI VALIDATION** (all feature components, all states, all viewports):
+
+   If `ui_validation.enabled` in `vibe.config.json`:
+
+   a. **Gather all components** modified in this feature
+
+   b. **Run comprehensive validation:**
+      - All components × all states × all viewports
+      - Use parallel agents (up to `ui_validation.parallel.max_agents`)
+
+   c. **Display comprehensive report:**
+      ```
+      +---------------------------------------------------------------------+
+      |  FULL UI VALIDATION: Feature [FEATURE-ID]                            |
+      |                                                                      |
+      |  Components: 3 | States: 4 | Viewports: 2 | Total: 24 checks         |
+      +---------------------------------------------------------------------+
+      |                                                                      |
+      |  LoginForm.svelte                                                    |
+      |    loading   │ mobile: [OK]  │ desktop: [OK]                         |
+      |    error     │ mobile: [OK]  │ desktop: [OK]                         |
+      |    success   │ mobile: [OK]  │ desktop: [OK]                         |
+      |                                                                      |
+      |  PasswordInput.svelte                                                |
+      |    default   │ mobile: [OK]  │ desktop: [OK]                         |
+      |    error     │ mobile: [OK]  │ desktop: [OK]                         |
+      |    focused   │ mobile: [OK]  │ desktop: [OK]                         |
+      |                                                                      |
+      |  ForgotPassword.svelte                                               |
+      |    loading   │ mobile: [WARN] │ desktop: [OK]                        |
+      |              │ spacing: 5px   │                                      |
+      |    empty     │ mobile: [OK]   │ desktop: [OK]                        |
+      |    success   │ mobile: [OK]   │ desktop: [OK]                        |
+      |                                                                      |
+      |  Summary: 23/24 passed, 1 warning, 0 errors                          |
+      |  Exceptions: 0 (none from Developer phase)                           |
+      |                                                                      |
+      |  Status: PASS (with warnings)                                        |
+      +---------------------------------------------------------------------+
+      ```
+
+   d. **Include exceptions report** (from Developer phase):
+      - List any rules skipped with `[s]` during development
+      - These will be flagged in PR description
+
+   e. **HARD BLOCK** if any errors (warnings allowed to proceed)
+
+   f. **Add to verification records:**
+      - Create `ui-validation-final.json` with full results
+      - Include in QA validation summary
+
+7. **HARD BLOCK CONDITIONS** (Cannot proceed if ANY fail):
    - [ ] All tests pass (0 failures)
    - [ ] No new test files were deleted or skipped
    - [ ] Coverage on new code >= 80%
    - [ ] `just check` passes
+   - [ ] UI validation passes (no errors, warnings allowed)
 
-7. **Calculate Implementation Quality Score** (see `qa-engineer.md`)
+8. **Calculate Implementation Quality Score** (see `qa-engineer.md`)
    - Score each category (0-5): Test Coverage, Pattern Compliance, UX States, Accessibility, Error Handling, Code Clarity, Performance
+   - **NEW:** Include UI validation score (errors: -1, warnings: -0.25)
    - Apply weights and calculate total
    - Display score report with recommendations
    - **BLOCK if score < 3.0** - return to Developer phase
 
-8. **FINAL PITFALL CHECK** - Run ALL pitfall checks:
+9. **FINAL PITFALL CHECK** - Run ALL pitfall checks:
    - Load `{project}/.claude/pitfalls.json`
    - Execute all checks regardless of `applies_to`
    - **HARD BLOCK** if any blocker-severity pitfall fails
    - Display full pitfall report
 
-9. **VERIFY ALL RECORDS EXIST** - Check verification records:
-   - [ ] `qa-test-creation.json` exists
-   - [ ] `qa-test-execution.json` exists
-   - [ ] All `dev-scenario-N-pre.json` exist for each scenario
-   - [ ] All `dev-scenario-N-post.json` exist for each scenario
-   - **BLOCK if any records missing**
+10. **VERIFY ALL RECORDS EXIST** - Check verification records:
+    - [ ] `qa-test-creation.json` exists
+    - [ ] `qa-test-execution.json` exists
+    - [ ] All `dev-scenario-N-pre.json` exist for each scenario
+    - [ ] All `dev-scenario-N-post.json` exist for each scenario
+    - [ ] All `ui-validation-scenario-N.json` exist for each scenario
+    - [ ] `ui-validation-final.json` exists
+    - **BLOCK if any records missing**
 
-10. **CREATE FINAL VERIFICATION RECORD**:
+11. **CREATE FINAL VERIFICATION RECORD**:
     - Create `qa-validation.json` with final test results
-    - Include quality score and pitfall check summary
+    - Include quality score, pitfall check summary, and UI validation summary
 
-11. **VERIFICATION GATE** - Display final gate status:
+12. **VERIFICATION GATE** - Display final gate status:
     ```
     +---------------------------------------------------------------------+
     |  FINAL VERIFICATION GATE: QA Validation -> PR                        |
     |                                                                      |
-    |  Verification Records: [OK] 8/8 records present                      |
+    |  Verification Records: [OK] 10/10 records present                    |
     |  Pitfall Checks: [OK] 6 passed, 0 failed                             |
     |  Quality Score: 4.2/5.0 [OK]                                         |
     |  Test Results: [OK] 12 passing, 0 failing                            |
+    |  UI Validation: [OK] 24/24 checks passed (1 warning)                 |
+    |  UI Exceptions: 0                                                    |
     |                                                                      |
     |  Gate Status: PASSED - Ready for PR                                  |
     +---------------------------------------------------------------------+
     ```
 
-12. If gate passes -> Offer to create PR
-13. **CHECKPOINT** - Wait for Enter
-14. Create PR with scenario checklist + quality score + test results summary
-11. Offer post-completion options:
+13. If gate passes -> Offer to create PR
+14. **CHECKPOINT** - Wait for Enter
+15. Create PR with scenario checklist + quality score + test results + UI validation summary
+16. Offer post-completion options:
     ```
     Feature implementation complete!
 

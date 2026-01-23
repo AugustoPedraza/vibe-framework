@@ -193,6 +193,266 @@
           }
         }
       }
+    },
+    "ui_validation": {
+      "type": "object",
+      "description": "UI validation configuration for visual correctness during /vibe workflow. Enables AI to validate components render correctly before committing.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable UI validation in Developer/QA phases",
+          "default": true
+        },
+        "blocking": {
+          "type": "boolean",
+          "description": "HARD BLOCK on validation failures (vs advisory warnings)",
+          "default": true
+        },
+        "mcp_server": {
+          "type": "string",
+          "description": "MCP browser server to use for DOM inspection",
+          "default": "@anthropic-ai/mcp-server-playwright"
+        },
+        "dev_server": {
+          "type": "object",
+          "description": "Dev server configuration",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "Dev server base URL",
+              "default": "http://localhost:4000"
+            },
+            "startup_command": {
+              "type": "string",
+              "description": "Command to start dev server if not running",
+              "default": "mix phx.server"
+            },
+            "ready_timeout": {
+              "type": "number",
+              "description": "Seconds to wait for dev server to be ready",
+              "default": 30
+            }
+          }
+        },
+        "temp_file": {
+          "type": "object",
+          "description": "Temporary validation file settings (AI creates, validates, deletes)",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Where to write temp validation HTML",
+              "default": "assets/__validate__.html"
+            },
+            "base_css": {
+              "type": "string",
+              "description": "Path to base CSS to include",
+              "default": "/assets/app.css"
+            },
+            "cleanup": {
+              "type": "boolean",
+              "description": "Delete temp file after validation",
+              "default": true
+            }
+          }
+        },
+        "viewports": {
+          "type": "array",
+          "description": "Screen sizes to validate",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Viewport name for reporting"
+              },
+              "width": {
+                "type": "number",
+                "description": "Viewport width in pixels"
+              },
+              "height": {
+                "type": "number",
+                "description": "Viewport height in pixels"
+              }
+            },
+            "required": ["name", "width", "height"]
+          },
+          "default": [
+            { "name": "mobile", "width": 375, "height": 812 },
+            { "name": "desktop", "width": 1280, "height": 800 }
+          ]
+        },
+        "rules": {
+          "type": "object",
+          "description": "Design system rules to validate via DOM inspection",
+          "properties": {
+            "touch_target_min": {
+              "type": "number",
+              "description": "Minimum touch target size in px",
+              "default": 44
+            },
+            "button_heights": {
+              "type": "array",
+              "items": { "type": "number" },
+              "description": "Valid button heights in px",
+              "default": [32, 40, 48]
+            },
+            "spacing_grid": {
+              "type": "number",
+              "description": "Spacing must be multiple of this value",
+              "default": 4
+            },
+            "primary_action_zone": {
+              "type": "string",
+              "enum": ["bottom_half", "any"],
+              "description": "Where primary actions must be positioned (mobile)",
+              "default": "bottom_half"
+            },
+            "input_height": {
+              "type": "number",
+              "description": "Standard input height in px",
+              "default": 40
+            },
+            "focus_visible_required": {
+              "type": "boolean",
+              "description": "All interactive elements must have visible focus",
+              "default": true
+            },
+            "skeleton_for_loading": {
+              "type": "boolean",
+              "description": "Loading states must use skeleton, not spinner",
+              "default": true
+            }
+          }
+        },
+        "design_tokens": {
+          "type": "object",
+          "description": "Design tokens that must be used (no raw values allowed)",
+          "properties": {
+            "colors": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Allowed color tokens",
+              "default": [
+                "primary", "primary-foreground",
+                "secondary", "secondary-foreground",
+                "success", "success-foreground", "success-soft",
+                "warning", "warning-foreground", "warning-soft",
+                "error", "error-foreground", "error-soft",
+                "info", "info-foreground", "info-soft",
+                "background", "foreground", "card", "muted", "muted-foreground",
+                "accent", "accent-foreground", "popover", "popover-foreground",
+                "border", "input", "ring", "disabled", "disabled-foreground"
+              ]
+            },
+            "spacing": {
+              "type": "array",
+              "items": { "type": "number" },
+              "description": "Allowed spacing values (Tailwind units)",
+              "default": [0, 0.5, 1, 2, 3, 4, 6, 8, 12, 16, 20, 24]
+            },
+            "radius": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Allowed border radius tokens",
+              "default": ["none", "sm", "md", "lg", "full"]
+            },
+            "shadows": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Allowed shadow tokens",
+              "default": ["xs", "sm", "md", "lg", "xl"]
+            }
+          }
+        },
+        "parallel": {
+          "type": "object",
+          "description": "Parallel validation settings for faster feedback",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Run validations in parallel (viewports + states)",
+              "default": true
+            },
+            "max_agents": {
+              "type": "number",
+              "description": "Maximum parallel validation agents",
+              "default": 4
+            }
+          }
+        },
+        "auto_fix": {
+          "type": "object",
+          "description": "Which issues AI can auto-fix without asking human",
+          "properties": {
+            "spacing": {
+              "type": "boolean",
+              "description": "Auto-fix spacing to nearest grid value",
+              "default": true
+            },
+            "design_tokens": {
+              "type": "boolean",
+              "description": "Auto-replace raw colors with tokens",
+              "default": true
+            },
+            "aria_labels": {
+              "type": "boolean",
+              "description": "Auto-generate aria-labels for icon buttons",
+              "default": true
+            },
+            "layout": {
+              "type": "boolean",
+              "description": "Auto-fix layout issues (risky, requires human judgment)",
+              "default": false
+            }
+          }
+        },
+        "default_states": {
+          "type": "object",
+          "description": "Default states to validate for all components (loading/empty/error/success)",
+          "additionalProperties": {
+            "type": "object",
+            "description": "Props to pass for this state"
+          },
+          "default": {
+            "loading": { "loading": true, "error": null, "data": null },
+            "empty": { "loading": false, "error": null, "data": [] },
+            "error": { "loading": false, "error": "Something went wrong", "data": null },
+            "success": { "loading": false, "error": null, "data": "{{mock}}" }
+          }
+        },
+        "components": {
+          "type": "object",
+          "description": "Component-specific validation configuration",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Import path relative to components directory"
+              },
+              "states": {
+                "type": "object",
+                "description": "State name -> props mapping for this component",
+                "additionalProperties": {
+                  "type": "object",
+                  "description": "Props to hydrate component with for this state"
+                }
+              },
+              "viewports": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Which viewports to test (defaults to all)"
+              },
+              "skip_rules": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Rules to skip for this component (e.g., primary_action_zone for modals)"
+              }
+            },
+            "required": ["path", "states"]
+          }
+        }
+      }
     }
   }
 }
