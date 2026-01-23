@@ -194,6 +194,104 @@
         }
       }
     },
+    "parallel_agents": {
+      "type": "object",
+      "description": "Configuration for parallel implementation workflow",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable parallel implementation mode (/vibe parallel)",
+          "default": true
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["quality", "balanced", "speed"],
+          "description": "Parallel mode: quality (strict verification), balanced (standard), speed (minimal)",
+          "default": "quality"
+        },
+        "auto_approve_minor_changes": {
+          "type": "boolean",
+          "description": "Auto-approve non-breaking contract changes (additive fields, new error codes)",
+          "default": true
+        },
+        "require_human_for_breaking": {
+          "type": "boolean",
+          "description": "Require human approval for breaking contract changes",
+          "default": true
+        },
+        "max_parallel_agents": {
+          "type": "integer",
+          "description": "Maximum number of parallel agents",
+          "default": 4,
+          "minimum": 2,
+          "maximum": 8
+        },
+        "lock_timeout_minutes": {
+          "type": "integer",
+          "description": "File lock timeout in minutes (prevents stale locks)",
+          "default": 120,
+          "minimum": 30,
+          "maximum": 480
+        },
+        "sync_point_timeout_minutes": {
+          "type": "integer",
+          "description": "Timeout for waiting at sync point",
+          "default": 60,
+          "minimum": 15,
+          "maximum": 180
+        },
+        "contract_paths": {
+          "type": "object",
+          "description": "Paths for contract-related files",
+          "properties": {
+            "contracts": {
+              "type": "string",
+              "description": "Path to store interface contracts",
+              "default": ".claude/contracts/"
+            },
+            "locks": {
+              "type": "string",
+              "description": "Path to store file locks",
+              "default": ".claude/locks/"
+            },
+            "sync_points": {
+              "type": "string",
+              "description": "Path to store sync point records",
+              "default": ".claude/sync-points/"
+            },
+            "change_requests": {
+              "type": "string",
+              "description": "Path to store change requests",
+              "default": ".claude/change-requests/"
+            }
+          }
+        },
+        "file_ownership": {
+          "type": "object",
+          "description": "Default file ownership patterns for streams",
+          "properties": {
+            "backend_patterns": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Glob patterns for backend-owned files",
+              "default": ["lib/*/", "test/*/"]
+            },
+            "frontend_patterns": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Glob patterns for frontend-owned files",
+              "default": ["assets/svelte/", "assets/js/"]
+            },
+            "integration_patterns": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Glob patterns for integration-owned files",
+              "default": ["lib/*_web/live/", "assets/tests/e2e/"]
+            }
+          }
+        }
+      }
+    },
     "ui_validation": {
       "type": "object",
       "description": "UI validation configuration for visual correctness during /vibe workflow. Enables AI to validate components render correctly before committing.",

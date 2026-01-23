@@ -233,6 +233,71 @@
       "type": "string",
       "description": "Free-form notes for context restoration"
     },
+    "smart_resume": {
+      "type": "object",
+      "description": "Enhanced resume information for faster session restoration",
+      "properties": {
+        "last_file": {
+          "type": "object",
+          "description": "Last file being actively worked on",
+          "properties": {
+            "path": { "type": "string", "description": "Full path to the file" },
+            "line_number": { "type": "integer", "description": "Last line being edited/reviewed" },
+            "action": {
+              "type": "string",
+              "enum": ["creating", "modifying", "reviewing", "testing"],
+              "description": "What was being done with the file"
+            }
+          }
+        },
+        "last_failing_test": {
+          "type": "object",
+          "description": "Details of the last failing test (for TDD resume)",
+          "properties": {
+            "file": { "type": "string", "description": "Test file path" },
+            "test_name": { "type": "string", "description": "Specific test name/description" },
+            "failure_message": { "type": "string", "description": "Error message (truncated)" },
+            "line_number": { "type": "integer", "description": "Line where test failed" }
+          }
+        },
+        "current_acceptance_criterion": {
+          "type": "object",
+          "description": "Specific acceptance criterion being worked on",
+          "properties": {
+            "scenario_name": { "type": "string", "description": "Scenario title" },
+            "given": { "type": "string", "description": "Given clause" },
+            "when": { "type": "string", "description": "When clause" },
+            "then": { "type": "string", "description": "Then clause (current focus)" },
+            "status": {
+              "type": "string",
+              "enum": ["not_started", "test_written", "implementing", "passing", "validating"],
+              "description": "Progress on this criterion"
+            }
+          }
+        },
+        "pending_operations": {
+          "type": "array",
+          "description": "Operations that were in progress when session ended",
+          "items": {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": ["write_test", "implement_code", "fix_test", "ui_validation", "run_checks"],
+                "description": "Type of operation"
+              },
+              "target": { "type": "string", "description": "File or component being operated on" },
+              "notes": { "type": "string", "description": "What needs to happen next" }
+            }
+          }
+        },
+        "resume_hints": {
+          "type": "array",
+          "description": "AI-generated hints for faster resume",
+          "items": { "type": "string" }
+        }
+      }
+    },
     "created_at": {
       "type": "string",
       "format": "date-time",
@@ -337,6 +402,38 @@
       }
     },
     "context_notes": "Working on scenario 2: invalid credentials handling",
+    "smart_resume": {
+      "last_file": {
+        "path": "lib/accounts/resources/user.ex",
+        "line_number": 45,
+        "action": "modifying"
+      },
+      "last_failing_test": {
+        "file": "test/accounts/user_test.exs",
+        "test_name": "returns error for invalid credentials",
+        "failure_message": "expected {:error, :invalid_credentials}, got {:ok, %User{}}",
+        "line_number": 78
+      },
+      "current_acceptance_criterion": {
+        "scenario_name": "User enters invalid credentials",
+        "given": "the user is on the login page",
+        "when": "they enter invalid credentials and submit",
+        "then": "they see an error message",
+        "status": "implementing"
+      },
+      "pending_operations": [
+        {
+          "operation": "implement_code",
+          "target": "lib/accounts/resources/user.ex",
+          "notes": "Add credential validation in authenticate action"
+        }
+      ],
+      "resume_hints": [
+        "Test failing at user_test.exs:78 - needs credential validation",
+        "Pattern: Use Ash.Error for invalid credentials",
+        "Component LoginForm.svelte already handles error state display"
+      ]
+    },
     "created_at": "2026-01-20T09:30:00Z",
     "updated_at": "2026-01-20T11:15:00Z"
   }

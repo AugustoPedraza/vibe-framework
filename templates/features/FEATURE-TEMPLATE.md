@@ -4,6 +4,34 @@
 
 ## Status: `todo`
 
+## Scope Assessment
+
+<!-- REQUIRED: Assess feature scope before starting implementation -->
+
+| Metric | Value | Target |
+|--------|-------|--------|
+| Scenarios | {count} | 1-6 |
+| Files Changed (est.) | {count} | 3-12 |
+| Context Size | {small\|medium\|large} | small-large |
+
+### Scope Guidelines
+
+| Scope | Scenarios | Files | Context | Recommendation |
+|-------|-----------|-------|---------|----------------|
+| **Tiny** | 1-2 | 3-5 | Small | Fastest iteration |
+| **Small** | 3-4 | 5-8 | Medium | Ideal for most features |
+| **Medium** | 5-6 | 8-12 | Large | Acceptable, watch context |
+| **Too Big** | 7+ | 12+ | Overload | **SPLIT REQUIRED** |
+
+**RULE:** If feature has 7+ scenarios, split into 2+ features before starting.
+
+### Split Suggestions (if needed)
+
+<!-- Remove this section if scope is acceptable -->
+If this feature is too big, consider splitting:
+- **{ID}-A:** {first logical chunk}
+- **{ID}-B:** {second logical chunk}
+
 ## Source
 
 <!-- Remove this section if not converted from BMAD -->

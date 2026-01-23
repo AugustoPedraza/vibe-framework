@@ -35,6 +35,8 @@ Do:
 | Command | What it does |
 |---------|--------------|
 | `/vibe [FEATURE-ID]` | Implement feature (QA -> Designer -> Dev -> QA) |
+| `/vibe parallel [FEATURE-ID]` | **NEW** Parallel implementation (backend + frontend simultaneously) |
+| `/vibe contract [FEATURE-ID]` | **NEW** Generate interface contract for parallel implementation |
 | `/vibe quick [desc]` | Bug/hotfix mode (condensed 2-phase workflow) |
 | `/vibe pivot` | Course correction when implementation diverges |
 | `/vibe plan [sprint]` | Plan sprint (Domain -> Designer -> PM) |
@@ -81,7 +83,36 @@ Do:
 
 ## Context Loading (Before Any Work)
 
-**Always read silently before starting:**
+**Always read silently before starting.**
+
+### Pre-loaded Context Strategy (Efficiency Optimization)
+
+> Load all relevant files ONCE at phase start to avoid repeated reads during implementation.
+
+**At the start of EACH phase, batch-read all files needed:**
+
+```
+PHASE START: Read in PARALLEL (single response, multiple Read tool calls)
+├── Feature spec
+├── Related domain spec
+├── Role guidance file
+├── Existing component (if extending)
+├── Test file (to see current state)
+└── Relevant pattern files
+
+DURING PHASE: Reference from memory, don't re-read
+```
+
+**Phase-Specific Pre-load Lists:**
+
+| Phase | Files to Pre-load (read in parallel) |
+|-------|-------------------------------------|
+| QA Engineer | Feature spec, QA role, testing guide, existing tests |
+| Designer | Feature spec, Designer role, components.json, UX copy |
+| Developer | Feature spec, Dev role, failing tests, target files, patterns |
+| QA Validation | Test results, QA role, verification records |
+
+**Anti-pattern:** Reading the same file 3+ times during a phase. Load once, reference from memory.
 
 ### WHY (Business Value)
 - `{{paths.domain}}/vision.md` - Product vision
@@ -333,6 +364,51 @@ On `/vibe [FEATURE-ID]`, check for existing checkpoint:
 | Designer | Re-display handoff, proceed to Readiness Gate |
 | Developer (mid) | Load scenario N, run test, continue TDD cycle |
 | QA Validation | Re-run tests, recalculate quality score |
+
+### Smart Resume (Enhanced Recovery)
+
+When checkpoint has `smart_resume` data, use it for faster restoration:
+
+**Resume Display:**
+```
++---------------------------------------------------------------------+
+|  SMART RESUME: AUTH-001                                              |
+|                                                                      |
+|  Last Working On:                                                    |
+|    File: lib/accounts/resources/user.ex:45                          |
+|    Action: modifying                                                 |
+|                                                                      |
+|  Failing Test:                                                       |
+|    test/accounts/user_test.exs:78                                    |
+|    "returns error for invalid credentials"                           |
+|    Error: expected {:error, :invalid_credentials}, got {:ok, %User{}}|
+|                                                                      |
+|  Current Criterion:                                                  |
+|    Scenario: User enters invalid credentials                         |
+|    Status: implementing (THEN clause)                                |
+|                                                                      |
+|  Resume Hints:                                                       |
+|    • Test failing at user_test.exs:78 - needs credential validation  |
+|    • Pattern: Use Ash.Error for invalid credentials                  |
+|                                                                      |
+|  [r] Resume at exact position  [s] Resume at scenario start          |
+|  [f] Resume from failing test  [v] View full checkpoint              |
++---------------------------------------------------------------------+
+```
+
+**Resume Options:**
+| Option | What Happens | Best For |
+|--------|--------------|----------|
+| Exact position | Open file at line, show failing test | Quick continuation |
+| Scenario start | Begin scenario from scratch | Context feels stale |
+| Failing test | Run test, show output, continue | TDD focus |
+
+**Saving Smart Resume Data:**
+At each checkpoint, capture:
+- Last file + line being edited
+- Current failing test (if any)
+- Acceptance criterion being worked on
+- AI-generated hints for context restoration
 
 ### Checkpoint Cleanup
 
@@ -1133,6 +1209,254 @@ Repeat for all scenarios.
 
 ---
 
+## Parallel Implementation Workflow (Optional)
+
+> For features with well-defined contracts, backend and frontend can be implemented simultaneously.
+
+**Trigger:** `/vibe parallel [FEATURE-ID]`
+
+### When to Use Parallel Mode
+
+| Use Parallel When | Use Sequential When |
+|-------------------|---------------------|
+| Feature has clear API contract | Contract is unclear or evolving |
+| Backend/frontend are independent | Tight coupling between layers |
+| Medium+ complexity (5+ scenarios) | Simple features (< 5 scenarios) |
+| Time-sensitive delivery | Quality is primary concern |
+
+### Parallel Workflow Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  PHASE 0: CONTRACT DEFINITION (~5 min)                              │
+│  /vibe contract AUTH-001                                            │
+│                                                                     │
+│  Output: .claude/contracts/AUTH-001.json (LOCKED)                   │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  PHASE 1: PARALLEL IMPLEMENTATION                                   │
+│                                                                     │
+│  ┌─────────────────────┐       ┌─────────────────────┐              │
+│  │  BACKEND STREAM     │       │  FRONTEND STREAM    │              │
+│  │                     │       │                     │              │
+│  │  Role: backend-agent│       │  Role: frontend-agent              │
+│  │  Tests: unit        │       │  Tests: component   │              │
+│  │  Mocks: none        │       │  Mocks: backend     │              │
+│  │                     │       │                     │              │
+│  │  Owns:              │       │  Owns:              │              │
+│  │  - lib/{domain}/    │       │  - assets/svelte/   │              │
+│  │  - test/{domain}/   │       │  - *.test.ts        │              │
+│  └──────────┬──────────┘       └──────────┬──────────┘              │
+│             │                             │                         │
+│             └──────────────┬──────────────┘                         │
+│                            ▼                                        │
+│             ┌──────────────────────────────┐                        │
+│             │  SYNC POINT VERIFICATION     │                        │
+│             │  Both streams must complete  │                        │
+│             │  Contract compliance check   │                        │
+│             └──────────────────────────────┘                        │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  PHASE 2: INTEGRATION (~5 min)                                      │
+│                                                                     │
+│  Role: integration-agent                                            │
+│  - Wire frontend to backend (remove mocks)                          │
+│  - Create LiveView handlers                                         │
+│  - Run integration tests                                            │
+│  - Run E2E tests                                                    │
+│  - UI validation (full system)                                      │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  PHASE 3: FINAL VALIDATION (~2 min)                                 │
+│                                                                     │
+│  - Quality score calculation                                        │
+│  - All tests passing                                                │
+│  - PR creation                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Phase 0: Contract Definition
+
+**Pre-requisite:** Feature spec must exist with acceptance scenarios.
+
+1. Run `/vibe contract [FEATURE-ID]`
+2. Generate interface contract from feature spec
+3. Review and approve contract
+4. Lock contract: `contract.locked = true`
+
+**Contract defines:**
+- API actions with exact signatures
+- Data shapes (types)
+- UI components with props/states
+- Acceptance criteria per stream
+- Mock data for isolated testing
+- File ownership boundaries
+
+**HARD BLOCK:** Cannot start parallel implementation without locked contract.
+
+### Phase 1: Parallel Streams
+
+**Spawn two agents simultaneously:**
+
+```
++======================================================================+
+|  PARALLEL IMPLEMENTATION                                             |
+|  Feature: AUTH-001 - User Login                                      |
+|  Contract: v1 (locked)                                               |
++======================================================================+
+
+Starting parallel streams...
+
+┌─ Backend Stream ───────────────────┐ ┌─ Frontend Stream ──────────────────┐
+│ Agent: backend-agent-abc123        │ │ Agent: frontend-agent-def456       │
+│ Role: roles/backend-agent.md       │ │ Role: roles/frontend-agent.md      │
+│ Criteria: AC-1, AC-2               │ │ Criteria: AC-3, AC-4               │
+│ Status: in_progress                │ │ Status: in_progress                │
+└────────────────────────────────────┘ └────────────────────────────────────┘
+```
+
+**File Locking:**
+- Create lock file: `.claude/locks/{FEATURE-ID}.json`
+- Each stream owns exclusive paths
+- Attempting to modify another stream's files = HARD BLOCK
+
+**Progress Display:**
+```
+┌─ Backend Stream ───────────────────┐ ┌─ Frontend Stream ──────────────────┐
+│ [===========         ] 50%         │ │ [================   ] 75%          │
+│ Criteria: 1/2 complete             │ │ Criteria: 2/2 complete             │
+│ Tests: 3 passing, 2 failing        │ │ Tests: 8 passing, 0 failing        │
+│ Status: implementing AC-2          │ │ Status: WAITING AT SYNC POINT      │
+└────────────────────────────────────┘ └────────────────────────────────────┘
+```
+
+### Sync Point
+
+When both streams signal complete:
+
+```
++---------------------------------------------------------------------+
+|  SYNC POINT: Parallel Streams Complete                               |
+|                                                                      |
+|  Backend Stream:                                                     |
+|    Status: COMPLETE                                                  |
+|    Criteria: 2/2 passed (AC-1, AC-2)                                 |
+|    Tests: 5 passing, 0 failing                                       |
+|                                                                      |
+|  Frontend Stream:                                                    |
+|    Status: COMPLETE                                                  |
+|    Criteria: 2/2 passed (AC-3, AC-4)                                 |
+|    Tests: 8 passing, 0 failing                                       |
+|    UI Validation: 6/6 passed                                         |
+|                                                                      |
+|  Contract Compliance:                                                |
+|    [OK] Backend actions match signatures                             |
+|    [OK] Frontend components match props                              |
+|    [OK] Data shapes compatible                                       |
+|                                                                      |
+|  Status: PASSED - Ready for Integration                              |
++---------------------------------------------------------------------+
+```
+
+**If sync point fails:**
+- Identify blocking stream
+- Display specific compliance issues
+- Allow stream to resume and fix
+
+### Contract Changes During Parallel
+
+If a stream discovers the contract needs modification:
+
+**Minor Changes (auto-approve):**
+- Adding optional fields
+- Adding new error codes
+- Adding accessibility improvements
+
+```
++---------------------------------------------------------------------+
+|  CONTRACT CHANGE: AUTO-APPROVED                                      |
+|                                                                      |
+|  Change: Add 'too_many_attempts' error code                          |
+|  Requested by: backend                                               |
+|  Impact: Frontend may show new error (minor)                         |
+|                                                                      |
+|  Status: Applied to contract v2                                      |
+|  Affected stream: frontend (notified)                                |
++---------------------------------------------------------------------+
+```
+
+**Breaking Changes (require approval):**
+- Changing action signatures
+- Removing fields
+- Changing required props
+
+```
++---------------------------------------------------------------------+
+|  CONTRACT CHANGE: REQUIRES APPROVAL                                  |
+|                                                                      |
+|  Change: Add required 'userId' prop to LoginForm                     |
+|  Requested by: frontend                                              |
+|  Breaking reason: Integration must now pass userId                   |
+|                                                                      |
+|  Impact Analysis:                                                    |
+|    Backend: none                                                     |
+|    Frontend: already implemented                                     |
+|    Integration: must update LiveView to pass prop                    |
+|                                                                      |
+|  [a] Approve  [r] Reject  [d] Discuss                                |
++---------------------------------------------------------------------+
+```
+
+### Phase 2: Integration
+
+After sync point passes, run integration agent:
+
+```
++======================================================================+
+|  INTEGRATION PHASE                                                   |
+|  Feature: AUTH-001 - User Login                                      |
++======================================================================+
+```
+
+Integration agent:
+1. Loads both stream implementations
+2. Creates LiveView handlers (shared paths)
+3. Wires frontend to backend (removes mocks)
+4. Runs integration tests (AC-5)
+5. Runs E2E tests (E2E-1)
+6. Full UI validation
+
+### Configuration Options
+
+In `vibe.config.json`:
+
+```json
+{
+  "parallel_agents": {
+    "enabled": true,
+    "mode": "quality",
+    "auto_approve_minor_changes": true,
+    "require_human_for_breaking": true,
+    "max_parallel_agents": 4,
+    "lock_timeout_minutes": 120
+  }
+}
+```
+
+| Mode | Description |
+|------|-------------|
+| `quality` | Strict contract verification, full UI validation |
+| `balanced` | Standard verification, essential UI validation |
+| `speed` | Advisory warnings only, minimal validation |
+
+---
+
 ## Checkpoint Template
 
 After each phase:
@@ -1191,6 +1515,51 @@ After QA Validation phase passes, show:
 
 > You are an AI assistant. Use these guidelines to make optimal decisions automatically.
 
+### Background Tooling (Immediate Efficiency Gain)
+
+Run non-blocking operations in background while continuing work:
+
+```
+CURRENT (SLOW):
+Write code → Run tests → Wait → See results → Continue
+                        ↑ dead time
+
+OPTIMIZED (FAST):
+Write code → Run tests (background) → Continue working
+                   ↓
+            Results appear when ready, interrupt if failure
+```
+
+**When to use background execution:**
+
+| Operation | Use Background | Rationale |
+|-----------|----------------|-----------|
+| `mix test` (full suite) | YES | Long-running, continue other work |
+| `mix test path/to/file.exs` | NO | Quick, need immediate feedback |
+| `npm run verify` | YES | Lint/type checks can run while coding |
+| `just check` | YES | Quality checks run in parallel |
+| `mix compile` | YES | Continue reading/planning while compiling |
+
+**Implementation:**
+
+```bash
+# Background test run (Developer phase)
+mix test --seed 0 &  # Run in background
+# ... continue with other work ...
+# Check results when needed
+```
+
+**In Task agents, use `run_in_background: true` for:**
+- Full test suite runs
+- Lint/format/type checks
+- Build commands
+- E2E test runs (long-running)
+
+**IMPORTANT:** Always check background task results before:
+- Moving to next scenario
+- Creating PR
+- Completing phase
+
 ### Task Type Detection (Auto-Detect Quick vs Full)
 
 Before starting any `/vibe` command, assess the task type:
@@ -1220,6 +1589,37 @@ This looks like a [bug fix]. Use quick workflow? [Y/n]
 - Task is simple (single file, bug fix)
 - Results depend on each other (sequential by nature)
 - User prefers detailed step-by-step visibility
+
+### Parallel Tool Calls (Built-in Optimization)
+
+Claude Code automatically batches independent tool calls. Maximize this by:
+
+**DO parallelize these operations:**
+```
+# Instead of sequential:
+Read file A → Read file B → Read file C
+
+# Do parallel (single response with multiple tool calls):
+[Read file A] [Read file B] [Read file C]  # All in one response
+```
+
+**File Operations to Parallelize:**
+| Operation | Parallel? | Example |
+|-----------|-----------|---------|
+| Read multiple files | YES | Feature spec + domain spec + test file |
+| Read + Write different files | YES | Read config while writing component |
+| Multiple Grep searches | YES | Search for imports + search for usages |
+| Independent edits | YES | Edit component + edit test (different files) |
+| Sequential edits (same file) | NO | Must wait for first edit to complete |
+
+**Phase-Specific Parallel Opportunities:**
+
+| Phase | What to Parallelize |
+|-------|---------------------|
+| Context Loading | Read all relevant files (feature spec, domain, architecture) at once |
+| QA Test Gen | Write unit test file + integration test file simultaneously |
+| Developer | Read implementation file + test file + pattern file together |
+| QA Validation | Run `mix test` + `npm test` + `npm run verify` in parallel |
 
 ### Parallelization Points
 
@@ -1554,6 +1954,7 @@ Load command: `~/.claude/vibe-ash-svelte/prompts/commands/debt.md`
 
 | Command | Prompt File |
 |---------|-------------|
+| `/vibe contract` | `prompts/commands/contract.md` |
 | `/vibe explore` | `prompts/commands/explore.md` |
 | `/vibe validate` | `prompts/commands/validate.md` |
 | `/vibe archive` | `prompts/commands/archive.md` |
