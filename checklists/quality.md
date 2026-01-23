@@ -404,6 +404,124 @@ pr_quality:
 ```
 <!-- /AI:CHECKLIST -->
 
+### Developer Practice Compliance
+
+<!-- AI:CHECKLIST dev_practice_compliance -->
+```yaml
+dev_practice_compliance:
+  description: "Verify developer followed TDD and YAGNI practices during implementation"
+  when: "After each developer scenario completion, before proceeding to next"
+  items:
+    - id: micro_iteration
+      description: Built in single-focus increments
+      verification:
+        type: manual
+        prompt: "Did you implement ONE concern at a time, with test verification between each?"
+      severity: warning
+      rationale: "Micro-iterations catch errors early and make debugging easier"
+
+    - id: yagni
+      description: Only built what the test required
+      verification:
+        type: manual
+        prompt: "Did you add any code NOT required by the current failing test?"
+      severity: warning
+      rationale: "Speculative code increases maintenance burden and obscures intent"
+
+    - id: pattern_compliance
+      description: Used patterns from architecture docs
+      verification:
+        type: manual
+        prompt: "No raw Tailwind colors, no hardcoded z-index, design tokens used?"
+      severity: warning
+      rationale: "Consistent patterns make the codebase predictable and maintainable"
+
+    - id: test_driven
+      description: Wrote code to make tests pass, not tests to validate code
+      verification:
+        type: manual
+        prompt: "Was implementation driven by the failing test, not the other way around?"
+      severity: warning
+      rationale: "TDD ensures tests are meaningful, not just code coverage theater"
+
+    - id: minimal_changes
+      description: Made only necessary changes
+      verification:
+        type: manual
+        prompt: "Were changes limited to what the scenario required? No 'while I'm here' refactoring?"
+      severity: warning
+      rationale: "Unrelated changes obscure the purpose of commits and complicate review"
+
+    - id: regression_check
+      description: Full test suite still passes
+      verification:
+        type: command
+        command: "{{commands.test}}"
+        success_pattern: "0 failures"
+      severity: blocker
+      rationale: "New code must not break existing functionality"
+```
+<!-- /AI:CHECKLIST -->
+
+### QA Practice Compliance
+
+<!-- AI:CHECKLIST qa_practice_compliance -->
+```yaml
+qa_practice_compliance:
+  description: "Verify QA followed test-first practices during test generation"
+  when: "Before exiting QA Test Generation phase"
+  items:
+    - id: aaa_pattern
+      description: Tests follow Arrange-Act-Assert
+      verification:
+        type: manual
+        prompt: "Do tests have clear setup (Arrange), action (Act), and assertion (Assert) sections?"
+      severity: warning
+      rationale: "AAA pattern makes tests readable and maintainable"
+
+    - id: ux_states_covered
+      description: All 4 UX states have tests
+      verification:
+        type: manual
+        prompt: "Are there tests for loading, error, empty, and success states?"
+      severity: warning
+      rationale: "Users experience all states; all states need verification"
+
+    - id: scenario_coverage
+      description: All acceptance scenarios have tests
+      verification:
+        type: manual
+        prompt: "Does each Given/When/Then scenario from the spec have a corresponding test?"
+      severity: blocker
+      rationale: "Acceptance criteria define done; untested criteria are unverified"
+
+    - id: test_isolation
+      description: Tests are isolated and independent
+      verification:
+        type: manual
+        prompt: "Can each test run independently without depending on other tests?"
+      severity: warning
+      rationale: "Coupled tests create flaky CI and debugging nightmares"
+
+    - id: descriptive_names
+      description: Test names describe expected behavior
+      verification:
+        type: manual
+        prompt: "Do test names follow 'should X when Y' or 'given X when Y then Z' pattern?"
+      severity: suggestion
+      rationale: "Good test names serve as documentation"
+
+    - id: e2e_if_required
+      description: E2E tests written if critical path
+      verification:
+        type: manual
+        prompt: "If feature is auth/payment/realtime, are E2E tests in assets/tests/e2e/?"
+      severity: blocker
+      applies_to: ["auth features", "payment features", "realtime features"]
+      rationale: "Critical paths need end-to-end verification; unit tests aren't sufficient"
+```
+<!-- /AI:CHECKLIST -->
+
 ---
 
 ## Checklist Runner Usage

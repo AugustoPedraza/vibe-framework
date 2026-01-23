@@ -144,6 +144,91 @@
         }
       }
     },
+    "verification_records": {
+      "type": "object",
+      "description": "Paths to verification record files (proof of TDD)",
+      "properties": {
+        "qa_test_creation": {
+          "type": "string",
+          "description": "Path to qa-test-creation.json"
+        },
+        "qa_test_execution": {
+          "type": "string",
+          "description": "Path to qa-test-execution.json"
+        },
+        "dev_iterations": {
+          "type": "array",
+          "description": "Verification records for each developer scenario",
+          "items": {
+            "type": "object",
+            "properties": {
+              "scenario": { "type": "integer", "minimum": 1 },
+              "pre_test": { "type": "string", "description": "Path to dev-scenario-N-pre.json" },
+              "post_test": { "type": "string", "description": "Path to dev-scenario-N-post.json" }
+            },
+            "required": ["scenario", "pre_test", "post_test"]
+          }
+        },
+        "qa_validation": {
+          "type": "string",
+          "description": "Path to qa-validation.json"
+        }
+      }
+    },
+    "pitfalls_checked": {
+      "type": "array",
+      "description": "Results of pitfall checks run during this feature",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "pattern": "^PIT-[0-9]+$" },
+          "description": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["passed", "failed", "fixed", "skipped"]
+          },
+          "checked_at": { "type": "string", "format": "date-time" },
+          "phase": {
+            "type": "string",
+            "enum": ["qa-test-gen", "developer", "qa-validation"]
+          },
+          "fix_details": {
+            "type": "string",
+            "description": "How the pitfall was fixed (if status is 'fixed')"
+          }
+        },
+        "required": ["id", "status", "checked_at"]
+      }
+    },
+    "practice_compliance_summary": {
+      "type": "object",
+      "description": "Summary of practice compliance checks",
+      "properties": {
+        "developer": {
+          "type": "object",
+          "description": "Developer practice compliance per scenario",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "passed": { "type": "integer", "minimum": 0 },
+              "warnings": { "type": "integer", "minimum": 0 },
+              "failed": { "type": "integer", "minimum": 0 },
+              "checked_at": { "type": "string", "format": "date-time" }
+            }
+          }
+        },
+        "qa": {
+          "type": "object",
+          "description": "QA practice compliance",
+          "properties": {
+            "passed": { "type": "integer", "minimum": 0 },
+            "warnings": { "type": "integer", "minimum": 0 },
+            "failed": { "type": "integer", "minimum": 0 },
+            "checked_at": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
     "context_notes": {
       "type": "string",
       "description": "Free-form notes for context restoration"
@@ -207,6 +292,50 @@
     },
     "patterns_used": ["async-result-extraction"],
     "blockers": [],
+    "verification_records": {
+      "qa_test_creation": ".claude/verification/AUTH-001/qa-test-creation.json",
+      "qa_test_execution": ".claude/verification/AUTH-001/qa-test-execution.json",
+      "dev_iterations": [
+        {
+          "scenario": 1,
+          "pre_test": ".claude/verification/AUTH-001/dev-scenario-1-pre.json",
+          "post_test": ".claude/verification/AUTH-001/dev-scenario-1-post.json"
+        }
+      ]
+    },
+    "pitfalls_checked": [
+      {
+        "id": "PIT-001",
+        "description": "Component exported in app.js",
+        "status": "passed",
+        "checked_at": "2026-01-20T11:00:00Z",
+        "phase": "developer"
+      },
+      {
+        "id": "PIT-002",
+        "description": "socket={@socket} in LiveSvelte",
+        "status": "fixed",
+        "checked_at": "2026-01-20T11:05:00Z",
+        "phase": "developer",
+        "fix_details": "Added socket prop to LoginForm component usage"
+      }
+    ],
+    "practice_compliance_summary": {
+      "developer": {
+        "scenario_1": {
+          "passed": 3,
+          "warnings": 1,
+          "failed": 0,
+          "checked_at": "2026-01-20T11:00:00Z"
+        }
+      },
+      "qa": {
+        "passed": 4,
+        "warnings": 0,
+        "failed": 0,
+        "checked_at": "2026-01-20T10:00:00Z"
+      }
+    },
     "context_notes": "Working on scenario 2: invalid credentials handling",
     "created_at": "2026-01-20T09:30:00Z",
     "updated_at": "2026-01-20T11:15:00Z"

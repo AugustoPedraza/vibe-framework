@@ -351,6 +351,264 @@ Current Feature: AUTH-001
 
 ---
 
+## Verification Requirements (MECHANICAL ENFORCEMENT)
+
+> Every phase transition requires machine-verifiable proof, not just documentation.
+
+### Verification Record Location
+
+```
+{project}/.claude/verification/{FEATURE-ID}/
+├── qa-test-creation.json      # Proof test files were created
+├── qa-test-execution.json     # Proof tests ran and FAILED (RED)
+├── dev-scenario-1-pre.json    # Proof test failed before implementation
+├── dev-scenario-1-post.json   # Proof test passed after implementation
+└── qa-validation.json         # Final test execution proof
+```
+
+See: `templates/verification-record-schema.json` for full schema
+
+### Phase 1 Exit Gate (QA Engineer)
+
+**HARD BLOCK CONDITIONS** - Must produce verification records:
+
+1. **Test File Creation Record** - AI verifies each test file exists:
+   ```bash
+   ls -la test/path/to/feature_test.exs
+   wc -l test/path/to/feature_test.exs
+   ```
+
+2. **Test Execution Record (RED State)** - AI captures actual test output:
+   ```bash
+   mix test test/path/to/feature_test.exs 2>&1 | head -50
+   ```
+
+**GATE CHECK**: QA Phase cannot complete unless:
+- [ ] `qa-test-creation.json` exists with files confirmed
+- [ ] `qa-test-execution.json` shows failing tests (exit_code != 0)
+
+### Phase 3 Exit Gate (Developer - Per Scenario)
+
+For EACH scenario, must produce:
+1. Pre-implementation Test Record (RED) - `test_counts.failing > 0`
+2. Post-implementation Test Record (GREEN) - `test_counts.failing == 0`
+
+**GATE CHECK**: Cannot proceed to next scenario unless both records exist.
+
+### Phase 4 Exit Gate (QA Validation)
+
+**GATE CHECK**: Cannot create PR unless:
+- [ ] All `dev-scenario-N-pre.json` and `dev-scenario-N-post.json` exist
+- [ ] `qa-validation.json` shows 0 failures
+- [ ] All pitfall checks passed (see Project Pitfalls System)
+
+### Display Format
+
+After each gate verification:
+```
++---------------------------------------------------------------------+
+|  VERIFICATION GATE: [Phase] -> [Next Phase]                          |
+|                                                                      |
+|  Records Verified:                                                   |
+|    [OK] qa-test-creation.json - 3 files, 5 tests                     |
+|    [OK] qa-test-execution.json - 5 failing (RED confirmed)           |
+|                                                                      |
+|  Gate Status: PASSED                                                 |
++---------------------------------------------------------------------+
+```
+
+If gate fails:
+```
++---------------------------------------------------------------------+
+|  VERIFICATION GATE: [Phase] -> [Next Phase]                          |
+|                                                                      |
+|  Records Verified:                                                   |
+|    [OK] qa-test-creation.json - 3 files, 5 tests                     |
+|    [FAIL] qa-test-execution.json - MISSING                           |
+|                                                                      |
+|  Gate Status: BLOCKED                                                |
+|                                                                      |
+|  Action Required:                                                    |
+|    Run tests and capture output before proceeding                    |
++---------------------------------------------------------------------+
+```
+
+---
+
+## Practice Compliance Checkpoints
+
+> Role practices are not fire-and-forget. Mid-phase checkpoints verify compliance.
+
+### Developer Practice Compliance (After Each Scenario)
+
+Run after each developer scenario completion, before proceeding to next:
+
+<!-- AI:CHECKLIST dev_practice_compliance -->
+```yaml
+dev_practice_compliance:
+  description: "Verify developer followed TDD and YAGNI practices"
+  items:
+    - id: micro_iteration
+      description: Built in single-focus increments
+      verification:
+        type: manual
+        prompt: "Did you implement ONE concern at a time?"
+      severity: warning
+
+    - id: yagni
+      description: Only built what the test required
+      verification:
+        type: manual
+        prompt: "Did you add any code NOT required by the current failing test?"
+      severity: warning
+
+    - id: pattern_compliance
+      description: Used patterns from architecture docs
+      verification:
+        type: manual
+        prompt: "No raw Tailwind colors, no hardcoded z-index, design tokens used?"
+      severity: warning
+
+    - id: test_driven
+      description: Wrote code to make tests pass, not tests to validate code
+      verification:
+        type: manual
+        prompt: "Was implementation driven by the failing test, not the other way around?"
+      severity: warning
+```
+<!-- /AI:CHECKLIST -->
+
+### QA Practice Compliance (End of QA Phase)
+
+Run before exiting QA Test Generation phase:
+
+<!-- AI:CHECKLIST qa_practice_compliance -->
+```yaml
+qa_practice_compliance:
+  description: "Verify QA followed test-first practices"
+  items:
+    - id: aaa_pattern
+      description: Tests follow Arrange-Act-Assert
+      verification:
+        type: manual
+        prompt: "Do tests have clear setup, action, assertion sections?"
+      severity: warning
+
+    - id: ux_states_covered
+      description: All 4 UX states have tests
+      verification:
+        type: manual
+        prompt: "Are there tests for loading, error, empty, and success states?"
+      severity: warning
+
+    - id: scenario_coverage
+      description: All acceptance scenarios have tests
+      verification:
+        type: manual
+        prompt: "Does each Given/When/Then scenario have a corresponding test?"
+      severity: warning
+
+    - id: e2e_if_required
+      description: E2E tests written if critical path
+      verification:
+        type: manual
+        prompt: "If feature is auth/payment/realtime, are E2E tests written?"
+      severity: blocker
+      applies_to: ["auth features", "payment features", "realtime features"]
+```
+<!-- /AI:CHECKLIST -->
+
+### Compliance Display Format
+
+```
++---------------------------------------------------------------------+
+|  PRACTICE COMPLIANCE: Developer (Scenario 1)                         |
+|                                                                      |
+|  [OK] micro_iteration - Built in single-focus increments             |
+|  [OK] yagni - Only built what the test required                      |
+|  [WARN] pattern_compliance - Review design token usage               |
+|  [OK] test_driven - Implementation driven by failing test            |
+|                                                                      |
+|  Status: PASSED (1 warning)                                          |
++---------------------------------------------------------------------+
+```
+
+---
+
+## Project Pitfalls System
+
+> Learn from mistakes. Don't repeat them.
+
+### Pitfalls Location
+
+```
+{project}/.claude/pitfalls.json
+```
+
+See: `templates/project-pitfalls-schema.json` for schema
+See: `templates/pitfalls-example.json` for common pitfalls
+
+### Integration Points
+
+1. **Session Start** - Display relevant pitfalls for feature type
+2. **Developer Checkpoints** - Run pitfall checks before each scenario completion
+3. **QA Validation** - Run ALL pitfall checks (blocker = HARD BLOCK)
+4. **Retro** - Prompt to capture new pitfalls discovered
+
+### Pitfall Check Display
+
+```
++---------------------------------------------------------------------+
+|  PITFALL CHECK: Scenario 1 Complete                                  |
+|                                                                      |
+|  [OK] PIT-001: Component in app.js                                   |
+|  [FAIL] PIT-002: Missing socket={@socket}                            |
+|         Found in: lib/syna_web/live/chat_live.ex:15                  |
+|                                                                      |
+|  1 pitfall detected. Fix before proceeding.                          |
++---------------------------------------------------------------------+
+```
+
+### Severity Rules
+
+| Severity | Enforcement |
+|----------|-------------|
+| blocker  | HARD BLOCK - Cannot proceed until fixed |
+| warning  | Show warning, allow proceed with acknowledgment |
+| suggestion | Show reminder, no block |
+
+### Pitfall Counter Updates
+
+When a pitfall check catches an issue:
+- Increment `times_caught` in pitfalls.json
+- Display in checkpoint: "Caught before it caused issues"
+
+When a pitfall is discovered via human intervention (retro analysis):
+- Increment `times_missed` in pitfalls.json
+- Higher missed count = consider upgrading severity
+
+### Session Start Pitfall Display
+
+At the beginning of `/vibe [FEATURE-ID]`:
+
+```
++---------------------------------------------------------------------+
+|  RELEVANT PITFALLS FOR THIS FEATURE                                  |
+|                                                                      |
+|  Blockers to watch:                                                  |
+|    PIT-001: Export new components in app.js                          |
+|    PIT-002: Include socket={@socket} in LiveSvelte                   |
+|                                                                      |
+|  Warnings:                                                           |
+|    PIT-003: Use design tokens, not raw colors                        |
+|    PIT-005: Handle all 4 UX states                                   |
+|                                                                      |
+|  [c] Continue  [v] View all pitfalls                                 |
++---------------------------------------------------------------------+
+```
+
+---
+
 ## Template Sync (AI-Driven)
 
 When user runs `/vibe check` or requests sync:
@@ -461,7 +719,13 @@ Display when switching roles:
    ```
    See: `templates/handoffs/qa-to-designer.json` for full schema
 9. **HARD BLOCK if no tests written** - Cannot proceed without executable tests
-10. **CHECKPOINT** - Wait for Enter
+10. **CREATE VERIFICATION RECORDS**:
+    - Create `qa-test-creation.json` with file paths and line counts
+    - Create `qa-test-execution.json` with test output and failure count
+    - Save to `{project}/.claude/verification/{FEATURE-ID}/`
+11. **RUN PRACTICE COMPLIANCE** - Execute `qa_practice_compliance` checklist
+12. **VERIFICATION GATE** - Display gate status, BLOCK if records missing or compliance fails
+13. **CHECKPOINT** - Wait for Enter
 
 ### Phase 2: Designer (UX Verification)
 
@@ -564,9 +828,21 @@ For EACH scenario:
    ```bash
    mix test
    ```
-8. **CHECKPOINT** - Wait for Enter
-   - Display: Tests before (X failing) → Tests after (all passing)
-   - For **bootstrap features**, show "Patterns Established" summary
+8. **CREATE VERIFICATION RECORDS**:
+   - Create `dev-scenario-{N}-pre.json` with pre-implementation test output
+   - Create `dev-scenario-{N}-post.json` with post-implementation test output
+   - Save to `{project}/.claude/verification/{FEATURE-ID}/`
+9. **RUN PITFALL CHECKS** - Verify against project `pitfalls.json`
+   - Display any caught pitfalls
+   - BLOCK if blocker-severity pitfall detected
+10. **RUN PRACTICE COMPLIANCE** - Execute `dev_practice_compliance` checklist
+11. **VERIFICATION GATE** - Display gate status showing:
+    - Pre/post records exist and show RED → GREEN transition
+    - Pitfall check results
+    - Practice compliance results
+12. **CHECKPOINT** - Wait for Enter
+    - Display: Tests before (X failing) → Tests after (all passing)
+    - For **bootstrap features**, show "Patterns Established" summary
 
 **HARD BLOCK**: If tests don't pass, cannot proceed to next scenario.
 
@@ -634,9 +910,40 @@ Repeat for all scenarios.
    - Display score report with recommendations
    - **BLOCK if score < 3.0** - return to Developer phase
 
-8. If score >= 3.0 -> Offer to create PR
-9. **CHECKPOINT** - Wait for Enter
-10. Create PR with scenario checklist + quality score + test results summary
+8. **FINAL PITFALL CHECK** - Run ALL pitfall checks:
+   - Load `{project}/.claude/pitfalls.json`
+   - Execute all checks regardless of `applies_to`
+   - **HARD BLOCK** if any blocker-severity pitfall fails
+   - Display full pitfall report
+
+9. **VERIFY ALL RECORDS EXIST** - Check verification records:
+   - [ ] `qa-test-creation.json` exists
+   - [ ] `qa-test-execution.json` exists
+   - [ ] All `dev-scenario-N-pre.json` exist for each scenario
+   - [ ] All `dev-scenario-N-post.json` exist for each scenario
+   - **BLOCK if any records missing**
+
+10. **CREATE FINAL VERIFICATION RECORD**:
+    - Create `qa-validation.json` with final test results
+    - Include quality score and pitfall check summary
+
+11. **VERIFICATION GATE** - Display final gate status:
+    ```
+    +---------------------------------------------------------------------+
+    |  FINAL VERIFICATION GATE: QA Validation -> PR                        |
+    |                                                                      |
+    |  Verification Records: [OK] 8/8 records present                      |
+    |  Pitfall Checks: [OK] 6 passed, 0 failed                             |
+    |  Quality Score: 4.2/5.0 [OK]                                         |
+    |  Test Results: [OK] 12 passing, 0 failing                            |
+    |                                                                      |
+    |  Gate Status: PASSED - Ready for PR                                  |
+    +---------------------------------------------------------------------+
+    ```
+
+12. If gate passes -> Offer to create PR
+13. **CHECKPOINT** - Wait for Enter
+14. Create PR with scenario checklist + quality score + test results summary
 11. Offer post-completion options:
     ```
     Feature implementation complete!

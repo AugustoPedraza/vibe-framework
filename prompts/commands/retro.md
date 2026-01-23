@@ -27,6 +27,169 @@ Display summary:
 +---------------------------------------------------------------------+
 ```
 
+## Step 1.5: Human Intervention Analysis
+
+> Automated scan of session for AI errors that required human fixes.
+
+### Detection Patterns
+
+<!-- AI:DETECTION human_intervention_patterns -->
+```yaml
+human_intervention_patterns:
+  description: "Patterns indicating human had to fix avoidable AI errors"
+  patterns:
+    - id: explicit_correction
+      description: User directly corrected the AI
+      signals:
+        - "no, you should"
+        - "that's wrong"
+        - "you forgot to"
+        - "don't do that"
+        - "remove that"
+        - "that's not right"
+        - "actually, "
+        - "I meant"
+      severity: high
+
+    - id: redo_request
+      description: User asked AI to redo work
+      signals:
+        - "try again"
+        - "redo this"
+        - "start over"
+        - "let me show you"
+        - "do it again"
+        - "revert that"
+      severity: high
+
+    - id: manual_fix
+      description: User fixed it themselves
+      signals:
+        - "I'll fix it"
+        - "I fixed it"
+        - "I had to change"
+        - "I manually"
+        - "I just changed"
+        - "let me do it"
+      severity: medium
+
+    - id: repeated_error
+      description: Same mistake made multiple times
+      signals:
+        - "again"
+        - "same mistake"
+        - "keep forgetting"
+        - "always do this"
+        - "every time"
+        - "you did this before"
+      severity: critical
+
+    - id: implicit_correction
+      description: User edits AI-written file immediately after AI edit
+      detection: "file_edit_pattern"
+      severity: medium
+```
+<!-- /AI:DETECTION -->
+
+### Analysis Workflow
+
+1. **Scan conversation** for intervention patterns (see human_intervention_patterns)
+2. **Cross-reference with file edits** - find cases where user edited file right after AI
+3. **Identify error categories**:
+   - Forgot required step (e.g., component registration)
+   - Wrong pattern used
+   - Ignored documented constraint
+   - Made assumption without reading spec
+   - Repeated previously-corrected mistake
+
+4. **Generate intervention report:**
+
+```
++---------------------------------------------------------------------+
+|  HUMAN INTERVENTION ANALYSIS                                         |
+|                                                                      |
+|  Interventions Detected: 3                                           |
+|                                                                      |
+|  1. [HIGH] Explicit Correction (line ~245 in session)                |
+|     User: "you forgot to add socket={@socket}"                       |
+|     Category: Forgot required step                                   |
+|     Preventable: YES - documented in qa-engineer.md:143              |
+|     -> Suggest pitfall: PIT-XXX                                      |
+|                                                                      |
+|  2. [MEDIUM] Manual Fix (line ~380)                                  |
+|     User edited: lib/syna_web/live/chat_live.ex                      |
+|     Changed: Added missing import statement                          |
+|     Category: Missed import                                          |
+|     Preventable: MAYBE - not explicitly documented                   |
+|     -> Suggest pitfall: PIT-XXX                                      |
+|                                                                      |
+|  3. [CRITICAL] Repeated Error (line ~520)                            |
+|     User: "you keep forgetting the socket prop"                      |
+|     Category: Same as #1 - repeated mistake                          |
+|     Preventable: YES - already documented                            |
+|     -> PRIORITY pitfall with blocker severity                        |
+|                                                                      |
+|  Actions:                                                            |
+|  [c] Create pitfalls for all  [s] Select which  [v] View details     |
++---------------------------------------------------------------------+
+```
+
+5. **Auto-generate pitfall drafts** for user approval
+
+### Pitfall Auto-Creation from Interventions
+
+When user selects "Create pitfalls", generate entries following this template:
+
+```json
+{
+  "id": "PIT-XXX",
+  "category": "{detected_category}",
+  "description": "Auto-detected: {description from user's correction}",
+  "example": "User correction: '{exact user text}'",
+  "solution": "{inferred solution from context}",
+  "check": {
+    "type": "manual|grep_pattern",
+    "prompt": "{verification question}",
+    "pattern": "{if applicable}",
+    "paths": ["{if applicable}"]
+  },
+  "severity": "{warning|blocker based on frequency}",
+  "discovered_in": "{FEATURE-ID}",
+  "discovered_at": "{today's date}",
+  "discovered_via": "human_intervention_analysis",
+  "times_caught": 0,
+  "times_missed": 1
+}
+```
+
+### Severity Assignment Rules
+
+| Condition | Assigned Severity |
+|-----------|-------------------|
+| Repeated error (same session) | blocker |
+| Explicit correction | warning |
+| Manual fix | warning |
+| Already in pitfalls.json | upgrade to blocker + increment times_missed |
+
+### Post-Analysis Actions
+
+After generating pitfalls:
+
+1. **Write to project pitfalls.json**:
+   - Read existing `{project}/.claude/pitfalls.json`
+   - Merge new pitfalls (avoid duplicates by checking description similarity)
+   - Update `last_updated` timestamp
+   - Write back to file
+
+2. **Update times_missed counter** for existing pitfalls that slipped through
+
+3. **Suggest severity upgrades** for frequently-missed pitfalls:
+   ```
+   PIT-002 has been missed 3 times. Upgrade from 'warning' to 'blocker'? [y/n]
+   ```
+
+---
+
 ## Step 2: Pattern Analysis
 
 Scan implementation for reusable patterns.

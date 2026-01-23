@@ -1,0 +1,176 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Vibe Verification Record",
+  "description": "Machine-verifiable proof of TDD phase completion",
+  "type": "object",
+  "required": ["record_type", "feature_id", "timestamp", "verification"],
+  "properties": {
+    "record_type": {
+      "type": "string",
+      "enum": [
+        "qa-test-creation",
+        "qa-test-execution",
+        "dev-scenario-pre",
+        "dev-scenario-post",
+        "qa-validation"
+      ],
+      "description": "Type of verification record"
+    },
+    "feature_id": {
+      "type": "string",
+      "pattern": "^[A-Z]+-[0-9]+$",
+      "description": "Feature identifier (e.g., AUTH-001)"
+    },
+    "scenario_number": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Scenario number (for dev-scenario-pre/post records)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this record was created"
+    },
+    "verification": {
+      "type": "object",
+      "description": "Proof of verification",
+      "properties": {
+        "command_executed": {
+          "type": "string",
+          "description": "The command that was run (e.g., mix test path/to/test.exs)"
+        },
+        "exit_code": {
+          "type": "integer",
+          "description": "Command exit code (0 = success, non-zero = failure)"
+        },
+        "output_summary": {
+          "type": "string",
+          "description": "Truncated output from the command"
+        },
+        "test_counts": {
+          "type": "object",
+          "properties": {
+            "total": { "type": "integer", "minimum": 0 },
+            "passing": { "type": "integer", "minimum": 0 },
+            "failing": { "type": "integer", "minimum": 0 },
+            "skipped": { "type": "integer", "minimum": 0 }
+          },
+          "required": ["total", "passing", "failing"]
+        },
+        "files_verified": {
+          "type": "array",
+          "description": "List of files that were verified to exist",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": { "type": "string" },
+              "exists": { "type": "boolean" },
+              "line_count": { "type": "integer", "minimum": 0 }
+            },
+            "required": ["path", "exists"]
+          }
+        }
+      }
+    },
+    "gate_status": {
+      "type": "string",
+      "enum": ["passed", "failed", "blocked"],
+      "description": "Whether this verification passed the gate check"
+    },
+    "failure_reason": {
+      "type": "string",
+      "description": "Reason for gate failure (if gate_status is failed/blocked)"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "record_type": { "const": "qa-test-creation" } }
+      },
+      "then": {
+        "properties": {
+          "verification": {
+            "required": ["files_verified"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "record_type": { "const": "qa-test-execution" } }
+      },
+      "then": {
+        "properties": {
+          "verification": {
+            "required": ["command_executed", "exit_code", "test_counts"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "record_type": { "enum": ["dev-scenario-pre", "dev-scenario-post"] } }
+      },
+      "then": {
+        "required": ["scenario_number"],
+        "properties": {
+          "verification": {
+            "required": ["command_executed", "exit_code", "test_counts"]
+          }
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "record_type": "qa-test-creation",
+      "feature_id": "AUTH-001",
+      "timestamp": "2026-01-22T10:00:00Z",
+      "verification": {
+        "files_verified": [
+          { "path": "test/syna/accounts/user_test.exs", "exists": true, "line_count": 45 },
+          { "path": "assets/svelte/features/auth/__tests__/LoginForm.test.ts", "exists": true, "line_count": 62 }
+        ]
+      },
+      "gate_status": "passed"
+    },
+    {
+      "record_type": "qa-test-execution",
+      "feature_id": "AUTH-001",
+      "timestamp": "2026-01-22T10:05:00Z",
+      "verification": {
+        "command_executed": "mix test test/syna/accounts/user_test.exs",
+        "exit_code": 1,
+        "output_summary": "5 tests, 5 failures\n\n  1) test user can log in with valid credentials...",
+        "test_counts": { "total": 5, "passing": 0, "failing": 5, "skipped": 0 }
+      },
+      "gate_status": "passed"
+    },
+    {
+      "record_type": "dev-scenario-pre",
+      "feature_id": "AUTH-001",
+      "scenario_number": 1,
+      "timestamp": "2026-01-22T11:00:00Z",
+      "verification": {
+        "command_executed": "mix test test/syna/accounts/user_test.exs --seed 0",
+        "exit_code": 1,
+        "output_summary": "1 test, 1 failure",
+        "test_counts": { "total": 1, "passing": 0, "failing": 1, "skipped": 0 }
+      },
+      "gate_status": "passed"
+    },
+    {
+      "record_type": "dev-scenario-post",
+      "feature_id": "AUTH-001",
+      "scenario_number": 1,
+      "timestamp": "2026-01-22T11:30:00Z",
+      "verification": {
+        "command_executed": "mix test test/syna/accounts/user_test.exs --seed 0",
+        "exit_code": 0,
+        "output_summary": "1 test, 0 failures",
+        "test_counts": { "total": 1, "passing": 1, "failing": 0, "skipped": 0 }
+      },
+      "gate_status": "passed"
+    }
+  ]
+}

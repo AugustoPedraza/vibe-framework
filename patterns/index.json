@@ -303,6 +303,81 @@
         "success_rate": 1.0,
         "feedback": ["Discovered in Syna / CONV-002"]
       }
+    },
+    {
+      "id": "app-shell-navigation",
+      "name": "App Shell Navigation",
+      "path": "ux/app-shell-navigation.md",
+      "category": "ux",
+      "tags": ["svelte5", "typescript", "pwa", "mobile", "navigation"],
+      "triggers": ["bottom tab", "tab bar", "app shell", "mobile navigation", "bottom navigation"],
+      "problem_keywords": ["native feel", "tab navigation", "safe areas", "persistent nav"],
+      "solution_summary": "Mobile-first app shell with bottom tab bar, active state, badge support, and user avatar",
+      "reusability_score": 5,
+      "related": ["directional-transitions", "liveview-navigation"],
+      "embeddings_hint": "app shell bottom tab bar navigation mobile pwa tabs active state badge avatar safe area",
+      "synonyms": ["tab bar", "bottom navigation", "app navigation", "mobile nav"],
+      "anti_patterns": ["More than 5 tabs", "No active state indicator", "Ignoring safe areas"],
+      "applicability": {
+        "stack_requires": ["svelte5"],
+        "file_patterns": ["*.svelte"],
+        "code_patterns": ["BottomTabBar", "activeTab", "currentRoute"]
+      },
+      "usage_stats": {
+        "times_used": 1,
+        "success_rate": 1.0,
+        "feedback": ["Discovered in Syna / NAV-001"]
+      }
+    },
+    {
+      "id": "centralized-copy",
+      "name": "Centralized Copy System",
+      "path": "frontend/centralized-copy.md",
+      "category": "frontend",
+      "tags": ["typescript", "svelte5", "i18n", "ux", "maintainability"],
+      "triggers": ["copy file", "user strings", "i18n", "text management", "hardcoded strings"],
+      "problem_keywords": ["inconsistent text", "hardcoded strings", "localization", "copy changes"],
+      "solution_summary": "Type-safe centralized copy system with feature-specific files and i18n-ready structure",
+      "reusability_score": 6,
+      "related": ["motion-presets"],
+      "embeddings_hint": "copy text strings i18n localization user-facing centralized management typed interfaces",
+      "synonyms": ["text management", "string management", "i18n system", "copy management"],
+      "anti_patterns": ["Hardcoded strings in components", "Duplicated text", "No typing"],
+      "applicability": {
+        "stack_requires": ["typescript"],
+        "file_patterns": ["*.ts", "*.svelte"],
+        "code_patterns": ["from '$lib/copy", "copy."]
+      },
+      "usage_stats": {
+        "times_used": 1,
+        "success_rate": 1.0,
+        "feedback": ["Discovered in Syna / NAV-001"]
+      }
+    },
+    {
+      "id": "motion-reduce-spinner",
+      "name": "Motion-Reduce Loading Spinner",
+      "path": "ux/motion-reduce-spinner.md",
+      "category": "ux",
+      "tags": ["tailwind", "accessibility", "a11y", "animation", "loading"],
+      "triggers": ["loading spinner", "reduced motion", "a11y spinner", "accessible loading"],
+      "problem_keywords": ["motion sensitivity", "vestibular", "prefers-reduced-motion", "spinning"],
+      "solution_summary": "Loading spinner that respects prefers-reduced-motion with static fallback",
+      "reusability_score": 4,
+      "related": ["motion-presets", "async-media-loading"],
+      "embeddings_hint": "loading spinner reduced motion accessibility a11y animation prefers-reduced-motion vestibular",
+      "synonyms": ["accessible spinner", "a11y loader", "motion-safe spinner"],
+      "anti_patterns": ["Ignoring reduced-motion preference", "No fallback indicator", "Jarring animations"],
+      "applicability": {
+        "stack_requires": ["tailwind"],
+        "file_patterns": ["*.svelte"],
+        "code_patterns": ["animate-spin", "motion-reduce"]
+      },
+      "usage_stats": {
+        "times_used": 1,
+        "success_rate": 1.0,
+        "feedback": ["Discovered in Syna / NAV-001"]
+      }
     }
   ],
   "categories": {
