@@ -2,8 +2,33 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "version": "1.1.0",
   "description": "Semantic pattern index for AI-assisted retrieval with RAG optimization",
-  "last_updated": "2026-01-22",
+  "last_updated": "2026-01-24",
   "patterns": [
+    {
+      "id": "tab-navigation-shared-header",
+      "name": "Tab Navigation with Shared Header",
+      "path": "ux/tab-navigation-shared-header.md",
+      "category": "ux",
+      "tags": ["svelte5", "phoenix", "liveview", "livesvelte", "navigation", "tabs"],
+      "triggers": ["tab navigation", "shared header", "tabbed view", "tab switch", "content tabs"],
+      "problem_keywords": ["header flicker", "tab change", "header re-render", "duplicate header", "tab navigation"],
+      "solution_summary": "Extract shared header components to parent level, switching only content area on tab change",
+      "reusability_score": 5,
+      "related": ["liveview-navigation", "directional-transitions", "app-shell-navigation"],
+      "embeddings_hint": "tab navigation header shared constant content switch tabs tabbed view seamless transition parent child",
+      "synonyms": ["tabbed navigation", "tab bar content", "shared header tabs", "persistent header"],
+      "anti_patterns": ["Rendering header inside each tab", "Full page reload on tab switch", "Duplicating header code"],
+      "applicability": {
+        "stack_requires": ["svelte5", "phoenix", "liveview"],
+        "file_patterns": ["*.svelte", "*_live.ex"],
+        "code_patterns": ["activeTab", "ChatTabs", "TabBar", "liveNavigate"]
+      },
+      "usage_stats": {
+        "times_used": 1,
+        "success_rate": 1.0,
+        "feedback": ["Discovered in Syna / DEC-002"]
+      }
+    },
     {
       "id": "async-image-fade-in",
       "name": "Async Image Fade-In",

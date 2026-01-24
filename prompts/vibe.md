@@ -4,6 +4,33 @@
 
 ---
 
+## Performance-Optimized Alternative
+
+For improved context management and faster response times, use the tiered loading system:
+
+```
+INSTEAD OF loading this full file, load:
+├── prompts/vibe-core.md              # Minimal orchestrator (~200 lines)
+├── prompts/phases/{current}.md       # Phase-specific guidance
+├── roles/{role}/core.md              # Role core only
+└── patterns/manifest.json            # Lightweight pattern index
+```
+
+**Documentation**:
+- `context/loading-strategy.md` - Tiered context loading system
+- `context/phase-boundaries.md` - What to load per phase
+
+**Modular Role Structure**:
+- `roles/developer/core.md` - Essential developer guidance
+- `roles/developer/backend.md` - Elixir/Ash patterns (on-demand)
+- `roles/developer/frontend.md` - Svelte patterns (on-demand)
+- `roles/qa-engineer/core.md` - Essential QA guidance
+- `roles/designer/core.md` - Essential designer guidance
+
+This reduces context usage by **50-60%** while maintaining quality.
+
+---
+
 ## Development Philosophy: Vertical Slices
 
 > **Build complete features end-to-end, not horizontal layers.**

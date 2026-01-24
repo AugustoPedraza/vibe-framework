@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "version": "1.0.0",
+  "description": "Lightweight pattern manifest for fast matching. Load full details from details/{id}.json",
+  "last_updated": "2026-01-24",
+  "patterns": [
+    {
+      "id": "tab-navigation-shared-header",
+      "category": "ux",
+      "triggers": ["tab navigation", "shared header", "tabbed view", "tab switch", "content tabs", "header flicker"],
+      "stack": ["svelte5", "phoenix", "liveview"],
+      "score": 5
+    },
+    {
+      "id": "async-image-fade-in",
+      "category": "frontend",
+      "triggers": ["image fade", "lazy load fade", "image transition", "smooth image load", "image pop-in"],
+      "stack": ["svelte5"],
+      "score": 5
+    },
+    {
+      "id": "motion-presets",
+      "category": "ux",
+      "triggers": ["animation system", "motion tokens", "transition presets", "stagger animation", "reduced motion"],
+      "stack": ["svelte5", "css"],
+      "score": 6
+    },
+    {
+      "id": "ash-get-or-create",
+      "category": "backend",
+      "triggers": ["get or create", "ensure exists", "default resource", "upsert", "find or create", "idempotent"],
+      "stack": ["elixir", "ash"],
+      "score": 5
+    },
+    {
+      "id": "async-media-loading",
+      "category": "frontend",
+      "triggers": ["image loading", "lazy load", "thumbnail", "avatar", "cover image", "skeleton placeholder"],
+      "stack": ["svelte5"],
+      "score": 7
+    },
+    {
+      "id": "swipe-drawer",
+      "category": "frontend",
+      "triggers": ["drawer", "side panel", "swipe gesture", "mobile navigation", "slide panel"],
+      "stack": ["svelte5"],
+      "score": 6
+    },
+    {
+      "id": "user-scoped-cache",
+      "category": "pwa",
+      "triggers": ["cache", "offline", "stale-while-revalidate", "localStorage", "user isolation", "TTL"],
+      "stack": ["typescript"],
+      "score": 5
+    },
+    {
+      "id": "async-result-extraction",
+      "category": "backend",
+      "triggers": ["AsyncResult", "loading state", "assign_async", "status extraction", "async states"],
+      "stack": ["elixir", "phoenix", "liveview"],
+      "score": 6
+    },
+    {
+      "id": "liveview-navigation",
+      "category": "frontend",
+      "triggers": ["live navigation", "pushHistoryPatch", "WebSocket navigation", "SPA navigation", "live_patch"],
+      "stack": ["phoenix", "liveview", "svelte"],
+      "score": 6
+    },
+    {
+      "id": "directional-transitions",
+      "category": "ux",
+      "triggers": ["page transition", "screen animation", "forward/back", "navigation animation", "slide animation"],
+      "stack": ["svelte", "css"],
+      "score": 5
+    },
+    {
+      "id": "design-by-contract",
+      "category": "backend",
+      "triggers": ["precondition", "postcondition", "invariant", "contract", "validation", "guard clause"],
+      "stack": ["elixir"],
+      "score": 5
+    },
+    {
+      "id": "component-folder-structure",
+      "category": "ux",
+      "triggers": ["folder structure", "component organization", "index.svelte", "barrel exports", "nested components"],
+      "stack": ["svelte5"],
+      "score": 6
+    },
+    {
+      "id": "typing-aware-scroll",
+      "category": "ux",
+      "triggers": ["chat scroll", "auto scroll", "new messages indicator", "scroll to bottom", "smart scroll"],
+      "stack": ["svelte5"],
+      "score": 5
+    },
+    {
+      "id": "app-shell-navigation",
+      "category": "ux",
+      "triggers": ["bottom tab", "tab bar", "app shell", "mobile navigation", "bottom navigation"],
+      "stack": ["svelte5"],
+      "score": 5
+    },
+    {
+      "id": "centralized-copy",
+      "category": "frontend",
+      "triggers": ["copy file", "user strings", "i18n", "text management", "hardcoded strings", "localization"],
+      "stack": ["typescript"],
+      "score": 6
+    },
+    {
+      "id": "motion-reduce-spinner",
+      "category": "ux",
+      "triggers": ["loading spinner", "reduced motion", "a11y spinner", "accessible loading", "prefers-reduced-motion"],
+      "stack": ["tailwind"],
+      "score": 4
+    }
+  ],
+  "matching": {
+    "description": "How to use this manifest for pattern matching",
+    "algorithm": [
+      "1. Extract keywords from feature spec (title, scenarios, UX requirements)",
+      "2. Match against 'triggers' array (case-insensitive, partial match OK)",
+      "3. Filter by 'stack' intersection with project's vibe.config.json stack",
+      "4. Sort by 'score' descending (higher = more broadly applicable)",
+      "5. Return top 3-5 matches"
+    ],
+    "score_thresholds": {
+      "high": 6,
+      "medium": 5,
+      "low": 4
+    }
+  },
+  "paths": {
+    "full_index": "index.json",
+    "pattern_files": "{category}/{id}.md"
+  }
+}

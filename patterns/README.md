@@ -80,6 +80,7 @@ When implementing a feature:
 |---------|-------------|------|
 | [directional-transitions](ux/directional-transitions.md) | Direction-aware screen animations | `css` `pwa` `a11y` |
 | [motion-presets](ux/motion-presets.md) | Centralized animation presets with reduced-motion support | `svelte5` `a11y` |
+| [tab-navigation-shared-header](ux/tab-navigation-shared-header.md) | Tab navigation with constant header, switching content only | `svelte5` `liveview` `navigation` |
 
 ---
 

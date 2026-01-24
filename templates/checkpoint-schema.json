@@ -311,6 +311,56 @@
     "session_id": {
       "type": "string",
       "description": "Claude session ID for reference"
+    },
+    "context_cache": {
+      "type": "object",
+      "description": "Context optimization data for faster session resume",
+      "properties": {
+        "patterns_loaded": {
+          "type": "array",
+          "description": "Pattern IDs that were loaded and found relevant",
+          "items": { "type": "string" }
+        },
+        "architecture_docs_read": {
+          "type": "array",
+          "description": "Architecture doc filenames already incorporated",
+          "items": { "type": "string" }
+        },
+        "role_modules_used": {
+          "type": "array",
+          "description": "Role module paths that were loaded (e.g., roles/developer/backend.md)",
+          "items": { "type": "string" }
+        },
+        "decisions": {
+          "type": "array",
+          "description": "Key decisions made during session for continuity",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["pattern_choice", "component_choice", "architecture_choice", "implementation_choice"]
+              },
+              "choice": { "type": "string" },
+              "reason": { "type": "string" }
+            }
+          }
+        },
+        "context_summary": {
+          "type": "string",
+          "description": "AI-generated summary of session context for quick resume (max 500 chars)"
+        },
+        "files_in_memory": {
+          "type": "array",
+          "description": "File paths that should be re-read on resume for context",
+          "items": { "type": "string" }
+        },
+        "skip_on_resume": {
+          "type": "array",
+          "description": "Context that doesn't need reloading (already incorporated)",
+          "items": { "type": "string" }
+        }
+      }
     }
   },
   "example": {
