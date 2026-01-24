@@ -4,6 +4,137 @@
 
 ---
 
+## Agent Configuration
+
+| Setting | Value | Rationale |
+|---------|-------|-----------|
+| **Model** | `opus` | Complex business logic requires deep reasoning |
+| **Max Context** | ~50k tokens | Keep under half capacity for reasoning |
+| **Progress File** | `.claude/progress/{FEATURE-ID}/backend.json` | Real-time visibility |
+
+**When spawning this agent:**
+```typescript
+Task({
+  subagent_type: "general-purpose",
+  model: "opus",  // Business logic needs deep reasoning
+  run_in_background: true,
+  prompt: "..." // See minimal context below
+})
+```
+
+---
+
+## Minimal Context Loading
+
+> Load ONLY what's needed. Every token counts.
+
+### Required Context (Load First)
+
+| Priority | File | Why | ~Lines |
+|----------|------|-----|--------|
+| 1 | Interface contract | Source of truth | 50-100 |
+| 2 | This role file | Workflow instructions | 150 |
+| 3 | Domain spec | Business rules | 100-200 |
+
+**Initial prompt should include:**
+```
+You are the Backend Agent for feature {FEATURE-ID}.
+
+CONTEXT (pre-loaded):
+1. Contract: {inline contract JSON or path}
+2. Role: roles/backend-agent.md
+3. Domain: {domain spec content}
+
+Your acceptance criteria: {AC-1, AC-2 from contract}
+Your file ownership: lib/{domain}/, test/{domain}/
+
+START WORK. Report progress to: .claude/progress/{FEATURE-ID}/backend.json
+```
+
+### Lazy Context (Load Only If Needed)
+
+| File | Load When |
+|------|-----------|
+| `testing.md` | Writing first test |
+| `03-domain-ash.md` | Hitting unfamiliar Ash pattern |
+| Existing resources | Extending existing code |
+
+**Anti-pattern:** Loading all architecture docs upfront. Most won't be used.
+
+### Context Budget
+
+```
+Target: ~40k tokens loaded
+├── Contract: 2k
+├── Role file: 4k
+├── Domain spec: 5k
+├── Implementation files: 15k
+├── Test files: 10k
+└── Reserve for output: 4k
+```
+
+---
+
+## Progress Reporting Protocol
+
+> Write progress to file after EACH significant action.
+
+**Progress file:** `.claude/progress/{FEATURE-ID}/backend.json`
+
+### Report At These Points
+
+1. **Agent start** - status: "starting"
+2. **Context loaded** - status: "loading_context"
+3. **Each test written** - update recent_actions
+4. **Test run results** - update tests_passing/failing
+5. **Criterion complete** - update criteria_completed
+6. **Blocked** - status: "blocked" with blocker details
+7. **Complete** - status: "complete"
+
+### Progress File Format
+
+```json
+{
+  "agent_id": "backend-{uuid}",
+  "stream": "backend",
+  "feature_id": "AUTH-001",
+  "model": "opus",
+  "status": "implementing",
+  "current_task": {
+    "phase": "implementation",
+    "description": "Implementing authenticate action",
+    "file": "lib/accounts/resources/user.ex",
+    "started_at": "2026-01-23T10:15:00Z"
+  },
+  "progress": {
+    "criteria_total": 2,
+    "criteria_completed": 1,
+    "criteria_in_progress": "AC-2",
+    "tests_passing": 3,
+    "tests_failing": 2,
+    "percent_complete": 50
+  },
+  "recent_actions": [
+    {"action": "Created test file", "result": "success", "timestamp": "..."},
+    {"action": "Ran tests (3 pass, 2 fail)", "result": "success", "timestamp": "..."}
+  ],
+  "blockers": [],
+  "context_loaded": {
+    "files_read": 5,
+    "total_lines": 850
+  },
+  "updated_at": "2026-01-23T10:15:30Z"
+}
+```
+
+### Update Frequency
+
+- **Every file created/modified** - update recent_actions
+- **Every test run** - update test counts
+- **Every 2-3 minutes** - heartbeat (update `updated_at`)
+
+---
+
 ## Role Context
 
 This role is used during **parallel implementation** when backend and frontend streams work simultaneously. The Backend Agent:

@@ -1215,6 +1215,78 @@ Repeat for all scenarios.
 
 **Trigger:** `/vibe parallel [FEATURE-ID]`
 
+---
+
+### Agent Context Management Best Practices
+
+> Spawned agents are NOT inside your context. Design prompts carefully.
+
+**Key Insight:** When you spawn an agent with `Task()`, it starts fresh. It doesn't see:
+- Prior conversation history
+- Files you've already read
+- Decisions you've made
+
+**Context Loading Strategy by Agent Type:**
+
+| Agent | Model | Context Priority | Budget |
+|-------|-------|------------------|--------|
+| Backend | opus | Contract → Role → Domain spec | ~40k tokens |
+| Frontend | sonnet | Contract (UI) → Role → Tokens | ~30k tokens |
+| Integration | opus | Contract → Role → Both impls | ~50k tokens |
+
+**Prompt Structure for Agent Spawning:**
+
+```
+1. IDENTITY: "You are the [Role] Agent for [FEATURE-ID]"
+
+2. CONTEXT (inline or paths):
+   - Contract (critical sections only)
+   - Role file (key sections)
+   - Domain-specific context
+
+3. TASK:
+   - Specific acceptance criteria
+   - File ownership boundaries
+   - Progress file location
+
+4. START COMMAND: "START WORK."
+```
+
+**Anti-Patterns:**
+- ❌ Spawning with "implement this feature" - too vague
+- ❌ Loading all architecture docs - wastes context
+- ❌ Not specifying progress file - loses visibility
+- ❌ Including full conversation history - unnecessary
+
+**Good Pattern:**
+```typescript
+Task({
+  model: "opus",
+  run_in_background: true,
+  prompt: `
+You are the Backend Agent for AUTH-001.
+
+CONTRACT (key sections):
+${JSON.stringify(contract.api_contract, null, 2)}
+
+ROLE SUMMARY:
+- Own lib/accounts/, test/accounts/
+- Write tests first (TDD)
+- Match contract exactly
+
+YOUR CRITERIA:
+- AC-1: Valid credentials return user
+- AC-2: Invalid credentials return error
+
+PROGRESS FILE: .claude/progress/AUTH-001/backend.json
+
+START WORK.
+`
+});
+```
+
+---
+
 ### When to Use Parallel Mode
 
 | Use Parallel When | Use Sequential When |
@@ -1302,8 +1374,60 @@ Repeat for all scenarios.
 
 ### Phase 1: Parallel Streams
 
+**Agent Spawning Configuration:**
+
+| Stream | Model | Rationale |
+|--------|-------|-----------|
+| Backend | `opus` | Complex business logic requires deep reasoning |
+| Frontend | `sonnet` | UI patterns are well-defined, speed matters |
+| Integration | `opus` | Careful wiring needs deep understanding |
+
 **Spawn two agents simultaneously:**
 
+```typescript
+// Orchestrator spawns with minimal, focused context
+const backendAgent = Task({
+  subagent_type: "general-purpose",
+  model: "opus",
+  run_in_background: true,
+  prompt: `
+You are the Backend Agent for ${featureId}.
+
+CONTEXT:
+1. Contract: ${contractJson}
+2. Role: ${backendAgentRole}
+3. Domain spec: ${domainSpec}
+
+Criteria: ${backendCriteria.join(', ')}
+File ownership: lib/${domain}/, test/${domain}/
+
+Report progress to: .claude/progress/${featureId}/backend.json
+START WORK.
+`
+});
+
+const frontendAgent = Task({
+  subagent_type: "general-purpose",
+  model: "sonnet",  // Faster for UI work
+  run_in_background: true,
+  prompt: `
+You are the Frontend Agent for ${featureId}.
+
+CONTEXT:
+1. Contract (ui_contract + mock_data): ${uiContractJson}
+2. Role: ${frontendAgentRole}
+3. Design tokens: ${designTokens}
+
+Criteria: ${frontendCriteria.join(', ')}
+File ownership: assets/svelte/
+
+Report progress to: .claude/progress/${featureId}/frontend.json
+START WORK.
+`
+});
+```
+
+**Display:**
 ```
 +======================================================================+
 |  PARALLEL IMPLEMENTATION                                             |
@@ -1315,26 +1439,98 @@ Starting parallel streams...
 
 ┌─ Backend Stream ───────────────────┐ ┌─ Frontend Stream ──────────────────┐
 │ Agent: backend-agent-abc123        │ │ Agent: frontend-agent-def456       │
+│ Model: opus                        │ │ Model: sonnet                      │
 │ Role: roles/backend-agent.md       │ │ Role: roles/frontend-agent.md      │
 │ Criteria: AC-1, AC-2               │ │ Criteria: AC-3, AC-4               │
 │ Status: in_progress                │ │ Status: in_progress                │
 └────────────────────────────────────┘ └────────────────────────────────────┘
 ```
 
-**File Locking:**
-- Create lock file: `.claude/locks/{FEATURE-ID}.json`
-- Each stream owns exclusive paths
-- Attempting to modify another stream's files = HARD BLOCK
+---
 
-**Progress Display:**
+### Orchestrator Monitoring Loop
+
+> The orchestrator doesn't wait blindly - it actively monitors agent progress.
+
+**Progress Files:**
+```
+.claude/progress/{FEATURE-ID}/
+├── backend.json    # Updated by backend agent
+├── frontend.json   # Updated by frontend agent
+└── integration.json # Updated by integration agent (Phase 2)
+```
+
+**Polling Behavior:**
+
+```
+WHILE agents running:
+  1. Read progress files (every 30-60 seconds)
+  2. Parse status from each stream
+  3. Update consolidated display
+  4. Check for blockers
+  5. Handle stale agents (no update in 3+ minutes)
+
+  IF blocker detected:
+    - Display blocker details
+    - Offer intervention options
+
+  IF agent stale:
+    - Check agent output file
+    - Determine if stuck or still processing
+    - Alert user if truly stuck
+```
+
+**Consolidated Progress Display (Updated Regularly):**
 ```
 ┌─ Backend Stream ───────────────────┐ ┌─ Frontend Stream ──────────────────┐
 │ [===========         ] 50%         │ │ [================   ] 75%          │
 │ Criteria: 1/2 complete             │ │ Criteria: 2/2 complete             │
 │ Tests: 3 passing, 2 failing        │ │ Tests: 8 passing, 0 failing        │
-│ Status: implementing AC-2          │ │ Status: WAITING AT SYNC POINT      │
+│ Current: implementing AC-2         │ │ Current: WAITING AT SYNC POINT     │
+│ Last update: 30s ago               │ │ Last update: 10s ago               │
 └────────────────────────────────────┘ └────────────────────────────────────┘
+
+Recent activity:
+  [10:15:30] Backend: Created authenticate_test.exs
+  [10:15:45] Frontend: LoginForm.svelte passing all tests
+  [10:16:00] Backend: Running tests (3 pass, 2 fail)
 ```
+
+**Blocker Detection:**
+```
+┌─ BLOCKER DETECTED ──────────────────────────────────────────────────────┐
+│                                                                         │
+│  Stream: backend                                                        │
+│  Issue: test_failure                                                    │
+│  Description: authenticate action returns wrong error code              │
+│  Severity: blocking                                                     │
+│                                                                         │
+│  Agent hint: Need to map Ash.Error to contract error code               │
+│                                                                         │
+│  [c] Continue monitoring  [i] Intervene  [a] Abort stream               │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**Stale Agent Detection:**
+```
+┌─ STALE AGENT WARNING ───────────────────────────────────────────────────┐
+│                                                                         │
+│  Stream: frontend                                                       │
+│  Last update: 4 minutes ago                                             │
+│  Last action: "Writing LoginForm.test.ts"                               │
+│                                                                         │
+│  Checking agent status...                                               │
+│                                                                         │
+│  [w] Wait longer  [c] Check output  [r] Resume agent  [k] Kill agent    │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+**File Locking:**
+- Create lock file: `.claude/locks/{FEATURE-ID}.json`
+- Each stream owns exclusive paths
+- Attempting to modify another stream's files = HARD BLOCK
 
 ### Sync Point
 

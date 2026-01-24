@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agent Progress Report",
+  "description": "Real-time progress updates from spawned agents. Orchestrator polls these files to maintain visibility into agent work.",
+  "type": "object",
+  "required": ["agent_id", "stream", "feature_id", "status", "updated_at"],
+  "properties": {
+    "agent_id": {
+      "type": "string",
+      "description": "Unique agent identifier"
+    },
+    "stream": {
+      "type": "string",
+      "enum": ["backend", "frontend", "integration"],
+      "description": "Which implementation stream"
+    },
+    "feature_id": {
+      "type": "string",
+      "description": "Feature being implemented",
+      "pattern": "^[A-Z]+-[0-9]+$"
+    },
+    "model": {
+      "type": "string",
+      "enum": ["opus", "sonnet", "haiku"],
+      "description": "Model powering this agent"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["starting", "loading_context", "implementing", "testing", "blocked", "complete", "failed"],
+      "description": "Current agent status"
+    },
+    "current_task": {
+      "type": "object",
+      "description": "What the agent is currently doing",
+      "properties": {
+        "phase": {
+          "type": "string",
+          "enum": ["context_loading", "test_writing", "implementation", "test_running", "verification"],
+          "description": "Current workflow phase"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of current work"
+        },
+        "file": {
+          "type": "string",
+          "description": "File currently being worked on"
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "progress": {
+      "type": "object",
+      "description": "Progress metrics",
+      "properties": {
+        "criteria_total": { "type": "integer" },
+        "criteria_completed": { "type": "integer" },
+        "criteria_in_progress": { "type": "string", "description": "Current criterion ID" },
+        "tests_passing": { "type": "integer" },
+        "tests_failing": { "type": "integer" },
+        "files_created": { "type": "integer" },
+        "files_modified": { "type": "integer" },
+        "percent_complete": { "type": "number", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "recent_actions": {
+      "type": "array",
+      "description": "Last 5 actions for visibility (rolling log)",
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "properties": {
+          "action": { "type": "string" },
+          "result": { "type": "string", "enum": ["success", "failure", "skipped"] },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "details": { "type": "string" }
+        }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "description": "Current issues preventing progress",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["test_failure", "contract_violation", "file_conflict", "dependency_missing", "change_request_pending"]
+          },
+          "description": { "type": "string" },
+          "severity": { "type": "string", "enum": ["warning", "blocking"] },
+          "resolution_hint": { "type": "string" }
+        }
+      }
+    },
+    "context_loaded": {
+      "type": "object",
+      "description": "What context the agent has loaded (for debugging)",
+      "properties": {
+        "files_read": { "type": "integer" },
+        "total_lines": { "type": "integer" },
+        "key_files": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "example": {
+    "agent_id": "backend-abc123",
+    "stream": "backend",
+    "feature_id": "AUTH-001",
+    "model": "opus",
+    "status": "implementing",
+    "current_task": {
+      "phase": "implementation",
+      "description": "Implementing authenticate action error handling",
+      "file": "lib/accounts/resources/user.ex",
+      "started_at": "2026-01-23T10:15:00Z"
+    },
+    "progress": {
+      "criteria_total": 2,
+      "criteria_completed": 1,
+      "criteria_in_progress": "AC-2",
+      "tests_passing": 3,
+      "tests_failing": 2,
+      "files_created": 2,
+      "files_modified": 1,
+      "percent_complete": 50
+    },
+    "recent_actions": [
+      {
+        "action": "Created test file test/accounts/authenticate_test.exs",
+        "result": "success",
+        "timestamp": "2026-01-23T10:10:00Z"
+      },
+      {
+        "action": "Ran tests (3 passing, 2 failing)",
+        "result": "success",
+        "timestamp": "2026-01-23T10:12:00Z"
+      },
+      {
+        "action": "Implemented valid credentials path",
+        "result": "success",
+        "timestamp": "2026-01-23T10:14:00Z"
+      }
+    ],
+    "blockers": [],
+    "context_loaded": {
+      "files_read": 5,
+      "total_lines": 850,
+      "key_files": [
+        ".claude/contracts/AUTH-001.json",
+        "docs/domain/specs/domains/accounts.md",
+        "roles/backend-agent.md"
+      ]
+    },
+    "started_at": "2026-01-23T10:05:00Z",
+    "updated_at": "2026-01-23T10:15:30Z"
+  }
+}

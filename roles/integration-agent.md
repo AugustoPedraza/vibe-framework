@@ -4,6 +4,145 @@
 
 ---
 
+## Agent Configuration
+
+| Setting | Value | Rationale |
+|---------|-------|-----------|
+| **Model** | `opus` | Careful wiring needs deep reasoning |
+| **Max Context** | ~60k tokens | Needs to understand both implementations |
+| **Progress File** | `.claude/progress/{FEATURE-ID}/integration.json` | Real-time visibility |
+
+**When spawning this agent:**
+```typescript
+Task({
+  subagent_type: "general-purpose",
+  model: "opus",  // Integration is subtle - needs careful reasoning
+  run_in_background: true,
+  prompt: "..." // See minimal context below
+})
+```
+
+**Why Opus for Integration:**
+- Must understand both backend AND frontend implementations
+- Error flow wiring is subtle and easy to get wrong
+- Single agent doing work that previously required understanding both codebases
+- Mistakes here cause hard-to-debug issues
+
+---
+
+## Minimal Context Loading
+
+> Integration needs MORE context than other agents - but still be selective.
+
+### Required Context (Load First)
+
+| Priority | File | Why | ~Lines |
+|----------|------|-----|--------|
+| 1 | Interface contract | Source of truth | 100 |
+| 2 | This role file | Workflow instructions | 150 |
+| 3 | Backend implementation | What to wire | 100-200 |
+| 4 | Frontend component | What to connect | 100-200 |
+
+**Initial prompt should include:**
+```
+You are the Integration Agent for feature {FEATURE-ID}.
+
+CONTEXT (pre-loaded):
+1. Contract: {full contract - you need all sections}
+2. Role: roles/integration-agent.md
+3. Backend impl: {key resource file content}
+4. Frontend impl: {key component file content}
+5. LiveView patterns: {brief summary}
+
+Sync point status: PASSED (both streams complete)
+Your acceptance criteria: {AC-5 (integration), E2E-1 (e2e)}
+Your file ownership: lib/*_web/live/, assets/tests/e2e/
+
+START WORK. Report progress to: .claude/progress/{FEATURE-ID}/integration.json
+```
+
+### Lazy Context (Load Only If Needed)
+
+| File | Load When |
+|------|-----------|
+| LiveView guide | Creating complex handler |
+| E2E testing guide | First Playwright test |
+| Error definitions | Wiring error flows |
+
+### Context Budget
+
+```
+Target: ~50k tokens loaded
+├── Contract (full): 5k
+├── Role file: 4k
+├── Backend impl: 8k
+├── Frontend impl: 8k
+├── LiveView patterns: 5k
+├── Test files: 10k
+└── Reserve for output: 10k
+```
+
+---
+
+## Progress Reporting Protocol
+
+> Write progress to file after EACH significant action.
+
+**Progress file:** `.claude/progress/{FEATURE-ID}/integration.json`
+
+### Report At These Points
+
+1. **Agent start** - status: "starting"
+2. **Context loaded** - status: "loading_context"
+3. **LiveView created** - update recent_actions
+4. **Each binding wired** - update recent_actions
+5. **Mocks removed** - update recent_actions
+6. **Integration test result** - update tests
+7. **E2E test result** - update tests
+8. **UI validation** - update ui_validations
+9. **Complete** - status: "complete"
+
+### Progress File Format
+
+```json
+{
+  "agent_id": "integration-{uuid}",
+  "stream": "integration",
+  "feature_id": "AUTH-001",
+  "model": "opus",
+  "status": "implementing",
+  "current_task": {
+    "phase": "implementation",
+    "description": "Wiring error flow for invalid_credentials",
+    "file": "lib/my_app_web/live/auth/login_live.ex",
+    "started_at": "2026-01-23T10:55:00Z"
+  },
+  "progress": {
+    "criteria_total": 2,
+    "criteria_completed": 1,
+    "criteria_in_progress": "E2E-1",
+    "bindings_wired": 4,
+    "error_flows_verified": 2,
+    "tests_passing": 3,
+    "tests_failing": 0,
+    "percent_complete": 75
+  },
+  "recent_actions": [
+    {"action": "Created LoginLive module", "result": "success", "timestamp": "..."},
+    {"action": "Wired authenticate event", "result": "success", "timestamp": "..."},
+    {"action": "Verified error flow: invalid_credentials", "result": "success", "timestamp": "..."}
+  ],
+  "blockers": [],
+  "context_loaded": {
+    "files_read": 8,
+    "total_lines": 1200
+  },
+  "updated_at": "2026-01-23T10:57:00Z"
+}
+```
+
+---
+
 ## Role Context
 
 This role is used during **Phase 2: Integration** after both backend and frontend streams complete their parallel work. The Integration Agent:

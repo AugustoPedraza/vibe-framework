@@ -4,6 +4,141 @@
 
 ---
 
+## Agent Configuration
+
+| Setting | Value | Rationale |
+|---------|-------|-----------|
+| **Model** | `sonnet` | UI work is pattern-based, speed matters |
+| **Max Context** | ~40k tokens | Smaller footprint for faster iteration |
+| **Progress File** | `.claude/progress/{FEATURE-ID}/frontend.json` | Real-time visibility |
+
+**When spawning this agent:**
+```typescript
+Task({
+  subagent_type: "general-purpose",
+  model: "sonnet",  // UI patterns don't need Opus depth
+  run_in_background: true,
+  prompt: "..." // See minimal context below
+})
+```
+
+**Why Sonnet for Frontend:**
+- UI work is largely pattern matching (props → component)
+- Faster iteration cycle (more edits, more test runs)
+- Svelte5 patterns are well-documented
+- Complex logic lives in backend, not here
+
+---
+
+## Minimal Context Loading
+
+> Load ONLY what's needed. Every token counts.
+
+### Required Context (Load First)
+
+| Priority | File | Why | ~Lines |
+|----------|------|-----|--------|
+| 1 | Interface contract | Source of truth | 50-100 |
+| 2 | This role file | Workflow instructions | 150 |
+| 3 | Design tokens | Required for UI work | 50 |
+
+**Initial prompt should include:**
+```
+You are the Frontend Agent for feature {FEATURE-ID}.
+
+CONTEXT (pre-loaded):
+1. Contract: {inline contract JSON - focus on ui_contract section}
+2. Role: roles/frontend-agent.md
+3. Design tokens: {inline tokens or path}
+4. Mock data: {from contract.mock_data}
+
+Your acceptance criteria: {AC-3, AC-4 from contract}
+Your file ownership: assets/svelte/
+
+START WORK. Report progress to: .claude/progress/{FEATURE-ID}/frontend.json
+```
+
+### Lazy Context (Load Only If Needed)
+
+| File | Load When |
+|------|-----------|
+| `04-frontend-components.md` | Creating new component type |
+| Existing components | Extending/wrapping existing |
+| Testing guide | First test file |
+
+**Anti-pattern:** Loading backend patterns. You don't need them.
+
+### Context Budget
+
+```
+Target: ~30k tokens loaded
+├── Contract (ui_contract + mock_data): 3k
+├── Role file: 4k
+├── Design tokens: 2k
+├── Component files: 10k
+├── Test files: 8k
+└── Reserve for output: 3k
+```
+
+---
+
+## Progress Reporting Protocol
+
+> Write progress to file after EACH significant action.
+
+**Progress file:** `.claude/progress/{FEATURE-ID}/frontend.json`
+
+### Report At These Points
+
+1. **Agent start** - status: "starting"
+2. **Context loaded** - status: "loading_context"
+3. **Each test written** - update recent_actions
+4. **Test run results** - update tests_passing/failing
+5. **UI validation run** - update ui_validations
+6. **Criterion complete** - update criteria_completed
+7. **Blocked** - status: "blocked" with blocker details
+8. **Complete** - status: "complete"
+
+### Progress File Format
+
+```json
+{
+  "agent_id": "frontend-{uuid}",
+  "stream": "frontend",
+  "feature_id": "AUTH-001",
+  "model": "sonnet",
+  "status": "implementing",
+  "current_task": {
+    "phase": "test_writing",
+    "description": "Writing form validation tests",
+    "file": "assets/svelte/components/features/auth/LoginForm.test.ts",
+    "started_at": "2026-01-23T10:15:00Z"
+  },
+  "progress": {
+    "criteria_total": 2,
+    "criteria_completed": 1,
+    "criteria_in_progress": "AC-4",
+    "tests_passing": 6,
+    "tests_failing": 2,
+    "ui_validations_passed": 4,
+    "ui_validations_failed": 0,
+    "percent_complete": 60
+  },
+  "recent_actions": [
+    {"action": "Created LoginForm.svelte", "result": "success", "timestamp": "..."},
+    {"action": "Ran UI validation (mobile)", "result": "success", "timestamp": "..."}
+  ],
+  "blockers": [],
+  "context_loaded": {
+    "files_read": 4,
+    "total_lines": 420
+  },
+  "updated_at": "2026-01-23T10:15:30Z"
+}
+```
+
+---
+
 ## Role Context
 
 This role is used during **parallel implementation** when backend and frontend streams work simultaneously. The Frontend Agent:
