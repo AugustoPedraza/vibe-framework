@@ -24,6 +24,43 @@ Task({
 
 ---
 
+## Working Directory
+
+> Stay in project root. Elixir/Mix commands expect it.
+
+**Set cwd in agent prompt:**
+```
+WORKING DIRECTORY: {project_root}/
+All mix commands run from project root.
+All file paths are relative to project root.
+```
+
+**Why project root as cwd:**
+- `mix test` works without path manipulation
+- `mix compile` finds all dependencies
+- Elixir tooling expects project root
+- Consistent with Phoenix conventions
+
+**Command examples:**
+```bash
+# From project root
+mix test test/accounts/authenticate_test.exs
+mix test test/accounts/ --seed 0
+mix compile --warnings-as-errors
+```
+
+**File paths in progress reports:**
+```json
+{
+  "current_task": {
+    "file": "lib/accounts/resources/user.ex"
+  }
+}
+```
+Use paths relative to project root.
+
+---
+
 ## Minimal Context Loading
 
 > Load ONLY what's needed. Every token counts.

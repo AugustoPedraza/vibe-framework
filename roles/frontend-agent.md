@@ -30,6 +30,89 @@ Task({
 
 ---
 
+## Working Directory
+
+> Work from `assets/` directory. Simpler commands, clearer paths.
+
+**Set cwd in agent prompt:**
+```
+WORKING DIRECTORY: assets/
+All npm commands run without 'cd assets &&' prefix.
+All file paths are relative to assets/.
+```
+
+**Why `assets/` as cwd:**
+- `npm test` instead of `cd assets && npm test`
+- Error paths match component paths
+- node_modules resolution works correctly
+- Simpler mental model for frontend work
+
+**Command examples:**
+```bash
+# From assets/ directory
+npm run test:related -- svelte/components/features/auth/LoginForm.svelte
+npm run verify:quick
+npm run lint:file svelte/components/features/auth/LoginForm.svelte
+```
+
+**File paths in progress reports:**
+```json
+{
+  "current_task": {
+    "file": "svelte/components/features/auth/LoginForm.svelte"
+  }
+}
+```
+Use paths relative to `assets/`, not absolute paths.
+
+---
+
+## Tiered Verification Strategy
+
+> Don't run everything after every change. Use the right check at the right time.
+
+**Reference:** `patterns/frontend/verification-strategy.md`
+
+### Verification Tiers
+
+| Tier | When | Command | Time |
+|------|------|---------|------|
+| 0 | During editing | None (dev server catches errors) | 0s |
+| 1 | After file save | `npm run verify:quick` | ~3s |
+| 2 | After implementation | `npm run lint:cached && npm run verify:types` | ~5s |
+| 3 | After test written | `npm run test:related -- {file}` | ~5s |
+| 4 | Before complete | `npm run verify` | ~30s |
+
+### During TDD Cycle
+
+```
+FOR EACH acceptance criterion:
+  1. Write test → Tier 0 (dev server catches syntax)
+  2. Run test   → npm run test:related -- {test-file}
+  3. Implement  → Tier 0 (dev server feedback)
+  4. Run test   → npm run test:related -- {test-file}
+  5. Quick check → npm run verify:quick
+```
+
+### Before Marking Stream Complete
+
+```bash
+# Full verification required
+npm run verify
+
+# All must pass before setting status: "complete"
+```
+
+### Anti-Patterns
+
+| Don't | Do Instead |
+|-------|------------|
+| `npm run verify` after every file | Use tiered approach |
+| Full test suite during TDD | `test:related` or `test:watch` |
+| Skip final verify | Always run before complete |
+
+---
+
 ## Minimal Context Loading
 
 > Load ONLY what's needed. Every token counts.

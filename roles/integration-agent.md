@@ -30,6 +30,61 @@ Task({
 
 ---
 
+## Working Directory
+
+> Stay in project root. You need both Mix and npm commands.
+
+**Set cwd in agent prompt:**
+```
+WORKING DIRECTORY: {project_root}/
+Mix commands run directly.
+npm commands use: cd assets && npm ...
+```
+
+**Why project root as cwd:**
+- LiveView work needs Mix commands
+- E2E tests need both backend running and npm
+- Most files you touch are in `lib/`
+- Frontend commands are less frequent
+
+**Command examples:**
+```bash
+# Elixir/Phoenix (from project root)
+mix test test/my_app_web/live/auth/login_live_test.exs
+mix phx.server
+
+# Frontend (need cd)
+cd assets && npm run test:related -- tests/e2e/auth/login.spec.ts
+cd assets && npx playwright test tests/e2e/auth/
+
+# E2E (typically)
+cd assets && npx playwright test --project=chromium
+```
+
+**File paths in progress reports:**
+```json
+{
+  "current_task": {
+    "file": "lib/my_app_web/live/auth/login_live.ex"
+  }
+}
+```
+Use paths relative to project root for all files.
+
+**Verification strategy:**
+```bash
+# After wiring LiveView
+mix test test/my_app_web/live/
+
+# After E2E tests written
+cd assets && npx playwright test tests/e2e/auth/ --reporter=list
+
+# Before marking complete
+mix test && cd assets && npm run verify
+```
+
+---
+
 ## Minimal Context Loading
 
 > Integration needs MORE context than other agents - but still be selective.
