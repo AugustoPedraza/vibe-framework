@@ -4,6 +4,25 @@
 
 ---
 
+## Quick Pattern Matching (Performance Optimized)
+
+For fast pattern matching, use the lightweight manifest:
+
+```
+1. Read manifest.json (~50 lines)
+2. Match feature keywords against "triggers"
+3. Filter by project stack
+4. Load only matched pattern files
+```
+
+| File | Lines | Use For |
+|------|-------|---------|
+| `manifest.json` | ~50 | Quick matching (triggers + stack + score) |
+| `index.json` | ~470 | Full details (anti-patterns, usage stats) |
+| `{category}/{id}.md` | varies | Pattern implementation |
+
+---
+
 ## How Patterns Are Organized
 
 ```

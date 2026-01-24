@@ -3,6 +3,8 @@
   "version": "1.1.0",
   "description": "Semantic pattern index for AI-assisted retrieval with RAG optimization",
   "last_updated": "2026-01-24",
+  "_performance_note": "For faster pattern matching, use manifest.json (~50 lines) instead of this full index (~470 lines). Load this file only when you need full pattern details.",
+  "_manifest_path": "patterns/manifest.json",
   "patterns": [
     {
       "id": "tab-navigation-shared-header",
