@@ -349,6 +349,137 @@
     "created_by": {
       "type": "string",
       "description": "Who/what created this contract"
+    },
+    "agent_assignments": {
+      "type": "object",
+      "description": "Criteria and file assignments for parallel implementation agents",
+      "properties": {
+        "domain-agent": {
+          "type": "object",
+          "description": "Ash resources, actions, validations, policies",
+          "properties": {
+            "criteria": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Acceptance criteria IDs assigned to this agent"
+            },
+            "files": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "File paths this agent owns (glob patterns)"
+            },
+            "dependencies": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Other agents that must complete first"
+            }
+          }
+        },
+        "api-agent": {
+          "type": "object",
+          "description": "LiveView handlers, events, API endpoints",
+          "properties": {
+            "criteria": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Acceptance criteria IDs assigned to this agent"
+            },
+            "files": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "File paths this agent owns (glob patterns)"
+            },
+            "dependencies": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Other agents that must complete first"
+            }
+          }
+        },
+        "ui-agent": {
+          "type": "object",
+          "description": "Svelte components, stores, UI tests",
+          "properties": {
+            "criteria": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Acceptance criteria IDs assigned to this agent"
+            },
+            "files": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "File paths this agent owns (glob patterns)"
+            },
+            "dependencies": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Other agents that must complete first"
+            }
+          }
+        },
+        "data-agent": {
+          "type": "object",
+          "description": "Migrations, seeds, data transforms",
+          "properties": {
+            "criteria": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Acceptance criteria IDs assigned to this agent"
+            },
+            "files": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "File paths this agent owns (glob patterns)"
+            },
+            "dependencies": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Other agents that must complete first"
+            }
+          }
+        }
+      }
+    },
+    "watcher_config": {
+      "type": "object",
+      "description": "Configuration for QA watcher agents",
+      "properties": {
+        "format-watcher": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "blocking_at_gate": { "type": "boolean", "default": true },
+            "auto_fix": { "type": "boolean", "default": true }
+          }
+        },
+        "lint-watcher": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "blocking_at_gate": { "type": "boolean", "default": true }
+          }
+        },
+        "test-watcher": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "blocking_at_gate": { "type": "boolean", "default": true },
+            "coverage_threshold": { "type": "number", "default": 80 }
+          }
+        },
+        "security-watcher": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "blocking_at_gate": { "type": "boolean", "default": false },
+            "block_on": {
+              "type": "array",
+              "items": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+              "default": ["critical"]
+            }
+          }
+        }
+      }
     }
   },
   "example": {
@@ -507,6 +638,34 @@
       ]
     },
     "created_at": "2026-01-23T09:30:00Z",
-    "created_by": "vibe-contract-generator"
+    "created_by": "vibe-contract-generator",
+    "agent_assignments": {
+      "domain-agent": {
+        "criteria": ["AC-1", "AC-2"],
+        "files": ["lib/*/resources/user.ex", "lib/*/actions/authenticate.ex", "test/*/"],
+        "dependencies": []
+      },
+      "ui-agent": {
+        "criteria": ["AC-3", "AC-4"],
+        "files": ["assets/svelte/components/features/auth/", "assets/svelte/stores/auth.ts"],
+        "dependencies": []
+      },
+      "data-agent": {
+        "criteria": [],
+        "files": ["priv/repo/migrations/"],
+        "dependencies": []
+      },
+      "api-agent": {
+        "criteria": ["AC-5"],
+        "files": ["lib/*_web/live/auth_live.ex"],
+        "dependencies": ["domain-agent", "ui-agent"]
+      }
+    },
+    "watcher_config": {
+      "format-watcher": { "enabled": true, "blocking_at_gate": true, "auto_fix": true },
+      "lint-watcher": { "enabled": true, "blocking_at_gate": true },
+      "test-watcher": { "enabled": true, "blocking_at_gate": true, "coverage_threshold": 80 },
+      "security-watcher": { "enabled": true, "blocking_at_gate": false, "block_on": ["critical"] }
+    }
   }
 }

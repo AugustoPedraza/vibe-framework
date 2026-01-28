@@ -292,6 +292,122 @@
         }
       }
     },
+    "agent_architecture": {
+      "type": "object",
+      "description": "Configuration for agent-first parallel implementation architecture",
+      "properties": {
+        "default_mode": {
+          "type": "string",
+          "enum": ["parallel", "quick", "solo"],
+          "description": "Default execution mode for /vibe [ID]",
+          "default": "parallel"
+        },
+        "auto_detect_complexity": {
+          "type": "boolean",
+          "description": "Automatically suggest mode based on feature complexity",
+          "default": true
+        },
+        "watchers": {
+          "type": "object",
+          "description": "Enable/disable QA watchers",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Master switch for all watchers",
+              "default": true
+            },
+            "format": {
+              "type": "boolean",
+              "description": "Enable format-watcher",
+              "default": true
+            },
+            "lint": {
+              "type": "boolean",
+              "description": "Enable lint-watcher",
+              "default": true
+            },
+            "test": {
+              "type": "boolean",
+              "description": "Enable test-watcher",
+              "default": true
+            },
+            "security": {
+              "type": "boolean",
+              "description": "Enable security-watcher",
+              "default": false
+            }
+          }
+        },
+        "models": {
+          "type": "object",
+          "description": "Model assignments for each agent type",
+          "properties": {
+            "orchestrator": {
+              "type": "string",
+              "enum": ["opus", "sonnet", "haiku"],
+              "description": "Model for orchestrator",
+              "default": "opus"
+            },
+            "domain-agent": {
+              "type": "string",
+              "enum": ["opus", "sonnet", "haiku"],
+              "description": "Model for domain agent",
+              "default": "opus"
+            },
+            "api-agent": {
+              "type": "string",
+              "enum": ["opus", "sonnet", "haiku"],
+              "description": "Model for API agent",
+              "default": "opus"
+            },
+            "ui-agent": {
+              "type": "string",
+              "enum": ["opus", "sonnet", "haiku"],
+              "description": "Model for UI agent",
+              "default": "sonnet"
+            },
+            "data-agent": {
+              "type": "string",
+              "enum": ["opus", "sonnet", "haiku"],
+              "description": "Model for data agent",
+              "default": "sonnet"
+            },
+            "watchers": {
+              "type": "string",
+              "enum": ["opus", "sonnet", "haiku"],
+              "description": "Default model for watcher agents",
+              "default": "haiku"
+            }
+          }
+        },
+        "context_budgets": {
+          "type": "object",
+          "description": "Token budgets for each agent type",
+          "properties": {
+            "orchestrator": { "type": "integer", "default": 50000 },
+            "domain-agent": { "type": "integer", "default": 40000 },
+            "api-agent": { "type": "integer", "default": 35000 },
+            "ui-agent": { "type": "integer", "default": 30000 },
+            "data-agent": { "type": "integer", "default": 25000 },
+            "watchers": { "type": "integer", "default": 15000 }
+          }
+        },
+        "progress_polling_interval_ms": {
+          "type": "integer",
+          "description": "How often orchestrator checks agent progress files",
+          "default": 30000,
+          "minimum": 10000,
+          "maximum": 120000
+        },
+        "stale_agent_timeout_ms": {
+          "type": "integer",
+          "description": "Time without progress update before agent considered stale",
+          "default": 180000,
+          "minimum": 60000,
+          "maximum": 600000
+        }
+      }
+    },
     "ui_validation": {
       "type": "object",
       "description": "UI validation configuration for visual correctness during /vibe workflow. Enables AI to validate components render correctly before committing.",

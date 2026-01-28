@@ -1,0 +1,346 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Watcher Report",
+  "description": "Schema for QA watcher reports written to .claude/qa/{FEATURE-ID}/{watcher}.json during parallel implementation.",
+  "type": "object",
+  "required": ["watcher", "feature_id", "status", "last_check", "issues", "metrics"],
+  "properties": {
+    "watcher": {
+      "type": "string",
+      "enum": ["format-watcher", "lint-watcher", "test-watcher", "security-watcher"],
+      "description": "Watcher type identifier"
+    },
+    "feature_id": {
+      "type": "string",
+      "description": "Feature being watched (e.g., AUTH-001)",
+      "pattern": "^[A-Z]+-[0-9]+$"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["watching", "paused", "complete", "error"],
+      "description": "Current watcher status"
+    },
+    "last_check": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of last check run"
+    },
+    "issues": {
+      "type": "array",
+      "description": "List of issues found",
+      "items": {
+        "type": "object",
+        "required": ["severity", "file", "message"],
+        "properties": {
+          "severity": {
+            "type": "string",
+            "enum": ["error", "warning", "info"],
+            "description": "Issue severity level"
+          },
+          "tool": {
+            "type": "string",
+            "description": "Tool that found the issue (e.g., credo, eslint, sobelow)"
+          },
+          "category": {
+            "type": "string",
+            "description": "Issue category (e.g., SQL.Injection, no-unused-vars)"
+          },
+          "file": {
+            "type": "string",
+            "description": "File path where issue was found"
+          },
+          "line": {
+            "type": ["integer", "null"],
+            "description": "Line number (null if not applicable)"
+          },
+          "column": {
+            "type": ["integer", "null"],
+            "description": "Column number (null if not applicable)"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable issue description"
+          },
+          "rule": {
+            "type": "string",
+            "description": "Rule or check that flagged this issue"
+          },
+          "recommendation": {
+            "type": "string",
+            "description": "Suggested fix for the issue"
+          },
+          "auto_fixable": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether the issue can be automatically fixed"
+          },
+          "auto_fixed": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether the issue was automatically fixed"
+          },
+          "fixed_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when issue was fixed (if auto_fixed)"
+          },
+          "cwe": {
+            "type": "string",
+            "description": "CWE identifier for security issues"
+          },
+          "cve": {
+            "type": "string",
+            "description": "CVE identifier for dependency vulnerabilities"
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "description": "Watcher metrics",
+      "properties": {
+        "checks_run": {
+          "type": "integer",
+          "description": "Total number of check runs"
+        },
+        "issues_found": {
+          "type": "integer",
+          "description": "Total issues found"
+        },
+        "issues_fixed": {
+          "type": "integer",
+          "description": "Issues that were auto-fixed"
+        },
+        "errors": {
+          "type": "integer",
+          "description": "Number of error-severity issues"
+        },
+        "warnings": {
+          "type": "integer",
+          "description": "Number of warning-severity issues"
+        },
+        "info": {
+          "type": "integer",
+          "description": "Number of info-severity issues"
+        },
+        "files_checked": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of files that were checked"
+        }
+      }
+    },
+    "test_results": {
+      "type": "object",
+      "description": "Test-specific results (for test-watcher)",
+      "properties": {
+        "backend": {
+          "type": "object",
+          "properties": {
+            "passing": { "type": "integer" },
+            "failing": { "type": "integer" },
+            "skipped": { "type": "integer" },
+            "duration_ms": { "type": "integer" }
+          }
+        },
+        "frontend": {
+          "type": "object",
+          "properties": {
+            "passing": { "type": "integer" },
+            "failing": { "type": "integer" },
+            "skipped": { "type": "integer" },
+            "duration_ms": { "type": "integer" }
+          }
+        },
+        "e2e": {
+          "type": "object",
+          "properties": {
+            "passing": { "type": "integer" },
+            "failing": { "type": "integer" },
+            "skipped": { "type": "integer" },
+            "duration_ms": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "description": "Coverage metrics (for test-watcher)",
+      "properties": {
+        "new_code": {
+          "type": "number",
+          "description": "Coverage percentage for new code",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "overall": {
+          "type": "number",
+          "description": "Overall coverage percentage",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "threshold": {
+          "type": "number",
+          "description": "Required coverage threshold",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "files": {
+          "type": "object",
+          "description": "Per-file coverage",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "lines_added": { "type": "integer" },
+              "lines_covered": { "type": "integer" },
+              "percent": { "type": "number" }
+            }
+          }
+        }
+      }
+    },
+    "dependency_status": {
+      "type": "object",
+      "description": "Dependency audit status (for security-watcher)",
+      "properties": {
+        "elixir": {
+          "type": "object",
+          "properties": {
+            "total": { "type": "integer" },
+            "vulnerable": { "type": "integer" }
+          }
+        },
+        "npm": {
+          "type": "object",
+          "properties": {
+            "total": { "type": "integer" },
+            "vulnerable": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "tools_status": {
+      "type": "object",
+      "description": "Status of individual tools (for lint-watcher)",
+      "additionalProperties": {
+        "type": "string",
+        "enum": ["passed", "warnings", "failed", "skipped"]
+      }
+    },
+    "config": {
+      "type": "object",
+      "description": "Watcher configuration used",
+      "properties": {
+        "auto_fix": {
+          "type": "boolean",
+          "description": "Whether auto-fix is enabled"
+        },
+        "blocking_at_gate": {
+          "type": "boolean",
+          "description": "Whether issues block at phase gates"
+        },
+        "block_on": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low", "error", "warning"]
+          },
+          "description": "Severity levels that cause blocking"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "watcher": "format-watcher",
+      "feature_id": "AUTH-001",
+      "status": "watching",
+      "last_check": "2026-01-23T10:30:00Z",
+      "issues": [
+        {
+          "severity": "warning",
+          "file": "lib/accounts/resources/user.ex",
+          "line": null,
+          "message": "File needs formatting",
+          "auto_fixable": true,
+          "auto_fixed": false
+        }
+      ],
+      "metrics": {
+        "checks_run": 15,
+        "issues_found": 1,
+        "issues_fixed": 0,
+        "files_checked": ["lib/accounts/resources/user.ex"]
+      },
+      "config": {
+        "auto_fix": true,
+        "blocking_at_gate": true
+      }
+    },
+    {
+      "watcher": "test-watcher",
+      "feature_id": "AUTH-001",
+      "status": "watching",
+      "last_check": "2026-01-23T10:30:00Z",
+      "issues": [],
+      "metrics": {
+        "checks_run": 8,
+        "issues_found": 0
+      },
+      "test_results": {
+        "backend": {
+          "passing": 10,
+          "failing": 0,
+          "skipped": 0,
+          "duration_ms": 2340
+        },
+        "frontend": {
+          "passing": 8,
+          "failing": 0,
+          "skipped": 0,
+          "duration_ms": 1520
+        }
+      },
+      "coverage": {
+        "new_code": 92,
+        "overall": 85,
+        "threshold": 80
+      },
+      "config": {
+        "blocking_at_gate": true
+      }
+    },
+    {
+      "watcher": "security-watcher",
+      "feature_id": "AUTH-001",
+      "status": "watching",
+      "last_check": "2026-01-23T10:30:00Z",
+      "issues": [
+        {
+          "severity": "warning",
+          "tool": "npm_audit",
+          "category": "dependency",
+          "file": "package.json",
+          "line": null,
+          "message": "lodash@4.17.20 has prototype pollution vulnerability",
+          "cve": "CVE-2021-23337",
+          "auto_fixable": true,
+          "auto_fixed": false
+        }
+      ],
+      "metrics": {
+        "checks_run": 3,
+        "issues_found": 1,
+        "warnings": 1
+      },
+      "dependency_status": {
+        "elixir": { "total": 45, "vulnerable": 0 },
+        "npm": { "total": 120, "vulnerable": 1 }
+      },
+      "config": {
+        "blocking_at_gate": false,
+        "block_on": ["critical"]
+      }
+    }
+  ]
+}

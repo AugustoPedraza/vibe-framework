@@ -1,6 +1,36 @@
 # Vibe Core Orchestrator
 
-> Minimal workflow orchestrator with tiered context loading for optimal performance.
+> Agent-first parallel execution with tiered context loading for optimal performance.
+
+---
+
+## Agent-First Architecture (DEFAULT)
+
+```
+/vibe [ID]         # Parallel mode (DEFAULT)
+/vibe [ID] --quick # Simple tasks (single agent)
+/vibe [ID] --solo  # Legacy sequential mode
+```
+
+### Agent Taxonomy
+
+**Implementation Agents:**
+| Agent | Model | Context | Files |
+|-------|-------|---------|-------|
+| domain-agent | opus | ~40k | `agents/implementation/domain-agent.md` |
+| api-agent | opus | ~35k | `agents/implementation/api-agent.md` |
+| ui-agent | sonnet | ~30k | `agents/implementation/ui-agent.md` |
+| data-agent | sonnet | ~25k | `agents/implementation/data-agent.md` |
+
+**QA Watcher Agents (Background):**
+| Agent | Model | Context | Files |
+|-------|-------|---------|-------|
+| format-watcher | haiku | ~10k | `agents/watchers/format-watcher.md` |
+| lint-watcher | haiku | ~15k | `agents/watchers/lint-watcher.md` |
+| test-watcher | sonnet | ~20k | `agents/watchers/test-watcher.md` |
+| security-watcher | haiku | ~15k | `agents/watchers/security-watcher.md` |
+
+**Orchestrator:** `agents/orchestrator/core.md`
 
 ---
 
@@ -11,13 +41,13 @@
 ```
 TIER 1 - CORE (Always Load - ~10% context)
 ├── This file (vibe-core.md)
-├── Phase-specific file from prompts/phases/
+├── Agent-specific file from agents/
 └── Feature spec from project
 
 TIER 2 - ON-DEMAND (Load when triggered - ~20%)
 ├── Matched patterns only (via manifest.json)
 ├── Referenced architecture docs only
-└── Role extensions when needed
+└── Contract sections when needed
 
 TIER 3 - CHECKPOINT (Restore from prior session)
 ├── patterns_used from checkpoint
@@ -30,25 +60,74 @@ TIER 3 - CHECKPOINT (Restore from prior session)
 1. **Start of Session**: Load TIER 1 only
 2. **Pattern Match**: Query `patterns/manifest.json`, load only matched patterns
 3. **Resume**: Load checkpoint's `context_cache` before TIER 1
-4. **Role Extensions**: Load `roles/{role}/{module}.md` only when that work begins
+4. **Agent Spawning**: Load specific agent file for spawned agent
 
 ---
 
 ## Command Reference
 
-| Command | Phase File | Context Tier |
-|---------|------------|--------------|
-| `/vibe [ID]` | `phases/workflow.md` | TIER 1 + matched patterns |
-| `/vibe quick [desc]` | `phases/quick.md` | TIER 1 minimal |
-| `/vibe parallel [ID]` | `phases/parallel.md` | TIER 1 + contracts |
-| `/vibe plan [sprint]` | `commands/plan.md` | TIER 1 + domain |
-| `/vibe retro` | `commands/retro.md` | TIER 1 + learnings |
+| Command | Mode | Context |
+|---------|------|---------|
+| `/vibe [ID]` | Parallel (default) | Orchestrator + agent files |
+| `/vibe [ID] --quick` | Quick | Single agent, minimal context |
+| `/vibe [ID] --solo` | Sequential | Legacy phase files |
+| `/vibe contract [ID]` | Contract gen | Contract schema |
+| `/vibe plan [sprint]` | Planning | Domain + PM |
+| `/vibe convert-story [ID]` | BMAD bridge | Convert story to spec |
 
 ---
 
 ## Workflow Skeleton
 
-### Standard Feature: `/vibe [FEATURE-ID]`
+### Parallel Mode (DEFAULT): `/vibe [FEATURE-ID]`
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  PHASE 0: CONTRACT                                                   │
+│  Context: agents/orchestrator/core.md                                │
+│  Output: .claude/contracts/{ID}.json with agent_assignments          │
+├─────────────────────────────────────────────────────────────────────┤
+│  PHASE 1: PARALLEL IMPLEMENTATION                                    │
+│                                                                      │
+│  ┌─ domain-agent (opus) ───────────┐                                 │
+│  │ Ash resources, actions, tests   │                                 │
+│  └─────────────────────────────────┘                                 │
+│  ┌─ ui-agent (sonnet) ─────────────┐  ← Run in parallel              │
+│  │ Svelte components, UI tests     │                                 │
+│  └─────────────────────────────────┘                                 │
+│  ┌─ data-agent (sonnet) ───────────┐                                 │
+│  │ Migrations, seeds               │                                 │
+│  └─────────────────────────────────┘                                 │
+│                                                                      │
+│  + QA WATCHERS (background): format, lint, test, security            │
+│                                                                      │
+│  Output: Implementation complete, watchers report issues             │
+├─────────────────────────────────────────────────────────────────────┤
+│  SYNC POINT: All implementation agents complete                      │
+├─────────────────────────────────────────────────────────────────────┤
+│  PHASE 2: INTEGRATION                                                │
+│  Context: agents/implementation/api-agent.md                         │
+│  Output: LiveView handlers, wiring, E2E tests                        │
+│  GATE: Watcher issues become BLOCKING                                │
+├─────────────────────────────────────────────────────────────────────┤
+│  PHASE 3: VALIDATION                                                 │
+│  Aggregate watcher reports, calculate quality score                  │
+│  Output: PR ready if passing                                         │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Quick Mode: `/vibe [FEATURE-ID] --quick`
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  SINGLE AGENT (sonnet)                                               │
+│  Context: agents/implementation/{relevant-agent}.md                  │
+│  Actions: Write test → Implement → Run test → Verify                 │
+│  No watchers, no parallel agents                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Solo Mode (Legacy): `/vibe [FEATURE-ID] --solo`
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -61,31 +140,14 @@ TIER 3 - CHECKPOINT (Restore from prior session)
 │  Output: UX verification, component selection                        │
 ├─────────────────────────────────────────────────────────────────────┤
 │  READINESS GATE                                                      │
-│  Verify: Scenarios complete, UI states defined, no blockers          │
 ├─────────────────────────────────────────────────────────────────────┤
 │  PHASE 3: DEVELOPER                                                  │
 │  Context: phases/developer.md + roles/developer/core.md              │
-│  + Load: roles/developer/{backend|frontend}.md as needed             │
-│  + Load: Matched patterns from manifest.json                         │
 │  Output: Implementation (GREEN state)                                │
 ├─────────────────────────────────────────────────────────────────────┤
 │  PHASE 4: QA VALIDATION                                              │
 │  Context: phases/validation.md + roles/qa-engineer/core.md           │
 │  Output: Quality score, PR ready                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### Quick Mode: `/vibe quick [desc]`
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│  PHASE 1: DEV (Condensed)                                            │
-│  Context: phases/quick.md + roles/developer/core.md                  │
-│  Actions: Read code → Write test → Implement → Run test              │
-├─────────────────────────────────────────────────────────────────────┤
-│  PHASE 2: VERIFY                                                     │
-│  Context: phases/validation.md (minimal)                             │
-│  Actions: Full test suite → Quality checks → Commit                  │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -243,7 +305,17 @@ background_ops:
 
 For complete documentation, see:
 - `prompts/vibe.md` - Full orchestrator (reference)
+- `agents/orchestrator/core.md` - Orchestrator guidance
+- `agents/implementation/*.md` - Implementation agent specs
+- `agents/watchers/*.md` - QA watcher specs
+- `contracts/watcher-report.schema.json` - Watcher report schema
 - `context/loading-strategy.md` - Detailed tier system
-- `context/phase-boundaries.md` - Phase-specific context
-- `roles/{role}/core.md` - Role essentials
 - `patterns/README.md` - Pattern discovery workflow
+
+### BMAD Integration
+
+Vibe uses BMAD for planning, with a single bridge:
+- `/vibe convert-story [ID]` - Convert BMAD story to Vibe spec
+
+BMAD owns: stories, UX exploration, research, architecture
+Vibe owns: implementation (agents, TDD, quality gates)

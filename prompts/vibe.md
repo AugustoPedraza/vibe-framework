@@ -1,6 +1,43 @@
 # Vibe Orchestrator
 
-> Master workflow that coordinates roles with clear phase separation for production-level code.
+> Agent-first parallel execution with continuous QA for production-level code.
+
+---
+
+## Agent-First Architecture (DEFAULT)
+
+Vibe uses specialized agents working in parallel with continuous QA monitoring:
+
+```
+/vibe [ID]         # Parallel mode (DEFAULT) - Multiple agents working simultaneously
+/vibe [ID] --quick # Simple tasks - Single agent, no watchers
+/vibe [ID] --solo  # Legacy mode - Sequential role-switching
+```
+
+### Agent Taxonomy
+
+**Implementation Agents:**
+| Agent | Model | Context | Responsibility |
+|-------|-------|---------|----------------|
+| **domain-agent** | opus | ~40k | Ash resources, actions, validations, policies |
+| **api-agent** | opus | ~35k | LiveView handlers, events, API endpoints |
+| **ui-agent** | sonnet | ~30k | Svelte components, stores, UI tests |
+| **data-agent** | sonnet | ~25k | Migrations, seeds, data transforms |
+
+**QA Watcher Agents (Background, Continuous):**
+| Agent | Model | Context | Responsibility |
+|-------|-------|---------|----------------|
+| **format-watcher** | haiku | ~10k | `mix format`, `prettier` on changed files |
+| **lint-watcher** | haiku | ~15k | Credo, ESLint, type checking |
+| **test-watcher** | sonnet | ~20k | Detect + run affected tests |
+| **security-watcher** | haiku | ~15k | Sobelow, dependency audits |
+
+**Orchestration:**
+| Agent | Model | Context | Responsibility |
+|-------|-------|---------|----------------|
+| **orchestrator** | opus | ~50k | Task decomposition, spawning, conflict resolution |
+
+**Agent Files Location:** `~/.claude/vibe-ash-svelte/agents/`
 
 ---
 
@@ -12,22 +49,23 @@ For improved context management and faster response times, use the tiered loadin
 INSTEAD OF loading this full file, load:
 ├── prompts/vibe-core.md              # Minimal orchestrator (~200 lines)
 ├── prompts/phases/{current}.md       # Phase-specific guidance
-├── roles/{role}/core.md              # Role core only
+├── agents/{type}/{agent}.md          # Agent-specific guidance
 └── patterns/manifest.json            # Lightweight pattern index
 ```
 
 **Documentation**:
 - `context/loading-strategy.md` - Tiered context loading system
 - `context/phase-boundaries.md` - What to load per phase
+- `agents/orchestrator/core.md` - Orchestrator guidance
 
-**Modular Role Structure**:
-- `roles/developer/core.md` - Essential developer guidance
-- `roles/developer/backend.md` - Elixir/Ash patterns (on-demand)
-- `roles/developer/frontend.md` - Svelte patterns (on-demand)
-- `roles/qa-engineer/core.md` - Essential QA guidance
-- `roles/designer/core.md` - Essential designer guidance
+**Agent Structure**:
+- `agents/implementation/domain-agent.md` - Ash/domain specialist
+- `agents/implementation/api-agent.md` - LiveView/API specialist
+- `agents/implementation/ui-agent.md` - Svelte/UI specialist
+- `agents/implementation/data-agent.md` - Migrations/data specialist
+- `agents/watchers/*.md` - QA watcher agents
 
-This reduces context usage by **50-60%** while maintaining quality.
+This reduces context usage by **50-60%** while enabling **3x faster** parallel execution.
 
 ---
 
@@ -61,10 +99,10 @@ Do:
 
 | Command | What it does |
 |---------|--------------|
-| `/vibe [FEATURE-ID]` | Implement feature (QA -> Designer -> Dev -> QA) |
-| `/vibe parallel [FEATURE-ID]` | **NEW** Parallel implementation (backend + frontend simultaneously) |
-| `/vibe contract [FEATURE-ID]` | **NEW** Generate interface contract for parallel implementation |
-| `/vibe quick [desc]` | Bug/hotfix mode (condensed 2-phase workflow) |
+| `/vibe [FEATURE-ID]` | **PARALLEL** (default) - Multiple agents working simultaneously |
+| `/vibe [FEATURE-ID] --quick` | Simple tasks - Single agent, condensed workflow |
+| `/vibe [FEATURE-ID] --solo` | Legacy sequential mode (QA -> Designer -> Dev -> QA) |
+| `/vibe contract [FEATURE-ID]` | Generate interface contract for parallel implementation |
 | `/vibe pivot` | Course correction when implementation diverges |
 | `/vibe plan [sprint]` | Plan sprint (Domain -> Designer -> PM) |
 | `/vibe discover [ID]` | Pre-planning discovery for a single feature |
@@ -73,18 +111,20 @@ Do:
 
 | Command | What it does |
 |---------|--------------|
-| `/vibe generate [ID]` | **NEW** Generate scaffold from feature spec (ui_spec) |
-| `/vibe lint [path]` | **NEW** UX Governor - validate tokens, states, a11y |
-| `/vibe convert-story [ID]` | **NEW** Convert BMAD story to Vibe feature spec |
-| `/vibe context` | **NEW** Generate project-context.md for BMAD compat |
+| `/vibe generate [ID]` | Generate scaffold from feature spec (ui_spec) |
+| `/vibe lint [path]` | UX Governor - validate tokens, states, a11y |
+| `/vibe convert-story [ID]` | Convert BMAD story to Vibe feature spec (BMAD bridge) |
+| `/vibe context` | Generate project-context.md (optional for convert-story) |
 
-### BMAD Integration Commands
+### BMAD Integration (DEPRECATED - Use BMAD directly)
 
-| Command | What it does |
-|---------|--------------|
-| `/vibe ux-design [ID]` | **NEW** Deep UX exploration (14-step BMAD workflow) |
-| `/vibe research [type]` | **NEW** Market/domain/technical research |
-| `/vibe party` | **NEW** Multi-agent discussion (BMAD Party Mode) |
+| Command | Status | Alternative |
+|---------|--------|-------------|
+| `/vibe ux-design [ID]` | DEPRECATED | Use BMAD directly for UX exploration |
+| `/vibe research [type]` | DEPRECATED | Use BMAD directly for research workflows |
+| `/vibe party` | DEPRECATED | Use BMAD directly for multi-agent discussions |
+
+> **BMAD Separation**: BMAD owns planning (stories, UX, research, architecture). Vibe owns implementation (agents, TDD, quality gates). The only bridge is `/vibe convert-story`.
 
 ### Spec-Driven Commands (OpenSpec-Inspired)
 
@@ -1236,11 +1276,95 @@ Repeat for all scenarios.
 
 ---
 
-## Parallel Implementation Workflow (Optional)
+## Parallel Implementation Workflow (DEFAULT)
 
-> For features with well-defined contracts, backend and frontend can be implemented simultaneously.
+> Agent-first execution with continuous QA. Multiple specialized agents working simultaneously.
 
-**Trigger:** `/vibe parallel [FEATURE-ID]`
+**Trigger:** `/vibe [FEATURE-ID]` (default mode)
+
+### Parallel Workflow Overview
+
+```
+PHASE 0: CONTRACT (auto)
+├── Orchestrator parses feature spec
+├── Generates contract with agent_assignments
+└── Output: .claude/contracts/{ID}.json
+
+PHASE 1: PARALLEL IMPLEMENTATION
+├── domain-agent  (opus)   ─┐
+├── ui-agent      (sonnet) ─┼─> Work in parallel
+├── data-agent    (sonnet) ─┘
+│
+├── QA WATCHERS (background)
+│   ├── format-watcher  ─┐
+│   ├── lint-watcher    ─┼─> Report issues (non-blocking)
+│   ├── test-watcher    ─┤
+│   └── security-watcher─┘
+│
+└── SYNC POINT: All implementation agents complete
+
+PHASE 2: INTEGRATION
+├── api-agent wires everything
+├── Remove mocks, connect real backend
+├── Integration + E2E tests
+└── GATE: Watcher issues become BLOCKING
+
+PHASE 3: VALIDATION
+├── Aggregate watcher reports
+├── Calculate quality score
+└── Generate PR if passing
+```
+
+### QA Watcher Pattern
+
+Watchers run **continuously** during implementation, not just at gates.
+
+```
+ON FILE CHANGE (from progress report):
+  1. Read changed file(s)
+  2. Run relevant check (format/lint/test/security)
+  3. Write to .claude/qa/{FEATURE-ID}/{watcher}.json
+  4. Report to orchestrator (NON-BLOCKING)
+
+ON GATE (phase transition):
+  - Warnings BECOME blockers
+  - Must resolve before proceeding
+```
+
+### Watcher Reports
+
+Reports written to `.claude/qa/{FEATURE-ID}/{watcher}.json`:
+
+```json
+{
+  "watcher": "test-watcher",
+  "feature_id": "AUTH-001",
+  "status": "watching",
+  "issues": [
+    {
+      "severity": "warning",
+      "file": "lib/accounts/user.ex",
+      "line": 45,
+      "message": "New code not covered by tests",
+      "auto_fixable": false
+    }
+  ],
+  "metrics": {
+    "checks_run": 15,
+    "issues_found": 1
+  }
+}
+```
+
+See: `contracts/watcher-report.schema.json` for full schema.
+
+---
+
+## Legacy Parallel Implementation Workflow
+
+> For backward compatibility, the previous parallel mode is still available.
+
+**Trigger:** `/vibe parallel [FEATURE-ID]` (explicit parallel)
 
 ---
 
