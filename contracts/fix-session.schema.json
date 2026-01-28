@@ -1,0 +1,285 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Fix Session",
+  "description": "Schema for fix session tracking written to .claude/fix-sessions/{feature-id}-{date}-{N}.json during iterative fix workflows.",
+  "type": "object",
+  "required": ["session_id", "feature_id", "created_at", "attempts", "status"],
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "description": "Unique session identifier (e.g., fix-AUTH-001-20260128-001)",
+      "pattern": "^fix-[A-Z]+-[0-9]+-[0-9]{8}-[0-9]{3}$"
+    },
+    "feature_id": {
+      "type": "string",
+      "description": "Feature being fixed (e.g., AUTH-001)",
+      "pattern": "^[A-Z]+-[0-9]+$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when fix session started"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of last update"
+    },
+    "attempts": {
+      "type": "array",
+      "description": "List of fix attempts in this session",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["attempt", "timestamp", "feedback", "triage", "result"],
+        "properties": {
+          "attempt": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Attempt number (1, 2, 3, ...)"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When this attempt started"
+          },
+          "feedback": {
+            "type": "string",
+            "description": "User's issue description"
+          },
+          "triage": {
+            "type": "object",
+            "required": ["category", "agents"],
+            "description": "Triage analysis result",
+            "properties": {
+              "category": {
+                "type": "string",
+                "enum": ["ui", "logic", "integration", "data", "mixed"],
+                "description": "Primary issue category"
+              },
+              "keywords": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Keywords that matched in feedback"
+              },
+              "agents": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["ui-agent", "domain-agent", "api-agent", "data-agent"]
+                },
+                "description": "Agents assigned to fix this issue"
+              }
+            }
+          },
+          "model": {
+            "type": "string",
+            "enum": ["haiku", "sonnet", "opus"],
+            "description": "Model used for this attempt"
+          },
+          "escalated": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether model was escalated from previous attempt"
+          },
+          "changes": {
+            "type": "array",
+            "description": "Files changed in this attempt",
+            "items": {
+              "type": "object",
+              "required": ["file"],
+              "properties": {
+                "file": {
+                  "type": "string",
+                  "description": "File path that was modified"
+                },
+                "line": {
+                  "type": ["integer", "null"],
+                  "description": "Primary line number of change"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Brief description of what changed"
+                },
+                "diff_summary": {
+                  "type": "string",
+                  "description": "Summary of the diff (lines added/removed)"
+                }
+              }
+            }
+          },
+          "verification": {
+            "type": "object",
+            "description": "Verification results for this attempt",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": ["passed", "failed", "skipped"],
+                "description": "Overall verification status"
+              },
+              "tests_run": {
+                "type": "integer",
+                "description": "Number of tests executed"
+              },
+              "tests_passed": {
+                "type": "integer",
+                "description": "Number of tests that passed"
+              },
+              "tests_failed": {
+                "type": "integer",
+                "description": "Number of tests that failed"
+              },
+              "visual_check": {
+                "type": "boolean",
+                "description": "Whether visual check was performed"
+              },
+              "screenshots": {
+                "type": "object",
+                "properties": {
+                  "before": { "type": "string" },
+                  "after": { "type": "string" }
+                }
+              }
+            }
+          },
+          "result": {
+            "type": "string",
+            "enum": ["success", "failed", "partial", "user_cancelled"],
+            "description": "Outcome of this attempt"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Additional notes or clarifications from this attempt"
+          }
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["in_progress", "resolved", "escalated", "abandoned"],
+      "description": "Current session status"
+    },
+    "related_fix_sessions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "IDs of related fix sessions for the same feature"
+    },
+    "source": {
+      "type": "string",
+      "enum": ["manual", "polish_watcher", "test_failure"],
+      "description": "How this fix session was initiated"
+    },
+    "contract_version": {
+      "type": "integer",
+      "description": "Contract version at time of fix"
+    }
+  },
+  "examples": [
+    {
+      "session_id": "fix-AUTH-001-20260128-001",
+      "feature_id": "AUTH-001",
+      "created_at": "2026-01-28T10:30:00Z",
+      "updated_at": "2026-01-28T10:45:00Z",
+      "attempts": [
+        {
+          "attempt": 1,
+          "timestamp": "2026-01-28T10:30:00Z",
+          "feedback": "login button is misaligned",
+          "triage": {
+            "category": "ui",
+            "keywords": ["button", "misaligned"],
+            "agents": ["ui-agent"]
+          },
+          "model": "sonnet",
+          "escalated": false,
+          "changes": [
+            {
+              "file": "assets/svelte/components/features/auth/LoginForm.svelte",
+              "line": 45,
+              "description": "Fixed button margin from 8px to 16px"
+            }
+          ],
+          "verification": {
+            "status": "passed",
+            "tests_run": 3,
+            "tests_passed": 3,
+            "tests_failed": 0,
+            "visual_check": true
+          },
+          "result": "success"
+        }
+      ],
+      "status": "resolved",
+      "source": "manual"
+    },
+    {
+      "session_id": "fix-AUTH-001-20260128-002",
+      "feature_id": "AUTH-001",
+      "created_at": "2026-01-28T14:00:00Z",
+      "updated_at": "2026-01-28T14:30:00Z",
+      "attempts": [
+        {
+          "attempt": 1,
+          "timestamp": "2026-01-28T14:00:00Z",
+          "feedback": "form doesn't submit",
+          "triage": {
+            "category": "integration",
+            "keywords": ["form", "submit"],
+            "agents": ["api-agent"]
+          },
+          "model": "sonnet",
+          "escalated": false,
+          "changes": [
+            {
+              "file": "lib/my_app_web/live/auth/login_live.ex",
+              "line": 34,
+              "description": "Fixed handle_event for form submission"
+            }
+          ],
+          "verification": {
+            "status": "failed",
+            "tests_run": 5,
+            "tests_passed": 4,
+            "tests_failed": 1
+          },
+          "result": "failed",
+          "notes": "Form submits but validation error not displayed"
+        },
+        {
+          "attempt": 2,
+          "timestamp": "2026-01-28T14:15:00Z",
+          "feedback": "still broken - validation error not showing",
+          "triage": {
+            "category": "mixed",
+            "keywords": ["validation", "error", "showing"],
+            "agents": ["api-agent", "ui-agent"]
+          },
+          "model": "opus",
+          "escalated": true,
+          "changes": [
+            {
+              "file": "lib/my_app_web/live/auth/login_live.ex",
+              "line": 42,
+              "description": "Push error to socket assigns"
+            },
+            {
+              "file": "assets/svelte/components/features/auth/LoginForm.svelte",
+              "line": 15,
+              "description": "Display error from props"
+            }
+          ],
+          "verification": {
+            "status": "passed",
+            "tests_run": 8,
+            "tests_passed": 8,
+            "tests_failed": 0
+          },
+          "result": "success"
+        }
+      ],
+      "status": "resolved",
+      "source": "manual",
+      "related_fix_sessions": ["fix-AUTH-001-20260128-001"]
+    }
+  ]
+}

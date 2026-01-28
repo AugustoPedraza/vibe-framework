@@ -29,6 +29,7 @@
 | lint-watcher | haiku | ~15k | `agents/watchers/lint-watcher.md` |
 | test-watcher | sonnet | ~20k | `agents/watchers/test-watcher.md` |
 | security-watcher | haiku | ~15k | `agents/watchers/security-watcher.md` |
+| polish-watcher | sonnet | ~25k | `agents/watchers/polish-watcher.md` |
 
 **Orchestrator:** `agents/orchestrator/core.md`
 
@@ -71,6 +72,7 @@ TIER 3 - CHECKPOINT (Restore from prior session)
 | `/vibe [ID]` | Parallel (default) | Orchestrator + agent files |
 | `/vibe [ID] --quick` | Quick | Single agent, minimal context |
 | `/vibe [ID] --solo` | Sequential | Legacy phase files |
+| `/vibe fix [ID] "desc"` | Fix | Targeted fix for reported issue |
 | `/vibe contract [ID]` | Contract gen | Contract schema |
 | `/vibe plan [sprint]` | Planning | Domain + PM |
 | `/vibe convert-story [ID]` | BMAD bridge | Convert story to spec |
@@ -113,6 +115,11 @@ TIER 3 - CHECKPOINT (Restore from prior session)
 │  PHASE 3: VALIDATION                                                 │
 │  Aggregate watcher reports, calculate quality score                  │
 │  Output: PR ready if passing                                         │
+├─────────────────────────────────────────────────────────────────────┤
+│  PHASE 4: POLISH (automatic, non-blocking)                           │
+│  Context: agents/watchers/polish-watcher.md                          │
+│  Output: Suggestions for CSS, LiveView, Ash, A11y, Performance       │
+│  User choice: auto-fix, view, skip, or create PR                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -305,10 +312,12 @@ background_ops:
 
 For complete documentation, see:
 - `prompts/vibe.md` - Full orchestrator (reference)
+- `prompts/commands/fix.md` - Fix command for user-reported issues
 - `agents/orchestrator/core.md` - Orchestrator guidance
 - `agents/implementation/*.md` - Implementation agent specs
 - `agents/watchers/*.md` - QA watcher specs
 - `contracts/watcher-report.schema.json` - Watcher report schema
+- `contracts/fix-session.schema.json` - Fix session tracking schema
 - `context/loading-strategy.md` - Detailed tier system
 - `patterns/README.md` - Pattern discovery workflow
 

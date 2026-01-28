@@ -73,7 +73,13 @@ PHASE 3: VALIDATION
 ├── Aggregate watcher reports
 ├── Calculate quality score
 ├── Run final test suite
-└── Generate PR if passing
+└── GATE: Must pass before Polish
+
+PHASE 4: POLISH (automatic, non-blocking)
+├── Spawn polish-watcher (sonnet)
+├── Run proactive checks
+├── Generate suggestions
+└── User choice: auto-fix, view, skip, or PR
 ```
 
 ---
@@ -369,6 +375,113 @@ Combine all watcher reports:
 |  [p] Create PR  [r] Review details  [a] Archive feature              |
 +---------------------------------------------------------------------+
 ```
+
+---
+
+## Phase 4: Polish & Enhancement
+
+After validation passes, run proactive quality checks for suggestions.
+
+### Trigger
+
+```
+Phase 3: VALIDATION
+└── GATE: PASSED
+        ↓
+Phase 4: POLISH (automatic)
+├── Spawn polish-watcher (sonnet)
+├── Run proactive checks (CSS, LiveView, Ash, A11y, Perf)
+├── Generate suggestions report
+├── Display polish score
+└── User choice: auto-fix, view, skip, or create PR
+
+Gate: NON-BLOCKING (suggestions only)
+```
+
+### Polish Watcher Spawning
+
+```typescript
+// After validation passes
+if (validationResult.ready_for_pr) {
+  Task({
+    subagent_type: "general-purpose",
+    model: "sonnet",
+    run_in_background: true,
+    prompt: buildPolishWatcherPrompt(contract, {
+      fixSessions: loadFixSessions(featureId)
+    })
+  });
+}
+```
+
+### Check Categories
+
+| Category | Checks |
+|----------|--------|
+| **CSS/Layout** | Touch targets 44px, design tokens (no raw colors), spacing grid |
+| **LiveView** | All contract bindings wired, socket prop passed, error flows tested |
+| **Ash Domain** | All error codes handled, policies applied, edge cases covered |
+| **Accessibility** | ARIA labels, keyboard nav, focus visible, error announcements |
+| **Performance** | No N+1 queries, component size <500 LOC, efficient stores |
+
+### Display Format
+
+```
++======================================================================+
+|  PHASE 4: POLISH                                                      |
++======================================================================+
+
+CSS/Layout:     [✓] 4.0/5.0  (1 suggestion)
+LiveView:       [✓] 5.0/5.0
+Ash Domain:     [✓] 5.0/5.0
+Accessibility:  [~] 4.0/5.0  (2 suggestions)
+Performance:    [✓] 5.0/5.0
+
+Polish Score: 4.5/5.0
+Suggestions: 3 (3 auto-fixable)
+
+[a] Auto-fix all  [v] View suggestions  [s] Skip  [Enter] Create PR
+```
+
+### Auto-Fix Behavior
+
+When user selects auto-fix:
+
+1. Apply changes for each auto-fixable suggestion
+2. Run quick verification (related tests only)
+3. Update polish report
+4. Show updated score
+
+```
++---------------------------------------------------------------------+
+|  AUTO-FIX APPLIED                                                    |
+|                                                                      |
+|  Fixed 3 suggestions:                                                |
+|    ✓ Button touch target → 44px                                      |
+|    ✓ Added aria-label to email input                                 |
+|    ✓ Added :focus-visible to submit button                           |
+|                                                                      |
+|  Quick verify: 3/3 tests passing                                     |
+|  New Polish Score: 5.0/5.0                                           |
+|                                                                      |
+|  [Enter] Create PR  [v] View changes  [r] Revert                     |
++---------------------------------------------------------------------+
+```
+
+### Integration with /vibe fix
+
+Polish suggestions can be routed to `/vibe fix` for targeted fixing:
+
+```
+Polish detected 3 issues. Fix now?
+  1. [ui] Button touch target 40px (should be 44px)
+  2. [a11y] Missing ARIA label on input
+  3. [a11y] Focus not visible on submit
+
+[1-3] Fix specific  [a] Fix all  [s] Skip to PR
+```
+
+Selecting an issue creates a fix session with pre-filled context.
 
 ---
 
