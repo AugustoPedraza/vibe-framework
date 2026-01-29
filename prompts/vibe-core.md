@@ -88,6 +88,11 @@ TIER 3 - CHECKPOINT (Restore from prior session)
 │  PHASE 0: CONTRACT                                                   │
 │  Context: agents/orchestrator/core.md                                │
 │  Output: .claude/contracts/{ID}.json with agent_assignments          │
+│  ┌─────────────────────────────────────────────────────────────────┐│
+│  │ PR SETUP: Create integration branch: feature/{ID}-integration   ││
+│  │ Initial commit: docs/features/{ID}/README.md, scenarios.md      ││
+│  │ User choice: [c] stacked PRs  [s] single PR at end              ││
+│  └─────────────────────────────────────────────────────────────────┘│
 ├─────────────────────────────────────────────────────────────────────┤
 │  PHASE 1: PARALLEL IMPLEMENTATION                                    │
 │                                                                      │
@@ -106,15 +111,29 @@ TIER 3 - CHECKPOINT (Restore from prior session)
 │  Output: Implementation complete, watchers report issues             │
 ├─────────────────────────────────────────────────────────────────────┤
 │  SYNC POINT: All implementation agents complete                      │
+│  ┌─────────────────────────────────────────────────────────────────┐│
+│  │ PR CHECKPOINT: Split into agent branches, create PRs            ││
+│  │   → data/{ID}-models          (~500 lines)                      ││
+│  │   → domain/{ID}-resources     (~500 lines)                      ││
+│  │   → ui/{ID}-components        (~500 lines)                      ││
+│  │ User choice: [a] all PRs  [1-3] specific  [s] skip              ││
+│  └─────────────────────────────────────────────────────────────────┘│
 ├─────────────────────────────────────────────────────────────────────┤
 │  PHASE 2: INTEGRATION                                                │
 │  Context: agents/implementation/api-agent.md                         │
 │  Output: LiveView handlers, wiring, E2E tests                        │
 │  GATE: Watcher issues become BLOCKING                                │
+│  ┌─────────────────────────────────────────────────────────────────┐│
+│  │ PR CHECKPOINT: Create api/{ID}-handlers PR                      ││
+│  │ User choice: [p] create PR  [s] skip                            ││
+│  └─────────────────────────────────────────────────────────────────┘│
 ├─────────────────────────────────────────────────────────────────────┤
 │  PHASE 3: VALIDATION                                                 │
 │  Aggregate watcher reports, calculate quality score                  │
-│  Output: PR ready if passing                                         │
+│  ┌─────────────────────────────────────────────────────────────────┐│
+│  │ FINAL PR CHECKPOINT: Create PR integration → main               ││
+│  │ User choice: [p] create final PR  [w] wait for reviews          ││
+│  └─────────────────────────────────────────────────────────────────┘│
 ├─────────────────────────────────────────────────────────────────────┤
 │  PHASE 4: POLISH (automatic, non-blocking)                           │
 │  Context: agents/watchers/polish-watcher.md                          │

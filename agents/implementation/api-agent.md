@@ -51,6 +51,9 @@ lib/*_web/
 ├── router.ex                    # Route additions only
 └── channels/                    # Channel handlers
 
+assets/js/
+└── app.js                       # Component registration (append only)
+
 test/*_web/
 ├── live/
 │   └── {feature}_live_test.exs  # LiveView tests
@@ -61,6 +64,54 @@ test/*_web/
 - `lib/{domain}/` - domain-agent territory
 - `assets/svelte/` - ui-agent territory
 - `priv/repo/migrations/` - data-agent territory
+
+---
+
+## Branch Workflow (Stacked PRs)
+
+When working with stacked PRs enabled, the API agent works on its own branch during Phase 2:
+
+### Branch Setup
+
+```bash
+# API agent creates its own branch from integration
+git checkout feature/{ID}-integration
+git checkout -b api/{ID}-handlers
+```
+
+### Commit Strategy
+
+```bash
+# Work on api/{ID}-handlers branch
+git add lib/{app}_web/live/
+git commit -m "feat(api): add {Feature}Live module for {ID}"
+
+git add lib/{app}_web/router.ex
+git commit -m "feat(api): add routes for {ID}"
+
+git add assets/js/app.js
+git commit -m "feat(api): register {Component} in app.js for {ID}"
+
+git add test/{app}_web/live/
+git commit -m "test(api): add LiveView integration tests for {ID}"
+```
+
+### Commit Message Format
+
+| Type | Example |
+|------|---------|
+| LiveView module | `feat(api): add LoginLive module for AUTH-001` |
+| Router | `feat(api): add /login route for AUTH-001` |
+| Component registration | `feat(api): register LoginForm in app.js for AUTH-001` |
+| Integration tests | `test(api): add login LiveView tests for AUTH-001` |
+| E2E tests | `test(api): add login E2E tests for AUTH-001` |
+
+### File Pattern for PR
+
+After Phase 2 completes, these files go into `api/{ID}-handlers` PR:
+- `lib/{app}_web/**`
+- `assets/js/app.js`
+- `test/{app}_web/**`
 
 ---
 

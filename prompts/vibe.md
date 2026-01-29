@@ -1315,6 +1315,265 @@ PHASE 3: VALIDATION
 └── Generate PR if passing
 ```
 
+### Stacked PR Workflow (Reviewable PRs)
+
+> Split large feature PRs into small, reviewable chunks per agent.
+
+**Problem:** AI-generated features produce large PRs (29+ files, 3k+ lines) that are impossible to meaningfully human review.
+
+**Solution:** Embed PR creation directly into the workflow at natural checkpoint moments, with user confirmation.
+
+#### PR Workflow Overview
+
+```
+PHASE 0: CONTRACT
+├── Parse feature spec, generate contract
+├── NEW: Create integration branch: feature/{ID}-integration
+├── NEW: Create feature documentation (README.md, scenarios.md)
+└── Output: .claude/contracts/{ID}.json
+
+PHASE 1: PARALLEL IMPLEMENTATION
+├── domain-agent, ui-agent, data-agent work in parallel
+├── All agents commit to integration branch
+└── QA watchers run in background
+
+SYNC POINT (PR CHECKPOINT)
+├── All implementation agents complete
+├── NEW: Split files into agent-specific branches:
+│   ├── data/{ID}-models
+│   ├── domain/{ID}-resources
+│   └── ui/{ID}-components
+├── NEW: Display PR summary, ask user confirmation
+├── NEW: Create PRs for each agent's branch → integration branch
+└── User can review PRs while Phase 2 runs
+
+PHASE 2: INTEGRATION
+├── api-agent wires everything on: api/{ID}-handlers
+├── Commit to api branch
+└── GATE: Watcher issues become BLOCKING
+
+PHASE 2 COMPLETE (PR CHECKPOINT)
+├── Create PR for api branch → integration branch
+└── User confirmation
+
+PHASE 3: VALIDATION
+├── Aggregate watcher reports
+├── Calculate quality score
+└── Create final PR: integration branch → main
+
+PHASE 4-5: POLISH & LEARNING (unchanged)
+```
+
+#### Phase 0: Integration Branch Creation
+
+When contract is generated, create integration branch with documentation:
+
+```
++---------------------------------------------------------------------+
+|  PHASE 0: CONTRACT                                                   |
+|  Feature: NAV-003 - Company Context Switching                        |
++---------------------------------------------------------------------+
+
+Creating integration branch: feature/NAV-003-integration
+
+Initial commit includes:
+  - docs/features/NAV-003/README.md (feature overview)
+  - docs/features/NAV-003/scenarios.md (acceptance criteria)
+  - .claude/contracts/NAV-003.json (agent assignments)
+
+[c] Continue with stacked PRs (recommended)
+[s] Skip stacking (single PR at end)
++---------------------------------------------------------------------+
+```
+
+**Integration Branch Initial Content:**
+
+`docs/features/{ID}/README.md` - Feature overview for reviewers:
+```markdown
+# {ID}: {Feature Title}
+
+## Summary
+{Summary from feature spec}
+
+## Acceptance Criteria
+- [ ] AC-1: {criterion}
+- [ ] AC-2: {criterion}
+...
+
+## Agent Assignments
+| Agent | Scope |
+|-------|-------|
+| data-agent | {data scope} |
+| domain-agent | {domain scope} |
+| ui-agent | {ui scope} |
+| api-agent | {api scope} |
+
+## PRs
+- [ ] PR 1: data/{ID}-models
+- [ ] PR 2: domain/{ID}-resources
+- [ ] PR 3: ui/{ID}-components
+- [ ] PR 4: api/{ID}-handlers
+```
+
+`docs/features/{ID}/scenarios.md` - Detailed scenarios from spec:
+```markdown
+# {ID} Scenarios
+
+## Scenario 1: {Scenario Title}
+**Given** {context}
+**When** {action}
+**Then** {outcome}
+
+## Scenario 2: {Scenario Title}
+...
+```
+
+#### SYNC POINT: PR Checkpoint (After Phase 1)
+
+```
++---------------------------------------------------------------------+
+|  SYNC POINT: Parallel Implementation Complete                        |
+|                                                                      |
+|  Agent Work Ready for Review:                                        |
+|                                                                      |
+|  [1] data-agent    → data/NAV-003-models                            |
+|      5 files: migrations, seeds, fixtures                            |
+|      ~450 lines                                                      |
+|                                                                      |
+|  [2] domain-agent  → domain/NAV-003-resources                       |
+|      4 files: Ash resources, accounts                                |
+|      ~400 lines                                                      |
+|                                                                      |
+|  [3] ui-agent      → ui/NAV-003-components                          |
+|      8 files: Svelte components, stores                              |
+|      ~600 lines                                                      |
+|                                                                      |
+|  [a] Create all 3 PRs → feature/NAV-003-integration (recommended)   |
+|  [1-3] Create specific PR only                                       |
+|  [s] Skip PRs, continue to Integration                               |
++---------------------------------------------------------------------+
+```
+
+#### Phase 2 Complete: API PR Checkpoint
+
+```
++---------------------------------------------------------------------+
+|  PHASE 2 COMPLETE: Integration                                       |
+|                                                                      |
+|  [4] api-agent     → api/NAV-003-handlers                           |
+|      4 files: LiveView, router                                       |
+|      ~300 lines                                                      |
+|                                                                      |
+|  [p] Create PR → feature/NAV-003-integration                        |
+|  [s] Skip, continue to Validation                                    |
++---------------------------------------------------------------------+
+```
+
+#### Phase 3 Complete: Final PR Checkpoint
+
+```
++---------------------------------------------------------------------+
+|  PHASE 3 COMPLETE: Validation                                        |
+|                                                                      |
+|  Quality Score: 4.2/5.0                                              |
+|  All tests passing                                                   |
+|                                                                      |
+|  Integration Branch: feature/NAV-003-integration                    |
+|  PRs merged: 4/4                                                     |
+|                                                                      |
+|  [p] Create final PR → main                                          |
+|  [w] Wait for PR reviews first                                       |
++---------------------------------------------------------------------+
+```
+
+#### File Ownership Patterns (for automatic splitting)
+
+| Agent | File Patterns |
+|-------|---------------|
+| data-agent | `priv/repo/migrations/**`, `priv/repo/seeds.exs`, `priv/resource_snapshots/**` |
+| domain-agent | `lib/{app}/**/resources/**`, `lib/{app}/**/actions/**`, `lib/{app}/**/*.ex` (not `_web`) |
+| ui-agent | `assets/svelte/**`, `assets/css/**`, `assets/js/**` (not app.js) |
+| api-agent | `lib/{app}_web/**`, `assets/js/app.js` |
+| shared | `test/**`, `docs/**` → included in final PR |
+
+#### Git Automation Commands
+
+```bash
+# Phase 0: Create integration branch with docs
+git checkout main && git pull
+git checkout -b feature/{ID}-integration
+
+# Create feature documentation from spec
+mkdir -p docs/features/{ID}
+# Generate README.md with overview, acceptance criteria, agent assignments
+# Generate scenarios.md with Given/When/Then from spec
+# Copy contract to .claude/contracts/{ID}.json
+
+git add docs/features/{ID}/ .claude/contracts/{ID}.json
+git commit -m "docs({ID}): add feature spec and scenarios for review context"
+git push -u origin feature/{ID}-integration
+
+# Phase 1: Agents commit to integration branch
+git add {agent-owned-files}
+git commit -m "feat({layer}): {description}"
+
+# SYNC POINT: Split into agent branches
+for layer in data domain ui; do
+  git checkout feature/{ID}-integration
+  git checkout -b {layer}/{ID}-{chunk}
+  # Keep only files matching layer patterns
+  git push -u origin {layer}/{ID}-{chunk}
+
+  gh pr create --base feature/{ID}-integration \
+    --title "feat({layer}): {description} ({N}/M)" \
+    --body "Part of {ID} feature implementation"
+done
+
+# Phase 2: API agent branch
+git checkout feature/{ID}-integration
+git checkout -b api/{ID}-handlers
+# ... api-agent work ...
+git push && gh pr create --base feature/{ID}-integration
+
+# Phase 3: Final PR
+gh pr create --base main \
+  --title "feat: {ID} - {feature title}"
+```
+
+#### PR Workflow Configuration
+
+In `vibe.config.json`:
+
+```json
+{
+  "pr_workflow": {
+    "enabled": true,
+    "create_integration_branch": true,
+    "pr_per_agent": true,
+    "auto_create_prs": false,
+    "require_confirmation": true
+  }
+}
+```
+
+| Option | Description |
+|--------|-------------|
+| `enabled` | Enable/disable stacked PR workflow |
+| `create_integration_branch` | Create feature integration branch |
+| `pr_per_agent` | Create separate PR per agent |
+| `auto_create_prs` | Skip confirmation prompts |
+| `require_confirmation` | Always ask before creating PRs |
+
+#### PR Workflow Verification
+
+- [ ] Each agent PR targets integration branch (not main)
+- [ ] PRs are <500 lines each (reviewable)
+- [ ] Tests run per-PR (CI on integration branch)
+- [ ] Final PR to main includes all reviewed work
+- [ ] User confirms at each checkpoint
+
+---
+
 ### QA Watcher Pattern
 
 Watchers run **continuously** during implementation, not just at gates.

@@ -49,6 +49,7 @@ priv/repo/
 │   ├── {timestamp}_add_{column}_to_{table}.exs
 │   └── ...
 ├── seeds.exs                    # Main seed file
+├── resource_snapshots/          # Ash resource snapshots
 └── seeds/
     ├── dev.exs                  # Development seeds
     ├── test.exs                 # Test fixtures
@@ -59,6 +60,43 @@ priv/repo/
 - `lib/{domain}/` - domain-agent territory
 - `lib/*_web/` - api-agent territory
 - `assets/` - ui-agent territory
+
+---
+
+## Branch Workflow (Stacked PRs)
+
+When working with stacked PRs enabled, commit to the integration branch with semantic messages:
+
+### Commit Strategy
+
+```bash
+# All work goes to integration branch during Phase 1
+git add priv/repo/migrations/{timestamp}_*.exs
+git commit -m "feat(data): add {table} migration for {ID}"
+
+git add priv/repo/seeds.exs priv/repo/seeds/
+git commit -m "feat(data): add seed data for {ID}"
+
+git add priv/resource_snapshots/
+git commit -m "feat(data): update resource snapshots for {ID}"
+```
+
+### Commit Message Format
+
+| Type | Example |
+|------|---------|
+| New migration | `feat(data): add users table migration for AUTH-001` |
+| Alter migration | `feat(data): add email_verified column to users for AUTH-002` |
+| Seeds | `feat(data): add development seeds for AUTH-001` |
+| Index | `feat(data): add email index on users for AUTH-001` |
+
+### File Pattern for PR Splitting
+
+At SYNC POINT, these files will be split into `data/{ID}-models` branch:
+- `priv/repo/migrations/**`
+- `priv/repo/seeds.exs`
+- `priv/repo/seeds/**`
+- `priv/resource_snapshots/**`
 
 ---
 

@@ -118,12 +118,101 @@ Feature spec at `{{paths.features}}/{area}/{ID}.md`
 4. Generate `agent_assignments`
 5. Set `watcher_config` from project config
 6. Create and lock contract
+7. **NEW: Create integration branch and feature docs**
+
+### Integration Branch Setup (NEW)
+
+```bash
+# Create integration branch
+git checkout main && git pull
+git checkout -b feature/{ID}-integration
+
+# Create feature documentation
+mkdir -p docs/features/{ID}
+```
+
+**Generate `docs/features/{ID}/README.md`:**
+```markdown
+# {ID}: {Feature Title}
+
+## Summary
+{Summary extracted from feature spec}
+
+## Acceptance Criteria
+- [ ] AC-1: {criterion description}
+- [ ] AC-2: {criterion description}
+...
+
+## Agent Assignments
+| Agent | Scope |
+|-------|-------|
+| data-agent | {data scope from contract} |
+| domain-agent | {domain scope from contract} |
+| ui-agent | {ui scope from contract} |
+| api-agent | {api scope from contract} |
+
+## PRs
+- [ ] PR 1: data/{ID}-models
+- [ ] PR 2: domain/{ID}-resources
+- [ ] PR 3: ui/{ID}-components
+- [ ] PR 4: api/{ID}-handlers
+```
+
+**Generate `docs/features/{ID}/scenarios.md`:**
+```markdown
+# {ID} Scenarios
+
+## Scenario 1: {Scenario Title}
+**Given** {context}
+**When** {action}
+**Then** {outcome}
+
+## Scenario 2: {Scenario Title}
+...
+```
+
+**Initial commit:**
+```bash
+git add docs/features/{ID}/ .claude/contracts/{ID}.json
+git commit -m "docs({ID}): add feature spec and scenarios for review context"
+git push -u origin feature/{ID}-integration
+```
+
+### User Confirmation (PR Workflow)
+
+```
++---------------------------------------------------------------------+
+|  PHASE 0: CONTRACT                                                   |
+|  Feature: {ID} - {Title}                                             |
++---------------------------------------------------------------------+
+
+Creating integration branch: feature/{ID}-integration
+
+Initial commit includes:
+  - docs/features/{ID}/README.md (feature overview)
+  - docs/features/{ID}/scenarios.md (acceptance criteria)
+  - .claude/contracts/{ID}.json (agent assignments)
+
+[c] Continue with stacked PRs (recommended)
+[s] Skip stacking (single PR at end)
++---------------------------------------------------------------------+
+```
 
 ### Output
 
 ```json
 {
   "feature_id": "AUTH-001",
+  "integration_branch": "feature/AUTH-001-integration",
+  "pr_workflow": {
+    "enabled": true,
+    "branches": {
+      "data": "data/AUTH-001-models",
+      "domain": "domain/AUTH-001-resources",
+      "ui": "ui/AUTH-001-components",
+      "api": "api/AUTH-001-handlers"
+    }
+  },
   "agent_assignments": {
     "domain-agent": {
       "criteria": ["AC-1", "AC-2"],
@@ -319,6 +408,90 @@ When all implementation agents signal complete:
 +---------------------------------------------------------------------+
 ```
 
+### PR Checkpoint (After Sync Point)
+
+If `pr_workflow.enabled` in contract, split files into agent branches and create PRs:
+
+#### File Ownership Patterns
+
+| Agent | File Patterns |
+|-------|---------------|
+| data-agent | `priv/repo/migrations/**`, `priv/repo/seeds.exs`, `priv/resource_snapshots/**` |
+| domain-agent | `lib/{app}/**/resources/**`, `lib/{app}/**/actions/**`, `lib/{app}/**/*.ex` (not `_web`) |
+| ui-agent | `assets/svelte/**`, `assets/css/**`, `assets/js/**` (not app.js) |
+| api-agent | `lib/{app}_web/**`, `assets/js/app.js` |
+| shared | `test/**`, `docs/**` → included in final PR only |
+
+#### Branch Splitting Process
+
+```bash
+# For each layer (data, domain, ui):
+for layer in data domain ui; do
+  git checkout feature/{ID}-integration
+  git checkout -b {layer}/{ID}-{chunk}
+
+  # Keep only files matching layer patterns
+  # (Use git filter or selective checkout based on ownership patterns)
+
+  git push -u origin {layer}/{ID}-{chunk}
+
+  gh pr create --base feature/{ID}-integration \
+    --title "feat({layer}): {description} ({N}/M)" \
+    --body "$(cat <<'EOF'
+## Summary
+Part of {ID} feature implementation.
+
+## Changes
+- {list of files changed}
+
+## Reviewable as standalone
+This PR contains only the {layer} layer changes and can be reviewed independently.
+
+---
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+EOF
+)"
+done
+```
+
+#### User Confirmation Display
+
+```
++---------------------------------------------------------------------+
+|  SYNC POINT: Parallel Implementation Complete                        |
+|                                                                      |
+|  Agent Work Ready for Review:                                        |
+|                                                                      |
+|  [1] data-agent    → data/{ID}-models                               |
+|      {N} files: migrations, seeds, fixtures                          |
+|      ~{X} lines                                                      |
+|                                                                      |
+|  [2] domain-agent  → domain/{ID}-resources                          |
+|      {N} files: Ash resources, accounts                              |
+|      ~{X} lines                                                      |
+|                                                                      |
+|  [3] ui-agent      → ui/{ID}-components                             |
+|      {N} files: Svelte components, stores                            |
+|      ~{X} lines                                                      |
+|                                                                      |
+|  [a] Create all 3 PRs → feature/{ID}-integration (recommended)      |
+|  [1-3] Create specific PR only                                       |
+|  [s] Skip PRs, continue to Integration                               |
++---------------------------------------------------------------------+
+```
+
+#### PR Summary Tracking
+
+After PRs are created, update the feature README:
+
+```bash
+# Update docs/features/{ID}/README.md with PR links
+sed -i 's/- \[ \] PR 1:/- [x] PR 1: #123/' docs/features/{ID}/README.md
+git add docs/features/{ID}/README.md
+git commit -m "docs({ID}): update PR tracking"
+git push
+```
+
 ---
 
 ## Phase 2: Integration
@@ -336,6 +509,20 @@ Task({
     uiImplementation: readUIFiles()
   })
 });
+```
+
+### API Agent Branch Workflow
+
+If `pr_workflow.enabled`:
+
+```bash
+# Create API branch from integration
+git checkout feature/{ID}-integration
+git checkout -b api/{ID}-handlers
+
+# API agent commits here
+git add lib/{app}_web/**
+git commit -m "feat(api): wire LiveView handlers for {ID}"
 ```
 
 ### Integration Gate
@@ -362,6 +549,47 @@ At end of integration:
 |                                                                      |
 |  Status: BLOCKED - Resolve lint warnings before proceeding           |
 +---------------------------------------------------------------------+
+```
+
+### Phase 2 PR Checkpoint
+
+After integration gate passes:
+
+```
++---------------------------------------------------------------------+
+|  PHASE 2 COMPLETE: Integration                                       |
+|                                                                      |
+|  [4] api-agent     → api/{ID}-handlers                              |
+|      {N} files: LiveView, router                                     |
+|      ~{X} lines                                                      |
+|                                                                      |
+|  [p] Create PR → feature/{ID}-integration                           |
+|  [s] Skip, continue to Validation                                    |
++---------------------------------------------------------------------+
+```
+
+```bash
+# Create API PR
+git push -u origin api/{ID}-handlers
+
+gh pr create --base feature/{ID}-integration \
+  --title "feat(api): LiveView handlers for {ID} (4/4)" \
+  --body "$(cat <<'EOF'
+## Summary
+Part of {ID} feature implementation - API/LiveView wiring.
+
+## Changes
+- LiveView modules created
+- Router entries added
+- Component bindings wired
+
+## Dependencies
+Requires PRs 1-3 to be merged first.
+
+---
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+EOF
+)"
 ```
 
 ---
@@ -439,6 +667,109 @@ Combine all watcher reports and policer reports:
 |                                                                      |
 |  [p] Create PR  [r] Review details  [a] Archive feature              |
 +---------------------------------------------------------------------+
+```
+
+### Phase 3 Final PR Checkpoint
+
+If `pr_workflow.enabled`:
+
+```
++---------------------------------------------------------------------+
+|  PHASE 3 COMPLETE: Validation                                        |
+|                                                                      |
+|  Quality Score: 4.5/5.0                                              |
+|  All tests passing                                                   |
+|                                                                      |
+|  Integration Branch: feature/{ID}-integration                       |
+|  PRs merged: 4/4                                                     |
+|    ✓ #123 data/{ID}-models                                          |
+|    ✓ #124 domain/{ID}-resources                                     |
+|    ✓ #125 ui/{ID}-components                                        |
+|    ✓ #126 api/{ID}-handlers                                         |
+|                                                                      |
+|  [p] Create final PR → main                                          |
+|  [w] Wait for PR reviews first                                       |
++---------------------------------------------------------------------+
+```
+
+#### Final PR Creation
+
+```bash
+# Ensure integration branch is up to date with all merged PRs
+git checkout feature/{ID}-integration
+git pull
+
+# Create final PR to main
+gh pr create --base main \
+  --title "feat: {ID} - {feature title}" \
+  --body "$(cat <<'EOF'
+## Summary
+{Feature description from spec}
+
+## Changes
+This PR brings together all reviewed agent work:
+- ✓ #123 data/{ID}-models - Migrations, seeds
+- ✓ #124 domain/{ID}-resources - Ash resources, actions
+- ✓ #125 ui/{ID}-components - Svelte components, stores
+- ✓ #126 api/{ID}-handlers - LiveView handlers, routing
+
+## Quality Metrics
+- Quality Score: 4.5/5.0
+- Test Coverage (new code): 92%
+- All watchers passing
+
+## Acceptance Criteria
+- [x] AC-1: {criterion}
+- [x] AC-2: {criterion}
+...
+
+## Test Plan
+- [x] All unit tests passing
+- [x] All integration tests passing
+- [x] E2E tests passing
+- [x] Manual testing completed
+
+---
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+EOF
+)"
+```
+
+#### PR Status Tracking
+
+The orchestrator tracks PR status in `.claude/pr-status/{ID}.json`:
+
+```json
+{
+  "feature_id": "AUTH-001",
+  "integration_branch": "feature/AUTH-001-integration",
+  "prs": [
+    {
+      "number": 123,
+      "branch": "data/AUTH-001-models",
+      "status": "merged",
+      "merged_at": "2026-01-29T10:00:00Z"
+    },
+    {
+      "number": 124,
+      "branch": "domain/AUTH-001-resources",
+      "status": "merged",
+      "merged_at": "2026-01-29T10:05:00Z"
+    },
+    {
+      "number": 125,
+      "branch": "ui/AUTH-001-components",
+      "status": "open",
+      "reviews_requested": true
+    },
+    {
+      "number": 126,
+      "branch": "api/AUTH-001-handlers",
+      "status": "draft"
+    }
+  ],
+  "final_pr": null
+}
 ```
 
 ---

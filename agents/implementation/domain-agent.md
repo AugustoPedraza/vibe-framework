@@ -72,6 +72,50 @@ test/{domain}/
 
 ---
 
+## Branch Workflow (Stacked PRs)
+
+When working with stacked PRs enabled, commit to the integration branch with semantic messages:
+
+### Commit Strategy
+
+```bash
+# All work goes to integration branch during Phase 1
+git add lib/{domain}/resources/
+git commit -m "feat(domain): add {Resource} resource for {ID}"
+
+git add lib/{domain}/actions/
+git commit -m "feat(domain): add {action} action for {ID}"
+
+git add lib/{domain}/policies/
+git commit -m "feat(domain): add authorization policies for {ID}"
+
+git add test/{domain}/
+git commit -m "test(domain): add tests for {Resource} for {ID}"
+```
+
+### Commit Message Format
+
+| Type | Example |
+|------|---------|
+| New resource | `feat(domain): add User resource for AUTH-001` |
+| Action | `feat(domain): add authenticate action for AUTH-001` |
+| Validation | `feat(domain): add email validation for AUTH-001` |
+| Policy | `feat(domain): add user authorization policies for AUTH-001` |
+| Tests | `test(domain): add User resource tests for AUTH-001` |
+
+### File Pattern for PR Splitting
+
+At SYNC POINT, these files will be split into `domain/{ID}-resources` branch:
+- `lib/{app}/**/resources/**`
+- `lib/{app}/**/actions/**`
+- `lib/{app}/**/calculations/**`
+- `lib/{app}/**/changes/**`
+- `lib/{app}/**/validations/**`
+- `lib/{app}/**/policies/**`
+- `lib/{app}/**/*.ex` (excluding `*_web/`)
+
+---
+
 ## Context Loading
 
 ### Required Context (Load First)

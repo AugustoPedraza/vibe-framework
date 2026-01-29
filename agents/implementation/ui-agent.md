@@ -62,6 +62,7 @@ assets/svelte/
 └── types/
     └── {feature}.ts            # TypeScript types
 
+assets/css/                      # Feature CSS (if needed)
 assets/tests/
 └── component/                   # Additional component tests
 ```
@@ -70,6 +71,48 @@ assets/tests/
 - `lib/{domain}/` - domain-agent territory
 - `lib/*_web/live/` - api-agent territory
 - `priv/repo/migrations/` - data-agent territory
+- `assets/js/app.js` - api-agent territory (component registration)
+
+---
+
+## Branch Workflow (Stacked PRs)
+
+When working with stacked PRs enabled, commit to the integration branch with semantic messages:
+
+### Commit Strategy
+
+```bash
+# All work goes to integration branch during Phase 1
+git add assets/svelte/components/features/{area}/
+git commit -m "feat(ui): add {Component} component for {ID}"
+
+git add assets/svelte/stores/
+git commit -m "feat(ui): add {feature} store for {ID}"
+
+git add assets/svelte/types/
+git commit -m "feat(ui): add TypeScript types for {ID}"
+
+git add assets/svelte/components/features/{area}/*.test.ts
+git commit -m "test(ui): add {Component} tests for {ID}"
+```
+
+### Commit Message Format
+
+| Type | Example |
+|------|---------|
+| New component | `feat(ui): add LoginForm component for AUTH-001` |
+| Store | `feat(ui): add auth store for AUTH-001` |
+| Types | `feat(ui): add auth TypeScript types for AUTH-001` |
+| Tests | `test(ui): add LoginForm component tests for AUTH-001` |
+| Styles | `feat(ui): add auth feature styles for AUTH-001` |
+
+### File Pattern for PR Splitting
+
+At SYNC POINT, these files will be split into `ui/{ID}-components` branch:
+- `assets/svelte/**`
+- `assets/css/**`
+- `assets/js/**` (excluding `app.js`)
+- `assets/tests/component/**`
 
 ---
 
