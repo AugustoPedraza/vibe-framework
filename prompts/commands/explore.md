@@ -6,13 +6,18 @@
 
 Exploration mode for early-stage ideation. Allows thinking through problems, discovering requirements, and validating approaches before formalizing into a feature spec. No artifacts created until explicitly requested.
 
+**Supports two modes:**
+- **Free-form exploration** - Open-ended thinking and ideation
+- **Structured discovery** - Formal discovery phases with wireframes, scenarios, and risk assessment
+
 ## Usage
 
 ```
-/vibe explore "social login"              # Explore a topic
+/vibe explore "social login"              # Explore a topic (free-form)
 /vibe explore                             # Continue current exploration
 /vibe explore --related AUTH              # Explore related to existing features
 /vibe explore --from-spec AUTH-001        # Explore extensions to existing spec
+/vibe explore --discover [FEATURE-ID]     # Structured discovery mode
 ```
 
 ---
@@ -364,3 +369,321 @@ Auto-runs: /vibe validate AUTH-003
   ↓
 Return to exploration with findings
 ```
+
+---
+
+## Structured Discovery Mode (`--discover`)
+
+> `/vibe explore --discover [FEATURE-ID]` - Pre-planning discovery for a single feature
+
+Lightweight discovery phase to understand a feature BEFORE formal planning:
+- Research and understand requirements
+- Create wireframes or UI descriptions
+- Draft acceptance scenarios (not finalized)
+- Identify risks and unknowns
+- Output: Discovery document
+
+### Structured Discovery Workflow
+
+```
+Context -> Research -> Wireframe -> Scenarios (Draft) -> Risks -> Document
+```
+
+### Discovery Phase 1: Context Loading
+
+```
++======================================================================+
+|  DISC DISCOVERY PHASE                                                |
+|  Feature: [ID]                                                       |
++======================================================================+
+```
+
+1. Load project context (WHY + WHAT from vibe.md)
+2. If feature spec exists, read it
+3. If not, gather initial requirements from user
+
+```
++---------------------------------------------------------------------+
+|  FEATURE CONTEXT                                                     |
+|                                                                      |
+|  Feature ID: [ID]                                                    |
+|  Status: [New Feature / Existing Spec Found]                         |
+|                                                                      |
+|  Project: {{project.name}}                                           |
+|  Core KPI: {{project.core_kpi}}                                      |
+|                                                                      |
+|  How might this feature support the KPI?                             |
+|  [AI assessment based on feature name/context]                       |
+|                                                                      |
+|  Describe the feature (or press Enter if spec exists): ___           |
++---------------------------------------------------------------------+
+```
+
+**CHECKPOINT** - Wait for user input
+
+### Discovery Phase 2: Research (Parallelized)
+
+```
++======================================================================+
+|  UX DISCOVERY RESEARCH                                               |
+|  Feature: [ID]                                                       |
++======================================================================+
+```
+
+**AI Optimization: Spawn 3 parallel agents for research:**
+
+```
+┌─ Agent 1: Industry Patterns
+│   - Research how similar apps solve this
+│   - Identify best practices
+│   - Note emerging trends
+│
+├─ Agent 2: Component Audit
+│   - Scan existing components in $lib/components/ui
+│   - Identify reusable components
+│   - Note gaps requiring new components
+│
+└─ Agent 3: Related Features
+    - Check related features in docs/domain/features/
+    - Identify dependencies
+    - Note shared patterns
+```
+
+**Wait for all agents → Synthesize findings → Present**
+
+```
++---------------------------------------------------------------------+
+|  RESEARCH FINDINGS                                                   |
+|                                                                      |
+|  Industry Patterns:                                                  |
+|  * [Pattern 1 - how similar apps solve this]                         |
+|  * [Pattern 2 - alternative approach]                                |
+|  * [Pattern 3 - emerging trend]                                      |
+|                                                                      |
+|  User Journey:                                                       |
+|  [Entry Point] -> [Step 1] -> [Step 2] -> [Success State]            |
+|                                                                      |
+|  Existing Components to Reuse:                                       |
+|  * [Component from $lib/components/ui] - [purpose]                   |
+|                                                                      |
+|  New Components Likely Needed:                                       |
+|  * [New component] - [why]                                           |
+|                                                                      |
+|  Feedback or additions? (Enter to continue): ___                     |
++---------------------------------------------------------------------+
+```
+
+**CHECKPOINT** - Wait for user feedback/additions
+
+### Discovery Phase 3: Wireframe
+
+```
++---------------------------------------------------------------------+
+|  WIREFRAME: [Feature Name]                                           |
+|                                                                      |
+|  Mobile Layout (Primary):                                            |
+|  +-------------------------+                                         |
+|  | [Header/Nav]            |                                         |
+|  +-------------------------+                                         |
+|  |                         |                                         |
+|  | [Main Content Area]     |                                         |
+|  |                         |                                         |
+|  +-------------------------+                                         |
+|  | [Primary Action/CTA]    |                                         |
+|  +-------------------------+                                         |
+|                                                                      |
+|  Desktop Adaptations:                                                |
+|  * [How layout changes on larger screens]                            |
+|                                                                      |
+|  States:                                                             |
+|  * Loading: [Skeleton description - no spinners]                     |
+|  * Empty:   [Message + CTA to populate]                              |
+|  * Error:   [Message + recovery action]                              |
+|  * Success: [Confirmation behavior]                                  |
+|                                                                      |
+|  Key Interactions:                                                   |
+|  * Tap [element]: [action]                                           |
+|  * Swipe [direction]: [action]                                       |
+|                                                                      |
+|  Feedback or changes? (Enter to continue): ___                       |
++---------------------------------------------------------------------+
+```
+
+**CHECKPOINT** - Wait for user feedback/modifications
+
+### Discovery Phase 4: Draft Scenarios
+
+```
++---------------------------------------------------------------------+
+|  DRAFT ACCEPTANCE SCENARIOS                                          |
+|  (These will be finalized during implementation)                     |
+|                                                                      |
+|  ### Scenario 1: [Happy path - primary use case]                     |
+|  DRAFT                                                               |
+|  - Given [precondition]                                              |
+|  - When [user action]                                                |
+|  - Then [expected outcome]                                           |
+|                                                                      |
+|  ### Scenario 2: [Alternate path or edge case]                       |
+|  DRAFT                                                               |
+|  - Given [precondition]                                              |
+|  - When [user action]                                                |
+|  - Then [expected outcome]                                           |
+|                                                                      |
+|  ### Scenario 3: [Error handling]                                    |
+|  DRAFT                                                               |
+|  - Given [precondition]                                              |
+|  - When [error condition]                                            |
+|  - Then [graceful handling]                                          |
+|                                                                      |
+|  Questions for Stakeholder:                                          |
+|  * [Question about unclear requirement]                              |
+|  * [Question about business rule]                                    |
+|                                                                      |
+|  Feedback or answers? (Enter to continue): ___                       |
++---------------------------------------------------------------------+
+```
+
+**CHECKPOINT** - Wait for user feedback/answers
+
+### Discovery Phase 5: Risk Identification
+
+```
++---------------------------------------------------------------------+
+|  RISKS & UNKNOWNS                                                    |
+|                                                                      |
+|  Technical Risks:                                                    |
+|  | Risk                      | Impact | Mitigation                 | |
+|  |---------------------------|--------|----------------------------| |
+|  | [Technical risk 1]        | H/M/L  | [How to address]           | |
+|  | [Technical risk 2]        | H/M/L  | [How to address]           | |
+|                                                                      |
+|  Unknowns (Need Clarification):                                      |
+|  * [Unknown 1] - Ask: [who/what]                                     |
+|  * [Unknown 2] - Research: [what to look into]                       |
+|                                                                      |
+|  Dependencies:                                                       |
+|  * [Depends on feature X]                                            |
+|  * [Depends on external service Y]                                   |
+|                                                                      |
+|  Estimated Complexity: [S / M / L / XL]                              |
+|  Reasoning: [Why this complexity level]                              |
+|                                                                      |
+|  Anything to add? (Enter to generate document): ___                  |
++---------------------------------------------------------------------+
+```
+
+**CHECKPOINT** - Wait for user confirmation
+
+### Discovery Phase 6: Generate Document
+
+Create/update feature spec at `{{paths.features}}/{area}/{ID}.md`:
+
+```markdown
+# [Feature ID]: [Feature Name]
+
+> [One-line description]
+
+**Status:** Discovery Complete | Ready for Implementation
+
+---
+
+## Discovery Summary
+
+- **Discovered:** [Date]
+- **Complexity:** [S / M / L / XL]
+- **Dependencies:** [List or None]
+
+---
+
+## Research Findings
+
+### Industry Patterns
+- [Pattern 1]
+- [Pattern 2]
+
+### User Journey
+[Entry] -> [Step 1] -> [Step 2] -> [Success]
+
+### Component Audit
+| Reuse | Component | Purpose |
+|-------|-----------|---------|
+| Yes | [name] | [purpose] |
+| New | [name] | [purpose] |
+
+---
+
+## Wireframe (Draft)
+
+### Mobile Layout
+[ASCII wireframe]
+
+### States
+| State | Behavior |
+|-------|----------|
+| Loading | [Skeleton description] |
+| Empty | [Message + CTA] |
+| Error | [Message + recovery] |
+
+---
+
+## Draft Scenarios
+
+> **DRAFT** - These scenarios will be finalized during implementation.
+
+### Scenario: [Happy Path Name]
+- **Given** [precondition]
+- **When** [action]
+- **Then** [outcome]
+
+---
+
+## Risks & Unknowns
+
+### Technical Risks
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| [Risk] | H/M/L | [Mitigation] |
+
+### Open Questions
+- [ ] [Question 1]
+- [ ] [Question 2]
+
+---
+
+## Next Steps
+
+1. Answer open questions
+2. Run `/vibe [ID]` to implement
+```
+
+### Discovery Output
+
+```
++---------------------------------------------------------------------+
+|  DISCOVERY COMPLETE                                                  |
+|                                                                      |
+|  Document: {{paths.features}}/{area}/{ID}.md                         |
+|                                                                      |
+|  Summary:                                                            |
+|  * Research findings documented                                      |
+|  * Wireframe created (mobile-first)                                  |
+|  * [N] draft scenarios                                               |
+|  * [N] risks identified                                              |
+|  * [N] open questions                                                |
+|                                                                      |
+|  Complexity: [S/M/L/XL]                                              |
+|                                                                      |
+|  Next Steps:                                                         |
+|  1. Review document and answer open questions                        |
+|  2. Run `/vibe [ID]` to implement                                    |
++---------------------------------------------------------------------+
+```
+
+### Discovery Anti-Patterns
+
+- Never mark scenarios as final (always DRAFT)
+- Never skip risk identification
+- Never auto-continue without checkpoints
+- Never skip wireframe phase even for API-only features (document data flow instead)
+- Never assume requirements - capture as open questions

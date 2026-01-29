@@ -12,47 +12,41 @@
 
 | Command | Description |
 |---------|-------------|
-| `/vibe [FEATURE-ID]` | Implement feature (QA -> Designer -> Dev -> QA) |
-| `/vibe quick [desc]` | Bug/hotfix mode (condensed 2-phase workflow) |
+| `/vibe [FEATURE-ID]` | Implement feature (parallel agents with continuous QA) |
+| `/vibe quick [desc]` | Bug/hotfix mode (condensed single-agent workflow) |
 | `/vibe pivot` | Course correction when implementation diverges |
-| `/vibe plan [sprint]` | Plan sprint (Domain -> Designer -> PM) |
-| `/vibe discover [ID]` | Pre-planning discovery (research, wireframe, scenarios) |
+| `/vibe fix [desc]` | Targeted issue fixing (Phase 4 polish workflow) |
 
-### AI Generation (NEW)
+### AI Generation
 
 | Command | Description |
 |---------|-------------|
 | `/vibe generate [ID]` | Generate scaffold from feature spec ui_spec |
 | `/vibe lint [path]` | UX Governor - validate tokens, states, accessibility |
 | `/vibe convert-story [ID]` | Convert BMAD story to Vibe feature spec |
-| `/vibe context` | Generate project-context.md for BMAD compatibility |
 
-### BMAD Integration (NEW)
+### Code Quality
 
 | Command | Description |
 |---------|-------------|
-| `/vibe ux-design [ID]` | Deep UX exploration (14-step BMAD workflow) |
-| `/vibe research [type]` | Market/domain/technical research |
-| `/vibe party` | Multi-agent discussion (BMAD Party Mode) |
-| `/vibe sync` | Sync epics/features to GitHub Projects |
+| `/vibe review [scope]` | Multi-agent code review (fresh context) |
+| `/vibe analyze [scope]` | On-demand refactoring and anti-pattern analysis |
 
-### Spec-Driven (OpenSpec-Inspired)
+### Spec-Driven
 
 | Command | Description |
 |---------|-------------|
 | `/vibe explore [topic]` | Think through ideas without committing to structure |
 | `/vibe validate [ID]` | Validate feature spec completeness and consistency |
 | `/vibe archive [ID]` | Archive completed feature, merge deltas into specs |
+| `/vibe tracer [path]` | Trace architecture dependencies |
 
-### Utilities
+### Learning & Patterns
 
 | Command | Description |
 |---------|-------------|
-| `/vibe check` | Validate project structure + template sync status |
-| `/vibe debt [desc]` | Capture technical debt with triage decision |
-| `/vibe review [scope]` | Multi-agent code review (fresh context) |
-| `/vibe status` | Show current progress |
-| `/vibe retro` | Capture learnings, extract reusable patterns |
+| `/vibe learn [ID]` | Continuous learning extraction (patterns, pitfalls) |
+| `/vibe patterns [action]` | Search, browse, and manage patterns |
 
 ### Migration
 
@@ -74,57 +68,83 @@
 
 ```bash
 # Core Implementation
-/vibe AUTH-001                    # Implement login feature
-/vibe quick "fix login button"    # Quick bug fix (condensed workflow)
+/vibe AUTH-001                    # Implement login feature (parallel agents)
+/vibe AUTH-001 --quick            # Single agent mode for simple tasks
+/vibe quick "fix login button"    # Quick bug fix
+/vibe fix "socket prop missing"   # Targeted fix for specific issue
 /vibe pivot                       # Course correction when stuck
-/vibe plan sprint-1               # Plan Sprint 1 features
-/vibe discover AUTH-003           # Discovery phase for password reset
 
-# AI Generation (NEW)
+# AI Generation
 /vibe generate AUTH-001           # Generate scaffold from spec
 /vibe lint                        # Validate all components
 /vibe lint assets/svelte/         # Validate specific path
 /vibe convert-story 1.2           # Convert BMAD Story 1.2 to Vibe spec
-/vibe context                     # Regenerate project-context.md
 
-# BMAD Integration (NEW)
-/vibe ux-design DEC-001           # Deep UX exploration for decisions
-/vibe research market "chat apps" # Market research
-/vibe research technical "pubsub" # Technical spike
-/vibe party                       # Multi-agent discussion
-/vibe sync                        # Sync to GitHub Projects
-
-# Spec-Driven (OpenSpec-Inspired)
-/vibe explore "social login"      # Think through ideas
-/vibe explore --from-spec AUTH-001 # Explore extensions
-/vibe validate AUTH-001           # Check spec completeness
-/vibe validate --fix              # Auto-fix minor issues
-/vibe archive AUTH-001            # Archive and merge to specs
-/vibe archive --dry-run           # Preview archive changes
-
-# Utilities
-/vibe check                       # Validate project structure
-/vibe debt "Need error handling"  # Capture tech debt item
+# Code Quality
 /vibe review                      # Review staged changes
 /vibe review AUTH-001             # Review feature implementation
 /vibe review --security           # Security-focused review
-/vibe retro                       # Run retrospective with pattern extraction
-/vibe status                      # Show implementation progress
+/vibe review --all                # Full review with refactoring + anti-patterns
+/vibe analyze                     # Analyze staged changes
+/vibe analyze AUTH-001            # Analyze feature implementation
+/vibe analyze --all               # Full codebase analysis
+
+# Spec-Driven
+/vibe explore "social login"      # Free-form ideation
+/vibe explore --discover AUTH-003 # Structured discovery with wireframes
+/vibe explore --from-spec AUTH-001 # Explore extensions
+/vibe validate AUTH-001           # Check spec completeness
+/vibe archive AUTH-001            # Archive and merge to specs
+
+# Learning & Patterns
+/vibe learn                       # Extract learnings from current session
+/vibe learn AUTH-001              # Extract learnings from specific feature
+/vibe patterns                    # List all patterns
+/vibe patterns search "form"      # Search patterns
+/vibe patterns show <id>          # Show pattern details
+/vibe patterns stats              # Show usage statistics
 
 # Migration (for existing projects)
 /vibe migrate init                # Analyze and document current state
 /vibe migrate PROFILE             # Create migration spec for profile feature
 /vibe migrate status              # Show migration progress
-/vibe MIGRATE-PROFILE             # Implement migration (after tests pass)
 ```
 
 ## WORKFLOW PHASES (per feature)
 
 ```
-1. QA Engineer    -> Generate tests from scenarios
-2. Designer       -> UX verification & component selection
-3. Developer      -> TDD implementation
-4. QA Validation  -> Quality gates & coverage
+PHASE 0: CONTRACT
+├── Parse feature spec
+├── Generate agent assignments
+└── Lock contract
+
+PHASE 1: PARALLEL IMPLEMENTATION
+├── Domain Agent (opus)    ─┐
+├── UI Agent (sonnet)      ─┼─> Work in parallel
+├── Data Agent (sonnet)    ─┘
+├── QA Watchers (background)
+└── Quality Policers (background)
+
+PHASE 2: INTEGRATION
+├── API Agent (opus) - wiring
+├── E2E tests
+└── GATE: Blockers must resolve
+
+PHASE 3: VALIDATION
+├── Aggregate reports
+├── Refactoring analysis
+├── Quality score
+└── GATE: Must pass
+
+PHASE 4: POLISH
+├── Polish watcher suggestions
+├── Auto-fix option
+└── PR creation
+
+PHASE 5: LEARNING (automatic)
+├── Pattern extraction
+├── Pitfall generation
+└── Update indexes
 ```
 
 ## PROJECT REQUIREMENTS
@@ -159,26 +179,38 @@ The framework automatically optimizes based on task type:
 
 **Auto-Detection:**
 - Bug fixes → Suggests `/vibe quick`
-- New features → Uses full 4-phase workflow
+- New features → Uses full 5-phase workflow
 - Complex tasks → Uses parallel agents
 
 **Parallelization (automatic):**
-- Discovery: 3 agents for research
+- Implementation: 3 agents (domain, ui, data)
+- QA: 4 watchers + 2 policers (continuous)
 - Review: 3 agents (security, performance, patterns)
-- Test generation: 3 agents (unit, integration, e2e)
-- Planning: 1 agent per feature (up to 3)
 
 **Context Management:**
 - AI recommends `/clear` when switching features
 - Uses Explore agents for fresh context on codebase questions
 
+## NEW AGENTS
+
+### Quality Policers (Phase 1-2)
+- **best-practices-policer** - Enforces Ash, Svelte 5, Phoenix patterns
+- **anti-pattern-detector** - Catches architecture violations, N+1 queries
+
+### Analyzers (Phase 3)
+- **refactoring-analyzer** - Code smells, technical debt scoring
+
+### Learning (Phase 5)
+- **continuous-learning-agent** - Pattern extraction, pitfall generation
+
 ## PATTERN DISCOVERY
 
-During retrospective (`/vibe retro`), AI will:
-1. Scan implementation for reusable patterns
-2. Score pattern reusability (HIGH/MEDIUM)
-3. Suggest extraction to `~/.claude/vibe-ash-svelte/patterns/`
-4. User approves which patterns to promote
+During `/vibe learn` or automatically in Phase 5:
+1. Analyze human interventions for pitfall generation
+2. Scan implementation for reusable patterns
+3. Score pattern reusability (HIGH/MEDIUM/LOW)
+4. Promote HIGH patterns to `patterns/`
+5. Update pattern index with usage stats
 
 Promoted patterns are available across all projects.
 
@@ -188,39 +220,22 @@ For migrating existing projects to Ash+Svelte using strangler fig pattern:
 
 **Setup:**
 1. Add `migration.enabled: true` to `.claude/vibe.config.json`
-2. Run `/vibe check` to scaffold migration structure
-3. Run `/vibe migrate init` to analyze current codebase
+2. Run `/vibe migrate init` to analyze current codebase
 
 **Workflow:**
 ```
 /vibe migrate init       # Document current state
-/vibe migrate FEATURE    # Create migration spec (generates test requirements)
+/vibe migrate FEATURE    # Create migration spec
 (write tests)            # Tests in target architecture
-(tests pass legacy)      # Verify tests work against old code
-/vibe MIGRATE-FEATURE    # Implement migration (blocked until tests pass)
+/vibe MIGRATE-FEATURE    # Implement migration
 ```
 
 **Safety Rule:** NO migration without regression tests first.
-Tests must be written in target architecture and pass against legacy code.
-
-**Config Example:**
-```json
-{
-  "migration": {
-    "enabled": true,
-    "template_repo": "https://github.com/AugustoPedraza/vibe-ash-svelte-template",
-    "current_stack": {
-      "backend": ["phoenix", "liveview"],
-      "frontend": ["liveview"]
-    }
-  }
-}
-```
 
 ## MORE INFO
 
 - Framework: `~/.claude/vibe-ash-svelte/`
-- Roles: `~/.claude/vibe-ash-svelte/roles/`
-- Checklists: `~/.claude/vibe-ash-svelte/checklists/`
+- Agents: `~/.claude/vibe-ash-svelte/agents/`
 - Patterns: `~/.claude/vibe-ash-svelte/patterns/`
+- Checklists: `~/.claude/vibe-ash-svelte/checklists/`
 - Templates: `~/.claude/vibe-ash-svelte/templates/`

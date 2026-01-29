@@ -13,6 +13,8 @@ Spawn a separate review agent with fresh context to review code. Separate contex
 /vibe review [FEATURE-ID]       # Review feature implementation
 /vibe review --security         # Security-focused review
 /vibe review --patterns         # Pattern compliance review
+/vibe review --refactoring      # Include refactoring analysis
+/vibe review --all              # Full review with all analyses
 ```
 
 ---
@@ -149,7 +151,84 @@ The review agent loads ONLY:
 | `--patterns` | Design pattern compliance only |
 | `--perf` | Performance concerns |
 | `--a11y` | Accessibility compliance |
+| `--refactoring` | Refactoring analysis (code smells, tech debt) |
+| `--anti-patterns` | Anti-pattern detection |
 | `--all` | Full comprehensive review (default) |
+
+---
+
+## Refactoring Analysis Phase
+
+When `--refactoring` or `--all` is specified, spawn the refactoring-analyzer:
+
+```
+┌─ Refactoring Analyzer (sonnet)
+│   - Code smell detection
+│   - Technical debt scoring
+│   - Martin Fowler's refactoring catalog
+│   - Specific refactoring suggestions
+```
+
+### Refactoring Findings in Report
+
+```
++---------------------------------------------------------------------+
+|  REFACTORING ANALYSIS                                                |
+|                                                                      |
+|  Technical Debt Score: 3.2/5.0                                       |
+|                                                                      |
+|  CODE SMELLS DETECTED:                                               |
+|  ~ [LONG METHOD] message_handler.ex:process/2                        |
+|    Lines: 45 | Complexity: 12                                        |
+|    Suggestion: Extract to smaller functions                          |
+|                                                                      |
+|  ~ [DATA CLUMPS] (user_id, org_id, role)                             |
+|    Appears 5 times across modules                                    |
+|    Suggestion: Extract UserContext struct                            |
+|                                                                      |
+|  ? [LAZY CLASS] string_helper.ex                                     |
+|    LOC: 15 | Single function                                         |
+|    Suggestion: Inline or expand responsibility                       |
++---------------------------------------------------------------------+
+```
+
+---
+
+## Anti-Pattern Detection Phase
+
+When `--anti-patterns` or `--all` is specified, spawn the anti-pattern-detector:
+
+```
+┌─ Anti-Pattern Detector (haiku)
+│   - Architecture violations
+│   - Performance anti-patterns
+│   - Security anti-patterns
+│   - UX anti-patterns
+│   - Project pitfalls check
+```
+
+### Anti-Pattern Findings in Report
+
+```
++---------------------------------------------------------------------+
+|  ANTI-PATTERN DETECTION                                              |
+|                                                                      |
+|  ARCHITECTURE VIOLATIONS:                                            |
+|  ! [LAYER SKIP] user_live.ex:45                                      |
+|    LiveView calling Repo directly                                    |
+|    Fix: Use domain function instead                                  |
+|                                                                      |
+|  PERFORMANCE ANTI-PATTERNS:                                          |
+|  ~ [UNBOUNDED LIST] user.ex:get_all/0                                |
+|    Ash.read! without limit                                           |
+|    Fix: Add pagination or limit                                      |
+|                                                                      |
+|  PROJECT PITFALLS:                                                   |
+|  ! [PIT-001] chat_live.ex:78                                         |
+|    Missing socket prop in LiveSvelte                                 |
+|    Fix: Add socket={@socket}                                         |
++---------------------------------------------------------------------+
+```
 
 ---
 
@@ -615,3 +694,48 @@ When Claude evaluates external suggestions:
 | Codex | `codex "your prompt"` | Industry research, alternatives |
 
 See `~/.claude/vibe-ash-svelte/roles/multi-agent-liaison.md` for full protocol.
+
+---
+
+## Feed to Learning Agent
+
+After review completion, findings can be fed to the learning agent:
+
+```
++---------------------------------------------------------------------+
+|  REVIEW COMPLETE                                                     |
+|                                                                      |
+|  Total findings: 12                                                  |
+|  Blockers: 2 | Warnings: 6 | Info: 4                                 |
+|                                                                      |
+|  Feed findings to learning agent?                                    |
+|  This will:                                                          |
+|  - Analyze recurring issues for pitfall generation                   |
+|  - Extract patterns from successful code                             |
+|  - Update pattern success rates                                      |
+|                                                                      |
+|  [l] Feed to learning  [f] Fix blockers  [s] Skip                    |
++---------------------------------------------------------------------+
+```
+
+When selected:
+
+```typescript
+// Feed review findings to learning
+Task({
+  subagent_type: "general-purpose",
+  model: "sonnet",
+  prompt: buildLearningFromReviewPrompt({
+    reviewFindings: findings,
+    refactoringReport: refactoringAnalysis,
+    antiPatternReport: antiPatternDetection,
+    scope: reviewScope
+  })
+});
+```
+
+The learning agent will:
+1. Identify recurring issues (3+ occurrences → pitfall candidate)
+2. Find successful patterns in reviewed code
+3. Update pattern index with usage feedback
+4. Generate pitfalls for repeated violations

@@ -31,6 +31,9 @@ Run proactive quality checks AFTER Phase 3 validation passes:
 - Auto-fixable issues marked for quick resolution
 - Skips issues already addressed in fix sessions
 - Generates polish score for visibility
+- **Incorporates refactoring-analyzer suggestions**
+- **Consolidates findings from quality policers**
+- **Coordinates with learning agent for pattern updates**
 
 ---
 
@@ -300,11 +303,130 @@ START CHECKING.
 
 ---
 
+---
+
+## Integration with Quality Agents
+
+### Receiving from Refactoring Analyzer
+
+Polish watcher incorporates refactoring suggestions as non-blocking polish items:
+
+```typescript
+// Load refactoring analyzer report
+const refactoringReport = loadReport('.claude/qa/{ID}/refactoring-analyzer.json');
+
+// Convert to polish suggestions
+for (const finding of refactoringReport.findings) {
+  if (finding.severity !== 'blocker') {
+    polishSuggestions.push({
+      category: 'refactoring',
+      source: 'refactoring-analyzer',
+      ...finding,
+      severity: 'info'  // Downgrade to non-blocking
+    });
+  }
+}
+```
+
+### Consolidating Quality Policer Reports
+
+Merge non-blocking issues from policers:
+
+```typescript
+// Load policer reports
+const practicesReport = loadReport('.claude/qa/{ID}/best-practices-policer.json');
+const antiPatternReport = loadReport('.claude/qa/{ID}/anti-pattern-detector.json');
+
+// Include warnings (blockers already handled at gate)
+for (const violation of [...practicesReport.violations, ...antiPatternReport.violations]) {
+  if (violation.severity === 'warning' || violation.severity === 'info') {
+    polishSuggestions.push({
+      category: violation.category,
+      source: violation.policer || violation.detector,
+      ...violation
+    });
+  }
+}
+```
+
+### Coordinating with Learning Agent
+
+After polish phase, feed insights to learning:
+
+```typescript
+// Polish complete signal
+const polishComplete = {
+  feature_id: featureId,
+  polish_score: calculatePolishScore(),
+  suggestions_applied: appliedSuggestions,
+  suggestions_skipped: skippedSuggestions,
+  patterns_used: detectPatternsUsed(files)
+};
+
+// Learning agent will pick this up in Phase 5
+writeReport('.claude/qa/{ID}/polish-complete.json', polishComplete);
+```
+
+---
+
+## Extended Report Schema
+
+```json
+{
+  "watcher": "polish-watcher",
+  "feature_id": "AUTH-001",
+  "status": "complete",
+  "scores": {
+    "css_layout": 4.0,
+    "liveview": 5.0,
+    "ash_domain": 5.0,
+    "accessibility": 4.0,
+    "performance": 5.0,
+    "refactoring": 4.0,
+    "overall": 4.5
+  },
+  "suggestions": [
+    {
+      "category": "css_layout",
+      "source": "polish-watcher",
+      "severity": "info",
+      "auto_fixable": true
+    },
+    {
+      "category": "refactoring",
+      "source": "refactoring-analyzer",
+      "severity": "info",
+      "smell": "long_method",
+      "auto_fixable": false
+    },
+    {
+      "category": "svelte_patterns",
+      "source": "best-practices-policer",
+      "severity": "warning",
+      "auto_fixable": true
+    }
+  ],
+  "sources_integrated": [
+    "refactoring-analyzer",
+    "best-practices-policer",
+    "anti-pattern-detector"
+  ],
+  "patterns_detected": ["svelte-form-validation", "ash-custom-validation"],
+  "learning_ready": true
+}
+```
+
+---
+
 ## Quality Checklist
 
 Before completing:
 - [ ] All 5 categories checked
+- [ ] Refactoring analyzer suggestions incorporated
+- [ ] Quality policer warnings consolidated
 - [ ] Scores calculated
 - [ ] Auto-fixable issues identified
 - [ ] Fix sessions checked for duplicates
 - [ ] Report written to correct path
+- [ ] Patterns used detected for learning
+- [ ] Learning ready signal set

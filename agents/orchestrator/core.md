@@ -57,6 +57,10 @@ PHASE 1: PARALLEL IMPLEMENTATION
 │   ├── test-watcher    (sonnet) ─┤
 │   └── security-watcher(haiku)  ─┘
 │
+├── Spawn quality policers (background)           [NEW]
+│   ├── best-practices-policer (haiku)  ─┐
+│   └── anti-pattern-detector  (haiku)  ─┴─> Monitor continuously
+│
 ├── Monitor progress files
 ├── Handle change requests
 └── SYNC POINT: All implementation agents complete
@@ -67,19 +71,31 @@ PHASE 2: INTEGRATION
 │   ├── Create LiveView handlers
 │   └── Remove mocks, connect real backend
 ├── Integration + E2E tests
-└── GATE: Watcher issues become BLOCKING
+├── Quality policers continue monitoring
+└── GATE: Watcher + policer issues become BLOCKING
 
 PHASE 3: VALIDATION
 ├── Aggregate watcher reports
+├── Run refactoring-analyzer (sonnet)             [NEW]
+├── Include refactoring findings in report
 ├── Calculate quality score
 ├── Run final test suite
 └── GATE: Must pass before Polish
 
 PHASE 4: POLISH (automatic, non-blocking)
 ├── Spawn polish-watcher (sonnet)
+├── Include refactoring suggestions               [NEW]
 ├── Run proactive checks
 ├── Generate suggestions
 └── User choice: auto-fix, view, skip, or PR
+
+PHASE 5: LEARNING (automatic after Phase 4)       [NEW]
+├── Spawn continuous-learning-agent (sonnet)
+├── Extract patterns from implementation
+├── Analyze fix sessions (if any)
+├── Update pattern index
+├── Generate pitfalls from interventions
+└── Append to learnings.md
 ```
 
 ---
@@ -195,6 +211,33 @@ if (config.watchers.format) {
 }
 
 // ... similar for other watchers
+```
+
+### Quality Policer Spawning
+
+```typescript
+// Spawn quality policers in background (NEW)
+const policers = [];
+
+// Best practices policer - enforces coding standards
+policers.push(Task({
+  subagent_type: "general-purpose",
+  model: "haiku",
+  run_in_background: true,
+  prompt: buildBestPracticesPolicerPrompt(contract, {
+    rules: ['ash_patterns', 'svelte_patterns', 'design_system', 'accessibility']
+  })
+}));
+
+// Anti-pattern detector - catches violations
+policers.push(Task({
+  subagent_type: "general-purpose",
+  model: "haiku",
+  run_in_background: true,
+  prompt: buildAntiPatternDetectorPrompt(contract, {
+    pitfalls: loadPitfalls('.claude/pitfalls.json')
+  })
+}));
 ```
 
 ### Progress Monitoring
@@ -325,9 +368,28 @@ At end of integration:
 
 ## Phase 3: Validation
 
+### Refactoring Analysis
+
+Run refactoring-analyzer before quality aggregation:
+
+```typescript
+// After all watchers report
+const refactoringResult = await Task({
+  subagent_type: "general-purpose",
+  model: "sonnet",
+  prompt: buildRefactoringAnalyzerPrompt(contract, {
+    files: contract.files,
+    scope: featureId
+  })
+});
+
+// Include in validation report
+validation.refactoring = refactoringResult;
+```
+
 ### Quality Aggregation
 
-Combine all watcher reports:
+Combine all watcher reports and policer reports:
 
 ```json
 {
@@ -336,7 +398,10 @@ Combine all watcher reports:
     "format": { "status": "pass", "issues": 0 },
     "lint": { "status": "pass", "issues": 0 },
     "test": { "status": "pass", "passing": 18, "failing": 0 },
-    "security": { "status": "pass", "issues": 0 }
+    "security": { "status": "pass", "issues": 0 },
+    "best_practices": { "status": "pass", "blockers": 0, "warnings": 1 },
+    "anti_patterns": { "status": "pass", "blockers": 0, "warnings": 0 },
+    "refactoring": { "status": "info", "debt_score": 3.2, "suggestions": 2 }
   },
   "quality_score": 4.5,
   "coverage": {
@@ -622,6 +687,70 @@ function detectComplexity(spec) {
 
 ---
 
+---
+
+## Phase 5: Learning
+
+### Trigger
+
+After Phase 4 completes (PR created or skipped):
+
+```
+Phase 4: POLISH
+├── Polish suggestions applied or skipped
+└── PR created or skipped
+        ↓
+Phase 5: LEARNING (automatic)
+├── Spawn continuous-learning-agent
+└── Non-blocking, runs in background
+```
+
+### Learning Agent Spawning
+
+```typescript
+// After Phase 4 completes
+if (phase4Complete) {
+  Task({
+    subagent_type: "general-purpose",
+    model: "sonnet",
+    run_in_background: true,
+    prompt: buildContinuousLearningAgentPrompt({
+      featureId: contract.feature_id,
+      fixSessions: loadFixSessions(featureId),
+      watcherReports: loadWatcherReports(featureId),
+      refactoringReport: loadRefactoringReport(featureId),
+      currentPatterns: loadPatternIndex(),
+      currentPitfalls: loadPitfalls()
+    })
+  });
+}
+```
+
+### Learning Outputs
+
+```
++---------------------------------------------------------------------+
+|  PHASE 5: LEARNING                                                   |
+|                                                                      |
+|  Extracting learnings from AUTH-001...                               |
+|                                                                      |
+|  Interventions analyzed: 2                                           |
+|  Pitfalls created: 1                                                 |
+|  Patterns extracted: 1 (ash-async-notification)                      |
+|  Pattern feedback recorded: 2 patterns                               |
+|                                                                      |
+|  Files updated:                                                      |
+|  * patterns/backend/ash-async-notification.md                        |
+|  * patterns/index.json                                               |
+|  * .claude/pitfalls.json                                             |
+|  * .claude/learnings.md                                              |
+|                                                                      |
+|  Learning complete. Feature AUTH-001 archived.                       |
++---------------------------------------------------------------------+
+```
+
+---
+
 ## Quality Checklist
 
 Orchestrator responsibilities:
@@ -630,8 +759,12 @@ Orchestrator responsibilities:
 - [ ] All criteria assigned to appropriate agents
 - [ ] No file ownership conflicts
 - [ ] Progress files created and monitored
+- [ ] Quality policers spawned and monitoring
 - [ ] Watcher reports aggregated
+- [ ] Policer reports aggregated
+- [ ] Refactoring analysis included
 - [ ] Sync point enforced
 - [ ] Gates enforced
 - [ ] Quality score calculated
 - [ ] PR ready with full summary
+- [ ] Learning agent triggered after completion
