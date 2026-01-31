@@ -440,6 +440,97 @@
         }
       }
     },
+    "pinned_context": {
+      "type": "object",
+      "description": "Context to reinforce during implementation to prevent drift",
+      "properties": {
+        "syntax_anchors": {
+          "type": "array",
+          "description": "Pattern syntax anchors to reload at checkpoints (e.g., svelte5-runes, ash-actions)",
+          "items": { "type": "string" }
+        },
+        "anti_patterns": {
+          "type": "array",
+          "description": "Anti-patterns to remind about (e.g., react-hooks, oop-classes)",
+          "items": { "type": "string" }
+        },
+        "naming": {
+          "type": "object",
+          "description": "Naming conventions to enforce",
+          "properties": {
+            "components": {
+              "type": "string",
+              "description": "Component naming convention (e.g., PascalCase)"
+            },
+            "files": {
+              "type": "string",
+              "description": "File naming convention (e.g., kebab-case)"
+            },
+            "events": {
+              "type": "string",
+              "description": "Event naming convention (e.g., noun:verb)"
+            },
+            "variables": {
+              "type": "string",
+              "description": "Variable naming convention (e.g., camelCase)"
+            }
+          }
+        }
+      }
+    },
+    "shared_decisions": {
+      "type": "object",
+      "description": "Initial shared decisions for agent coordination",
+      "properties": {
+        "initial": {
+          "type": "array",
+          "description": "Pre-seeded decisions from contract",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "type": { "type": "string", "enum": ["naming", "pattern", "structure", "interface"] },
+              "scope": { "type": "string" },
+              "decision": { "type": "object" },
+              "impacts": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "naming_conventions": {
+          "type": "object",
+          "description": "Project naming conventions to enforce",
+          "properties": {
+            "fields": {
+              "type": "object",
+              "properties": {
+                "style": { "type": "string", "default": "snake_case" },
+                "timestamps": { "type": "string", "default": "*_at suffix" },
+                "booleans": { "type": "string", "default": "is_* or has_* prefix" }
+              }
+            },
+            "events": {
+              "type": "object",
+              "properties": {
+                "style": { "type": "string", "default": "noun:verb" }
+              }
+            },
+            "components": {
+              "type": "object",
+              "properties": {
+                "style": { "type": "string", "default": "PascalCase" }
+              }
+            },
+            "files": {
+              "type": "object",
+              "properties": {
+                "svelte": { "type": "string", "default": "kebab-case.svelte" },
+                "elixir": { "type": "string", "default": "snake_case.ex" }
+              }
+            }
+          }
+        }
+      }
+    },
     "watcher_config": {
       "type": "object",
       "description": "Configuration for QA watcher agents",

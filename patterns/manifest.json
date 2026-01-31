@@ -1,12 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Lightweight pattern manifest for fast matching. Load full details from details/{id}.json",
-  "last_updated": "2026-01-24",
+  "last_updated": "2026-01-30",
+  "semantic_index": "semantic-index.json",
   "patterns": [
     {
       "id": "tab-navigation-shared-header",
       "category": "ux",
+      "semantic_group": "navigation",
       "triggers": ["tab navigation", "shared header", "tabbed view", "tab switch", "content tabs", "header flicker"],
       "stack": ["svelte5", "phoenix", "liveview"],
       "score": 5
@@ -14,6 +16,7 @@
     {
       "id": "async-image-fade-in",
       "category": "frontend",
+      "semantic_group": "media",
       "triggers": ["image fade", "lazy load fade", "image transition", "smooth image load", "image pop-in"],
       "stack": ["svelte5"],
       "score": 5
@@ -21,6 +24,7 @@
     {
       "id": "motion-presets",
       "category": "ux",
+      "semantic_group": "animations",
       "triggers": ["animation system", "motion tokens", "transition presets", "stagger animation", "reduced motion"],
       "stack": ["svelte5", "css"],
       "score": 6
@@ -28,6 +32,7 @@
     {
       "id": "ash-get-or-create",
       "category": "backend",
+      "semantic_group": null,
       "triggers": ["get or create", "ensure exists", "default resource", "upsert", "find or create", "idempotent"],
       "stack": ["elixir", "ash"],
       "score": 5
@@ -35,6 +40,7 @@
     {
       "id": "async-media-loading",
       "category": "frontend",
+      "semantic_group": "media",
       "triggers": ["image loading", "lazy load", "thumbnail", "avatar", "cover image", "skeleton placeholder"],
       "stack": ["svelte5"],
       "score": 7
@@ -42,6 +48,7 @@
     {
       "id": "swipe-drawer",
       "category": "frontend",
+      "semantic_group": "modals",
       "triggers": ["drawer", "side panel", "swipe gesture", "mobile navigation", "slide panel"],
       "stack": ["svelte5"],
       "score": 6
@@ -49,6 +56,7 @@
     {
       "id": "user-scoped-cache",
       "category": "pwa",
+      "semantic_group": "offline",
       "triggers": ["cache", "offline", "stale-while-revalidate", "localStorage", "user isolation", "TTL"],
       "stack": ["typescript"],
       "score": 5

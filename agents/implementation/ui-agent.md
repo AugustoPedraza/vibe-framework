@@ -532,6 +532,69 @@ Before marking complete:
 
 ---
 
+## Coordination Protocol
+
+> Align with domain-agent decisions, broadcast UI-specific decisions.
+
+### On Receiving Data Shape
+
+Domain-agent is authoritative for data shapes. When you receive field names:
+
+1. **Check shared-decisions.json** for domain naming decisions
+2. **Align your props** to domain field names
+3. **Transform in store** if needed (snake_case → camelCase)
+
+```typescript
+// If domain uses email_verified_at, store transforms:
+const user = $derived({
+  ...rawUser,
+  emailVerifiedAt: rawUser.email_verified_at ? new Date(rawUser.email_verified_at) : null
+});
+```
+
+### On Event Decisions
+
+When you define events that go to backend:
+
+1. **Broadcast to shared-decisions.json:**
+
+```json
+{
+  "id": "DEC-XXX",
+  "type": "naming",
+  "scope": "event",
+  "decided_by": "ui-agent",
+  "decided_at": "2026-01-30T10:00:00Z",
+  "decision": {
+    "event": "form:submit",
+    "payload": ["email", "password"],
+    "target": "api-agent/liveview-handler",
+    "rationale": "noun:verb per convention"
+  },
+  "impacts": ["api-agent"]
+}
+```
+
+### Naming Conventions (Reference)
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Components | PascalCase | `LoginForm`, `UserCard` |
+| Files | kebab-case | `login-form.svelte` |
+| Props | camelCase | `userId`, `isLoading` |
+| Events | camelCase in JS | `onSubmit`, `handleClick` |
+| LiveView events | snake_case | `submit_login`, `validate_form` |
+| CSS classes | kebab-case | `auth-form`, `user-card` |
+
+### Conflict Resolution
+
+If domain-agent named a field differently than you expected:
+1. **Align to domain** (they are authoritative)
+2. Transform in your store/component
+3. Document transformation
+
+---
+
 ## Anti-Patterns
 
 **DON'T:**
@@ -541,6 +604,7 @@ Before marking complete:
 - Add props not in contract
 - Call real backend APIs (use mocks)
 - Use raw Tailwind colors
+- Ignore shared-decisions.json naming
 
 **DO:**
 - Follow contract exactly
@@ -548,3 +612,4 @@ Before marking complete:
 - Test all UI states
 - Match accessibility requirements
 - Update progress frequently
+- Align to domain-agent naming decisions

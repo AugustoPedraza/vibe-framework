@@ -1,0 +1,202 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "version": "1.0.0",
+  "description": "Semantic concept groups for pattern matching with code context signals",
+  "last_updated": "2026-01-30",
+
+  "concept_groups": {
+    "authentication": {
+      "description": "User authentication and session management",
+      "concepts": ["login", "logout", "session", "token", "password", "credential", "auth", "signin", "signup", "register"],
+      "code_signals": {
+        "elixir": ["Ash.Plug.CurrentUser", "AshAuthentication", "sign_in", "sign_out", "current_user", "token"],
+        "svelte": ["authStore", "isAuthenticated", "login", "logout"],
+        "liveview": ["on_mount :require_authenticated_user", "current_user", "session"]
+      },
+      "patterns": ["pwa/auth", "backend/ash-authentication"],
+      "anti_patterns": ["pwa"]
+    },
+
+    "forms": {
+      "description": "Form handling, validation, and submission",
+      "concepts": ["form", "input", "validation", "submit", "field", "error", "changeset"],
+      "code_signals": {
+        "elixir": ["AshPhoenix.Form", "to_form", "phx-submit", "phx-change", "validate"],
+        "svelte": ["FormField", "handleSubmit", "formErrors", "formData", "$bindable"],
+        "liveview": ["handle_event.*submit", "@form", "form_for"]
+      },
+      "patterns": ["frontend/form-validation", "backend/ash-forms"],
+      "anti_patterns": ["svelte"]
+    },
+
+    "lists": {
+      "description": "List rendering, pagination, and infinite scroll",
+      "concepts": ["list", "pagination", "infinite", "scroll", "load more", "cursor", "offset"],
+      "code_signals": {
+        "elixir": ["Ash.Query.page", "offset", "limit", "keyset"],
+        "svelte": ["#each", "virtualList", "loadMore", "hasMore", "IntersectionObserver"],
+        "liveview": ["stream", "stream_insert", "phx-viewport"]
+      },
+      "patterns": ["frontend/progressive-loading", "frontend/virtual-list"],
+      "anti_patterns": []
+    },
+
+    "realtime": {
+      "description": "Real-time updates and live data",
+      "concepts": ["realtime", "live", "pubsub", "broadcast", "subscribe", "notify", "websocket", "channel"],
+      "code_signals": {
+        "elixir": ["Phoenix.PubSub", "broadcast", "subscribe", "Ash.Notifier", "notify"],
+        "svelte": ["$state", "store.update", "push_to_svelte"],
+        "liveview": ["handle_info", "Phoenix.PubSub.subscribe", "push_event"]
+      },
+      "patterns": ["backend/ash-notifier", "frontend/live-updates"],
+      "anti_patterns": []
+    },
+
+    "navigation": {
+      "description": "Routing, navigation, and page transitions",
+      "concepts": ["navigate", "route", "redirect", "link", "tab", "breadcrumb", "back"],
+      "code_signals": {
+        "elixir": ["live_navigate", "push_navigate", "redirect", "Router.Helpers"],
+        "svelte": ["activeTab", "currentRoute", "navigate"],
+        "liveview": ["~p\"", "live_patch", "push_patch"]
+      },
+      "patterns": ["ux/tab-navigation-shared-header", "ux/directional-transitions"],
+      "anti_patterns": []
+    },
+
+    "media": {
+      "description": "Image, video, and file handling",
+      "concepts": ["image", "upload", "file", "media", "avatar", "thumbnail", "gallery", "video"],
+      "code_signals": {
+        "elixir": ["allow_upload", "consume_uploaded_entries", "presigned_url"],
+        "svelte": ["<img", "asyncMedia", "FileUpload", "accept="],
+        "liveview": ["phx-drop-target", "live_file_input", "@uploads"]
+      },
+      "patterns": ["frontend/async-media", "frontend/async-image-fade-in"],
+      "anti_patterns": ["animations"]
+    },
+
+    "offline": {
+      "description": "Offline support and PWA features",
+      "concepts": ["offline", "cache", "service worker", "sync", "queue", "pwa"],
+      "code_signals": {
+        "elixir": [],
+        "svelte": ["navigator.onLine", "localStorage", "indexedDB", "caches"],
+        "js": ["serviceWorker", "workbox", "manifest.json"]
+      },
+      "patterns": ["pwa/auth", "frontend/native-mobile", "frontend/offline-queue"],
+      "anti_patterns": ["pwa"]
+    },
+
+    "modals": {
+      "description": "Modal dialogs, drawers, and overlays",
+      "concepts": ["modal", "dialog", "drawer", "sheet", "overlay", "popup", "confirm"],
+      "code_signals": {
+        "elixir": [],
+        "svelte": ["Dialog", "Modal", "Drawer", "Sheet", "open=", "onclose"],
+        "liveview": ["JS.show", "JS.hide", "phx-click-away"]
+      },
+      "patterns": ["ux/modal-patterns", "frontend/sheet-component"],
+      "anti_patterns": []
+    },
+
+    "errors": {
+      "description": "Error handling and user feedback",
+      "concepts": ["error", "exception", "toast", "flash", "notification", "alert", "message"],
+      "code_signals": {
+        "elixir": ["Ash.Error", "raise", "rescue", "put_flash", "push_toast"],
+        "svelte": ["toast", "errorMessage", "Alert", "Notification"],
+        "liveview": ["put_flash", "push_event.*toast"]
+      },
+      "patterns": ["frontend/error-handling", "ux/toast-notifications"],
+      "anti_patterns": []
+    },
+
+    "animations": {
+      "description": "Motion, transitions, and animations",
+      "concepts": ["animation", "transition", "motion", "fade", "slide", "scale", "stagger"],
+      "code_signals": {
+        "elixir": [],
+        "svelte": ["transition:", "animate:", "in:", "out:", "@keyframes", "prefers-reduced-motion"],
+        "css": ["transition", "animation", "transform", "@keyframes"]
+      },
+      "patterns": ["ux/motion-presets", "ux/directional-transitions"],
+      "anti_patterns": ["animations"]
+    }
+  },
+
+  "explicit_triggers": {
+    "description": "Patterns that should be explicitly invoked via feature spec annotations",
+    "format": "<!-- AI:PATTERN:USE pattern-id -->",
+    "example": "<!-- AI:PATTERN:USE progressive-loading -->"
+  },
+
+  "code_pattern_matchers": {
+    "description": "Regex patterns to detect in code files",
+    "matchers": [
+      {
+        "pattern": "\\$state\\s*\\(",
+        "concept": "svelte5-runes",
+        "patterns": ["frontend/svelte-guide"]
+      },
+      {
+        "pattern": "\\$derived",
+        "concept": "svelte5-runes",
+        "patterns": ["frontend/svelte-guide"]
+      },
+      {
+        "pattern": "\\$effect",
+        "concept": "svelte5-runes",
+        "patterns": ["frontend/svelte-guide"]
+      },
+      {
+        "pattern": "use Ash\\.Resource",
+        "concept": "ash-resource",
+        "patterns": ["backend/ash-framework"]
+      },
+      {
+        "pattern": "AshPhoenix\\.Form",
+        "concept": "ash-forms",
+        "patterns": ["backend/ash-forms"]
+      },
+      {
+        "pattern": "IntersectionObserver",
+        "concept": "lazy-loading",
+        "patterns": ["frontend/progressive-loading"]
+      },
+      {
+        "pattern": "prefers-reduced-motion",
+        "concept": "motion-a11y",
+        "patterns": ["ux/motion-presets"]
+      },
+      {
+        "pattern": "push_to_svelte|pushEvent",
+        "concept": "liveview-svelte-bridge",
+        "patterns": ["integration/liveview-svelte"]
+      }
+    ]
+  },
+
+  "auto_load_rules": {
+    "description": "Rules for automatically loading patterns based on context",
+    "rules": [
+      {
+        "condition": "file_type == 'svelte'",
+        "load": ["anti-patterns/svelte", "frontend/svelte-guide"]
+      },
+      {
+        "condition": "file_type == 'ex' && contains('Ash.Resource')",
+        "load": ["anti-patterns/elixir", "backend/ash-framework"]
+      },
+      {
+        "condition": "file_contains('AshAuthentication')",
+        "load": ["pwa/auth"]
+      },
+      {
+        "condition": "feature_spec_contains('offline')",
+        "load": ["anti-patterns/pwa", "frontend/native-mobile"]
+      }
+    ]
+  }
+}

@@ -408,6 +408,61 @@ When all domain criteria complete:
 
 ---
 
+## Coordination Protocol
+
+> Broadcast decisions to ensure consistency with other agents.
+
+### On Naming Decisions
+
+When you decide on field names, action names, or error codes:
+
+1. **Check shared-decisions.json first**
+```bash
+cat .claude/progress/{ID}/shared-decisions.json
+```
+
+2. **If decision exists:** Use existing naming, don't deviate
+3. **If new decision:** Broadcast to shared-decisions.json:
+
+```json
+{
+  "id": "DEC-XXX",
+  "type": "naming",
+  "scope": "field",
+  "decided_by": "domain-agent",
+  "decided_at": "2026-01-30T10:00:00Z",
+  "decision": {
+    "entity": "User",
+    "field": "email_verified_at",
+    "type": ":utc_datetime",
+    "rationale": "Ash timestamp convention"
+  },
+  "impacts": ["ui-agent", "api-agent"]
+}
+```
+
+### Naming Conventions (Reference)
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Fields | snake_case | `email_verified_at` |
+| Timestamps | `*_at` suffix | `created_at`, `updated_at` |
+| Booleans | `is_*` or `has_*` | `is_verified`, `has_password` |
+| Foreign keys | `*_id` | `user_id`, `project_id` |
+| Actions | verb or noun_verb | `authenticate`, `send_verification` |
+| Error codes | atom, snake_case | `:invalid_credentials` |
+
+### On Data Shape Decisions
+
+Domain agent is **authoritative** for data shapes. Other agents align to you.
+
+When defining a data shape:
+1. Document in shared-decisions.json
+2. Include type information
+3. Note if optional/nullable
+
+---
+
 ## Anti-Patterns
 
 **DON'T:**
@@ -416,6 +471,7 @@ When all domain criteria complete:
 - Create LiveView handlers
 - Add error codes not in contract
 - Guess what other agents need
+- Use different naming than shared-decisions.json
 
 **DO:**
 - Follow contract exactly
@@ -423,3 +479,4 @@ When all domain criteria complete:
 - Write comprehensive tests
 - Focus on domain logic correctness
 - Update progress frequently
+- Broadcast naming decisions

@@ -4,6 +4,14 @@
 
 ## Status: `todo`
 
+<!-- AI:PATTERN:USE progressive-loading -->
+<!-- AI:PATTERN:USE motion-presets -->
+<!--
+  Use AI:PATTERN:USE to explicitly request specific patterns.
+  Remove patterns you don't need for this feature.
+  Available patterns: see patterns/manifest.json
+-->
+
 ## Scope Assessment
 
 <!-- REQUIRED: Assess feature scope before starting implementation -->

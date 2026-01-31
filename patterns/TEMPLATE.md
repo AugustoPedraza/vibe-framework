@@ -61,6 +61,36 @@
 
 ---
 
+<!-- AI:SYNTAX_ANCHOR -->
+## Syntax Anchor
+
+> **REQUIRED**: This section prevents AI context drift. Include correct/wrong comparisons.
+
+### Correct Syntax
+
+```
+// Copy-paste correct example here
+// Use the exact syntax this pattern requires
+```
+
+### Wrong Syntax (Common Mistakes)
+
+```
+// WRONG: [Framework/language] pattern that doesn't apply
+// Example of what NOT to do
+
+// WRONG: Another common mistake
+// Another example of what NOT to do
+```
+
+### Key Difference
+
+[Explain WHY this syntax differs from similar patterns. What makes this pattern unique?]
+
+<!-- /AI:SYNTAX_ANCHOR -->
+
+---
+
 ## Tech Stack
 
 `tag1` `tag2` `tag3`

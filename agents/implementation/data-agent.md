@@ -408,6 +408,61 @@ add :status, :user_status, null: false, default: "active"
 
 ---
 
+## Coordination Protocol
+
+> Align with domain-agent on naming. You define schema, they define behavior.
+
+### Naming Alignment
+
+Read shared-decisions.json before creating migrations:
+
+```bash
+cat .claude/progress/{ID}/shared-decisions.json
+```
+
+If domain-agent decided field names, use those exact names:
+
+```elixir
+# If domain decided: email_verified_at (timestamp)
+# Your migration:
+add :email_verified_at, :utc_datetime
+```
+
+### Broadcasting Schema Decisions
+
+When you create a table or add columns, broadcast:
+
+```json
+{
+  "id": "DEC-XXX",
+  "type": "naming",
+  "scope": "schema",
+  "decided_by": "data-agent",
+  "decided_at": "2026-01-30T10:00:00Z",
+  "decision": {
+    "table": "users",
+    "columns": [
+      {"name": "email_verified_at", "type": "utc_datetime", "nullable": true}
+    ],
+    "rationale": "Timestamp for email verification"
+  },
+  "impacts": ["domain-agent"]
+}
+```
+
+### Database Naming Conventions
+
+| Element | Convention | Example |
+|---------|------------|---------|
+| Tables | plural, snake_case | `users`, `project_members` |
+| Columns | singular, snake_case | `email`, `created_at` |
+| Foreign keys | `{table}_id` | `user_id`, `project_id` |
+| Indexes | `{table}_{column}_index` | `users_email_index` |
+| Timestamps | `*_at` suffix | `verified_at`, `expired_at` |
+| Booleans | `is_*` or `has_*` | `is_active`, `has_password` |
+
+---
+
 ## Anti-Patterns
 
 **DON'T:**
@@ -416,6 +471,7 @@ add :status, :user_status, null: false, default: "active"
 - Add NOT NULL without default to existing table
 - Skip testing rollback
 - Hardcode data in migrations (use seeds)
+- Use different names than shared-decisions.json
 
 **DO:**
 - Follow naming conventions
@@ -423,3 +479,4 @@ add :status, :user_status, null: false, default: "active"
 - Use change blocks when possible
 - Create seeds for test data
 - Coordinate with domain-agent
+- Broadcast schema decisions

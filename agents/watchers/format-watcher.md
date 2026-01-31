@@ -206,6 +206,61 @@ START WATCHING.
 
 ---
 
+## Pre-computed Fixes
+
+> Instead of just reporting issues, compute and store the fix for faster resolution.
+
+When an issue is detected, the watcher MUST compute and store the fix:
+
+### Report Schema with Pre-computed Fix
+
+```json
+{
+  "issues": [
+    {
+      "severity": "warning",
+      "file": "lib/accounts/resources/user.ex",
+      "message": "File needs formatting",
+      "auto_fixable": true,
+      "precomputed_fix": {
+        "type": "command",
+        "command": "mix format lib/accounts/resources/user.ex",
+        "estimated_time_ms": 500
+      }
+    }
+  ]
+}
+```
+
+### Fix Types
+
+| Type | Description | Example |
+|------|-------------|---------|
+| `command` | Shell command to run | `mix format {file}` |
+| `patch` | Diff to apply | `{ "line": 10, "old": "...", "new": "..." }` |
+| `replace` | Full file replacement | `{ "content": "..." }` |
+
+### Benefits
+
+- **Gate resolution 3-5x faster**: No need to re-analyze at gate
+- **Orchestrator can batch fixes**: Run all commands in parallel
+- **User can preview**: Show exact changes before applying
+
+### Implementation
+
+```
+ON ISSUE DETECTED:
+  1. Detect issue type
+  2. Compute fix:
+     - Format issue → command: "mix format {file}"
+     - Style issue → patch with correct syntax
+     - Missing code → patch with insertion
+  3. Store in precomputed_fix field
+  4. Update report
+```
+
+---
+
 ## Quality Checklist
 
 Before gate pass:
@@ -213,3 +268,4 @@ Before gate pass:
 - [ ] All frontend files pass `prettier --check`
 - [ ] Report file updated with final status
 - [ ] No blocking issues remain
+- [ ] All issues have precomputed_fix

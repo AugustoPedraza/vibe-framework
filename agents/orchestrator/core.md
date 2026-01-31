@@ -349,6 +349,63 @@ WHILE any agent status != "complete":
   4. Handle blockers/change requests
 
   5. Check for stale agents (no update in 3+ min)
+
+  6. Context reinforcement (at progress milestones)
+     - See section below
+```
+
+### Context Reinforcement (Drift Prevention)
+
+> See `context/reinforcement-protocol.md` for full details.
+
+At progress milestones, inject syntax reminders to prevent drift:
+
+| Progress | Trigger | Reinforcement Content |
+|----------|---------|----------------------|
+| 25% | First file complete | Syntax anchors from loaded patterns |
+| 50% | Midpoint | Anti-pattern reminders |
+| 75% | Final stretch | Naming conventions, consistency |
+| 100% | Before completion | Final validation checklist |
+
+**25% Checkpoint Message:**
+```markdown
+## Context Reinforcement (25% checkpoint)
+
+Verify your implementation uses correct syntax:
+
+1. **Svelte 5 runes** - $state, $derived, $effect (not $: or useState)
+2. **Design tokens** - bg-surface, text-primary (not bg-gray-100)
+3. **Ash patterns** - Domain.action() (not Repo.insert)
+
+Review syntax anchors in loaded patterns before continuing.
+```
+
+**50% Checkpoint Message:**
+```markdown
+## Anti-Pattern Check (50% checkpoint)
+
+Common mistakes at this stage:
+
+- Mixing React patterns (useState, useEffect)
+- Adding unnecessary abstraction layers
+- Using raw Tailwind colors instead of tokens
+- Over-engineering simple features
+
+Review anti-patterns/ docs if any apply.
+```
+
+**75% Checkpoint Message:**
+```markdown
+## Consistency Check (75% checkpoint)
+
+Verify naming is consistent across files:
+
+- Components: PascalCase (UserCard)
+- Files: kebab-case (user-card.svelte)
+- Events: noun:verb (user:created)
+- CSS: design tokens only
+
+Cross-reference with existing code patterns.
 ```
 
 ### Progress Display

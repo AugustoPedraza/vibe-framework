@@ -461,6 +461,77 @@ end
 
 ---
 
+## Coordination Protocol
+
+> Consume decisions from domain-agent and ui-agent. Align wiring accordingly.
+
+### Reading Shared Decisions
+
+Before wiring, read shared-decisions.json:
+
+```bash
+cat .claude/progress/{ID}/shared-decisions.json
+```
+
+Check for:
+- Domain field names (for action calls)
+- UI event names (for handlers)
+- Error code formats
+
+### Aligning Wiring
+
+```elixir
+# If domain decided: field is email_verified_at
+# And UI decided: event is form:submit with {email, password}
+
+def handle_event("form:submit", %{"email" => email, "password" => password}, socket) do
+  case Accounts.authenticate(%{email: email, password: password}) do
+    {:ok, user} ->
+      # Domain returns email_verified_at, push to svelte
+      push_to_svelte(socket, "auth", "user:authenticated", %{
+        user_id: user.id,
+        email_verified_at: user.email_verified_at
+      })
+    {:error, :invalid_credentials} ->
+      {:noreply, assign(socket, error: "Invalid credentials")}
+  end
+end
+```
+
+### JSON Payload Convention
+
+When pushing to Svelte, use camelCase (JSON convention):
+
+```elixir
+# Transform snake_case → camelCase for JSON
+push_to_svelte(socket, "auth", "user:authenticated", %{
+  userId: user.id,                      # camelCase in JSON
+  emailVerifiedAt: user.email_verified_at
+})
+```
+
+### Broadcasting Integration Decisions
+
+If you make decisions that affect future integration:
+
+```json
+{
+  "id": "DEC-XXX",
+  "type": "interface",
+  "scope": "event_format",
+  "decided_by": "api-agent",
+  "decided_at": "2026-01-30T10:00:00Z",
+  "decision": {
+    "event_name": "user:authenticated",
+    "payload_format": "camelCase",
+    "rationale": "JSON convention, Svelte expects camelCase"
+  },
+  "impacts": ["ui-agent"]
+}
+```
+
+---
+
 ## Anti-Patterns
 
 **DON'T:**
@@ -469,6 +540,7 @@ end
 - Add features not in contract
 - Skip error flow verification
 - Hardcode routes without contract
+- Ignore shared-decisions.json
 
 **DO:**
 - Wire existing implementations
@@ -476,3 +548,4 @@ end
 - Verify error flows
 - Report issues to relevant agent
 - Update progress frequently
+- Align with domain and UI naming decisions

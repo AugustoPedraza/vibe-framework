@@ -258,6 +258,58 @@ START WATCHING.
 
 ---
 
+## Pre-computed Fixes
+
+> Compute fixes at detection time for faster gate resolution.
+
+### Report Schema with Pre-computed Fix
+
+```json
+{
+  "issues": [
+    {
+      "severity": "error",
+      "file": "lib/accounts/resources/user.ex",
+      "line": 1,
+      "rule": "moduledoc",
+      "message": "Missing @moduledoc",
+      "precomputed_fix": {
+        "type": "patch",
+        "patch": {
+          "line": 2,
+          "action": "insert",
+          "content": "  @moduledoc \"\"\"\n  Handles user authentication.\n  \"\"\"\n"
+        }
+      }
+    }
+  ]
+}
+```
+
+### Common Lint Fix Templates
+
+| Rule | Fix Type | Template |
+|------|----------|----------|
+| `moduledoc` | patch/insert | Add @moduledoc with inferred description |
+| `long_line` | patch/replace | Break line at logical point |
+| `unused_variable` | patch/replace | Prefix with underscore |
+| `missing_type` | patch/replace | Add type annotation |
+
+### Implementation
+
+```
+ON LINT ISSUE:
+  1. Identify rule violated
+  2. Match to fix template
+  3. Compute specific fix:
+     - moduledoc: Infer description from module name/functions
+     - unused_var: Add underscore prefix
+     - long_line: Find logical break point
+  4. Store in precomputed_fix field
+```
+
+---
+
 ## Quality Checklist
 
 Before gate pass:
@@ -266,3 +318,4 @@ Before gate pass:
 - [ ] TypeScript compiles without errors
 - [ ] svelte-check passes
 - [ ] Report file updated with final status
+- [ ] All fixable issues have precomputed_fix

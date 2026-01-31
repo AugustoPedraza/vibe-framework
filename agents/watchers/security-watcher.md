@@ -322,6 +322,57 @@ START WATCHING.
 
 ---
 
+## Pre-computed Fixes
+
+> Provide ready-to-apply fixes for security issues.
+
+### Report Schema with Pre-computed Fix
+
+```json
+{
+  "issues": [
+    {
+      "severity": "high",
+      "file": "lib/accounts/queries.ex",
+      "line": 45,
+      "type": "sql_injection",
+      "message": "Raw SQL with string interpolation",
+      "precomputed_fix": {
+        "type": "patch",
+        "patch": {
+          "line": 45,
+          "old": "Repo.query(\"SELECT * FROM users WHERE id = #{id}\")",
+          "new": "Repo.query(\"SELECT * FROM users WHERE id = $1\", [id])"
+        }
+      }
+    },
+    {
+      "severity": "medium",
+      "package": "lodash",
+      "version": "4.17.20",
+      "cve": "CVE-2021-23337",
+      "precomputed_fix": {
+        "type": "command",
+        "command": "cd assets && npm update lodash",
+        "new_version": "4.17.21"
+      }
+    }
+  ]
+}
+```
+
+### Fix Types for Security
+
+| Vulnerability | Fix Type | Action |
+|--------------|----------|--------|
+| SQL injection | patch | Parameterize query |
+| XSS | patch | Remove raw/escape properly |
+| Hardcoded secret | patch | Move to env variable |
+| Vulnerable dep | command | Update command |
+| Missing header | patch | Add security header |
+
+---
+
 ## Quality Checklist
 
 Before gate pass (when blocking enabled):
@@ -330,3 +381,4 @@ Before gate pass (when blocking enabled):
 - [ ] No known CVEs in dependencies
 - [ ] No hardcoded secrets detected
 - [ ] Report file updated with final status
+- [ ] All fixable issues have precomputed_fix

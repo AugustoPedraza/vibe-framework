@@ -322,6 +322,61 @@ START WATCHING.
 
 ---
 
+## Pre-computed Fixes
+
+> Analyze test failures and suggest fixes at detection time.
+
+### Report Schema with Pre-computed Fix
+
+```json
+{
+  "failures": [
+    {
+      "file": "test/accounts/authenticate_test.exs",
+      "test": "returns user for valid credentials",
+      "line": 23,
+      "error": {
+        "expected": "{:ok, %User{}}",
+        "got": "{:error, :not_found}"
+      },
+      "precomputed_fix": {
+        "type": "suggestion",
+        "analysis": "User lookup returning :not_found suggests User.get!/1 is failing",
+        "likely_files": ["lib/accounts/resources/user.ex"],
+        "suggested_fix": {
+          "file": "lib/accounts/resources/user.ex",
+          "action": "Check get action accepts email lookup",
+          "code_hint": "get_by_email = Ash.Changeset.filter(query, email: email)"
+        }
+      }
+    }
+  ],
+  "coverage_gaps": [
+    {
+      "file": "lib/accounts/resources/user.ex",
+      "lines": [45, 46, 47, 48, 49, 50, 51, 52],
+      "function": "validate_password",
+      "precomputed_fix": {
+        "type": "test_template",
+        "test_file": "test/accounts/user_test.exs",
+        "template": "describe \"validate_password/1\" do\n  test \"returns ok for valid password\" do\n    # Add test implementation\n  end\n\n  test \"returns error for invalid password\" do\n    # Add test implementation\n  end\nend"
+      }
+    }
+  ]
+}
+```
+
+### Fix Types for Tests
+
+| Issue | Fix Type | Content |
+|-------|----------|---------|
+| Assertion failure | suggestion | Analysis + likely cause + fix hint |
+| Missing coverage | test_template | Ready-to-use test scaffold |
+| Flaky test | suggestion | Stabilization approach |
+| Setup error | command | Fixture/seed commands |
+
+---
+
 ## Quality Checklist
 
 Before gate pass:
@@ -329,3 +384,5 @@ Before gate pass:
 - [ ] Coverage on new code >= threshold
 - [ ] No skipped tests for new code
 - [ ] Report file updated with final status
+- [ ] Failures have precomputed_fix suggestions
+- [ ] Coverage gaps have test_template fixes
