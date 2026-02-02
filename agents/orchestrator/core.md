@@ -36,67 +36,138 @@ The Orchestrator:
 
 ---
 
-## Parallel Workflow (Default)
+## Parallel Workflow (Default) - FULLY AUTONOMOUS
 
 ```
-PHASE 0: CONTRACT
+PHASE 0: CONTRACT (auto)
+├── **Validate spec** (absorbed from /vibe validate)
+│   ├── Check required sections exist
+│   ├── Verify acceptance criteria format
+│   └── GATE: Valid? → Continue : PAUSE with errors
+├── **Generate scaffold** (absorbed from /vibe generate)
+│   ├── If ui_spec exists, generate component scaffolds
+│   └── Create test stubs from scenarios
 ├── Parse feature spec
 ├── Generate contract with agent_assignments
 ├── Lock contract
-└── Output: .claude/contracts/{ID}.json
+├── Create integration branch
+├── Setup stacked PRs (DEFAULT)
+└── AUTO-PROCEED to Phase 1
 
-PHASE 1: PARALLEL IMPLEMENTATION
+PHASE 1: PARALLEL IMPLEMENTATION (auto)
+├── **Auto-match patterns** (absorbed from /vibe patterns)
+│   ├── Query patterns/manifest.json
+│   ├── Match feature requirements
+│   └── Load matched patterns into agent context
 ├── Spawn implementation agents
 │   ├── domain-agent  (opus)   ─┐
 │   ├── ui-agent      (sonnet) ─┼─> Work in parallel
 │   └── data-agent    (sonnet) ─┘
 │
 ├── Spawn QA watchers (background)
-│   ├── format-watcher  (haiku)  ─┐
-│   ├── lint-watcher    (haiku)  ─┼─> Monitor continuously
+│   ├── format-watcher  (haiku)  ─┐ AUTO-FIX format issues
+│   ├── lint-watcher    (haiku)  ─┼─> NOTIFY on warnings, proceed
 │   ├── test-watcher    (sonnet) ─┤
 │   └── security-watcher(haiku)  ─┘
 │
-├── Spawn quality policers (background)           [NEW]
+├── Spawn quality policers (background)
 │   ├── best-practices-policer (haiku)  ─┐
 │   └── anti-pattern-detector  (haiku)  ─┴─> Monitor continuously
 │
 ├── Monitor progress files
+├── Context reinforcement at 25%, 50%, 75%
 ├── Handle change requests
-└── SYNC POINT: All implementation agents complete
+└── SYNC POINT: All agents complete → AUTO-PROCEED to Phase 2
 
-PHASE 2: INTEGRATION
+PHASE 2: INTEGRATION (auto with gates)
+├── Create PRs: data/, domain/, ui/
 ├── Spawn api-agent (opus)
 │   ├── Wire domain to UI
 │   ├── Create LiveView handlers
 │   └── Remove mocks, connect real backend
 ├── Integration + E2E tests
 ├── Quality policers continue monitoring
-└── GATE: Watcher + policer issues become BLOCKING
+├── GATE: Tests passing?
+│   ├── YES → AUTO-PROCEED
+│   └── NO → **PAUSE** (strategic pause point)
+└── Create PR: api/
 
-PHASE 3: VALIDATION
+PHASE 3: VALIDATION + AUTO-REVIEW (auto with gates)
 ├── Aggregate watcher reports
-├── Run refactoring-analyzer (sonnet)             [NEW]
+├── Run refactoring-analyzer (sonnet)
 ├── Include refactoring findings in report
 ├── Calculate quality score
-├── Run final test suite
-└── GATE: Must pass before Polish
+├── GATE: Quality >= 4.0?
+│   ├── YES → Continue to review
+│   └── NO → **PAUSE** (strategic pause point)
+├── **AUTO-RUN: /vibe review --all** (absorbed from review + analyze)
+│   ├── Spawn 3 parallel agents (security, performance, patterns)
+│   ├── Include DRY analysis
+│   ├── Include orthogonality analysis
+│   └── GATE: No blockers?
+│       ├── YES → AUTO-PROCEED to Phase 4
+│       └── NO → **PAUSE** (strategic pause point)
+└── Continue to Phase 4: Polish
 
-PHASE 4: POLISH (automatic, non-blocking)
+PHASE 4: POLISH (auto)
 ├── Spawn polish-watcher (sonnet)
-├── Include refactoring suggestions               [NEW]
+├── Include refactoring suggestions
 ├── Run proactive checks
-├── Generate suggestions
-└── User choice: auto-fix, view, skip, or PR
+├── Auto-fix safe suggestions (absorbed from /vibe lint --fix)
+├── List remaining suggestions (info only)
+└── AUTO-CREATE final PR → main
 
-PHASE 5: LEARNING (automatic after Phase 4)       [NEW]
+PHASE 5: LEARNING (auto, background)
 ├── Spawn continuous-learning-agent (sonnet)
-├── Extract patterns from implementation
-├── Analyze fix sessions (if any)
-├── Update pattern index
+├── **Extract patterns** (absorbed from /vibe learn)
+│   ├── Analyze implementation for reusable patterns
+│   ├── Score pattern reusability
+│   └── Promote HIGH patterns to patterns/
+├── **Archive feature** (absorbed from /vibe archive)
+│   ├── Move spec to archived/
+│   ├── Merge deltas into domain specs
+│   └── Update completed.md
 ├── Generate pitfalls from interventions
-└── Append to learnings.md
+└── Update pattern index
+
+DONE! (Only paused if issues found)
 ```
+
+---
+
+## Strategic Pause Points (Only 5)
+
+System only pauses when human judgment is required:
+
+| Pause Point | Condition | Why Human Needed |
+|-------------|-----------|------------------|
+| **Tests failing** | Phase 2 test gate fails | Cannot auto-fix test logic |
+| **Security critical** | Security watcher finds critical issue | Requires acknowledgment |
+| **Quality below threshold** | Quality score < 4.0 | May need scope adjustment |
+| **Review blockers** | Auto-review finds blockers | Must fix before PR |
+| **Conflicts unresolved** | Naming/interface disputes between agents | Need decision |
+
+All other situations auto-proceed with notification.
+
+---
+
+## Auto-Proceed Decision Matrix
+
+| Decision Point | Current | Autonomous Behavior |
+|----------------|---------|---------------------|
+| PR workflow choice | User picks | **Stacked PRs default** |
+| Format issues | User acknowledges | **Auto-fix always** |
+| Lint warnings | User acknowledges | **Notify, proceed** |
+| Tests passing | User confirms | **Auto-proceed** |
+| Tests failing | Block | **PAUSE** |
+| Security advisory | User acknowledges | **Log, proceed** |
+| Security critical | Block | **PAUSE** |
+| Quality >= 4.0 | User confirms | **Auto-proceed to review** |
+| Quality < 4.0 | Block | **PAUSE** |
+| Review no blockers | User confirms | **Auto-proceed** |
+| Review has blockers | Block | **PAUSE** |
+| PR creation | User confirms | **Auto-create** |
+| Polish suggestions | User chooses | **Auto-fix safe** |
 
 ---
 
@@ -108,6 +179,20 @@ Feature spec at `{{paths.features}}/{area}/{ID}.md`
 
 ### Process
 
+**Step 0a: Validate Spec** (absorbed from /vibe validate)
+- Check required sections: Status, PM Context, Domain, Wireframe, UX Requirements, UI Specification
+- Verify acceptance criteria have Given/When/Then format
+- Validate ui_spec YAML syntax
+- **GATE**: If invalid → PAUSE with specific errors. If valid → continue.
+
+**Step 0b: Generate Scaffold** (absorbed from /vibe generate)
+- If `ui_spec` block exists in feature spec:
+  - Generate Svelte component scaffold
+  - Generate LiveView shell
+  - Generate test stubs from scenarios
+- Output files with TODO markers for implementation
+
+**Step 0c: Contract Generation**
 1. Read feature spec
 2. Extract acceptance criteria
 3. Classify criteria by agent:
@@ -178,24 +263,20 @@ git commit -m "docs({ID}): add feature spec and scenarios for review context"
 git push -u origin feature/{ID}-integration
 ```
 
-### User Confirmation (PR Workflow)
+### Autonomous PR Workflow (No User Confirmation)
+
+Stacked PRs are the default. No user prompt required.
 
 ```
-+---------------------------------------------------------------------+
-|  PHASE 0: CONTRACT                                                   |
-|  Feature: {ID} - {Title}                                             |
-+---------------------------------------------------------------------+
-
+═══════════════════════════════════════════════════════════════
+  PHASE 0: CONTRACT
+  Feature: {ID} - {Title}
+═══════════════════════════════════════════════════════════════
+Validating spec... ✓
+Generating scaffold... ✓ (if ui_spec exists)
 Creating integration branch: feature/{ID}-integration
-
-Initial commit includes:
-  - docs/features/{ID}/README.md (feature overview)
-  - docs/features/{ID}/scenarios.md (acceptance criteria)
-  - .claude/contracts/{ID}.json (agent assignments)
-
-[c] Continue with stacked PRs (recommended)
-[s] Skip stacking (single PR at end)
-+---------------------------------------------------------------------+
+PR workflow: stacked (default)
+Auto-proceeding to Phase 1...
 ```
 
 ### Output
@@ -247,6 +328,26 @@ Initial commit includes:
 ---
 
 ## Phase 1: Parallel Implementation
+
+### Pattern Auto-Matching (absorbed from /vibe patterns)
+
+Before spawning agents, automatically match and load relevant patterns:
+
+```typescript
+// Auto-match patterns based on feature requirements
+const patterns = matchPatterns(contract, featureSpec);
+// patterns = [{ id: "async-result-extraction", ... }, { id: "form-validation", ... }]
+
+// Display matched patterns (no user interaction required)
+console.log(`Matched patterns: ${patterns.map(p => p.id).join(', ')}`);
+
+// Patterns automatically loaded into each agent's context
+const agentContext = {
+  ...baseContext,
+  matchedPatterns: patterns,
+  syntaxAnchors: extractSyntaxAnchors(patterns)
+};
+```
 
 ### Agent Spawning
 
@@ -411,29 +512,19 @@ Cross-reference with existing code patterns.
 ### Progress Display
 
 ```
-+======================================================================+
-|  PARALLEL IMPLEMENTATION                                             |
-|  Feature: AUTH-001 - User Login                                      |
-+======================================================================+
+═══════════════════════════════════════════════════════════════
+  Phase: 1/5 PARALLEL IMPLEMENTATION
+  Feature: AUTH-001 - User Login
+═══════════════════════════════════════════════════════════════
+Matched patterns: async-result-extraction, form-validation
 
-┌─ Domain Agent (opus) ──────────┐ ┌─ UI Agent (sonnet) ────────────────┐
-│ [==============    ] 70%        │ │ [==================  ] 90%          │
-│ Criteria: 1/2 complete          │ │ Criteria: 2/2 complete              │
-│ Tests: 5 pass, 1 fail           │ │ Tests: 8 pass, 0 fail               │
-│ Current: AC-2 implementation    │ │ Status: WAITING AT SYNC             │
-│ Last update: 30s ago            │ │ Last update: 1m ago                 │
-└─────────────────────────────────┘ └─────────────────────────────────────┘
+┌─ domain-agent ────────┐ ┌─ ui-agent ─────────────┐
+│ [████████░░░░] 65%    │ │ [██████████░░] 80%     │
+│ Tests: 5/6 pass       │ │ Tests: 8/8 pass        │
+└───────────────────────┘ └────────────────────────┘
 
-┌─ Data Agent (sonnet) ──────────┐
-│ [====================] 100%     │
-│ Migrations: 1 applied           │
-│ Status: COMPLETE                │
-└─────────────────────────────────┘
-
-QA WATCHERS (background)
-┌─────────────────────────────────────────────────────────────────────┐
-│ format: 0 issues  │ lint: 2 warnings  │ test: 1 fail  │ sec: 0     │
-└─────────────────────────────────────────────────────────────────────┘
+WATCHERS: format ✓ | lint ✓ | test ✓ | security ✓
+Auto-fixed: 3 format issues
 ```
 
 ---
@@ -651,7 +742,49 @@ EOF
 
 ---
 
-## Phase 3: Validation
+## Phase 3: Validation + Auto-Review
+
+### Auto-Review Integration (absorbed from /vibe review + /vibe analyze)
+
+After quality score passes threshold, automatically run comprehensive review:
+
+```typescript
+// After quality aggregation
+if (qualityScore >= 4.0) {
+  // Spawn 3 parallel review agents
+  const [securityReview, perfReview, patternReview] = await Promise.all([
+    Task({
+      subagent_type: "general-purpose",
+      model: "haiku",
+      prompt: buildSecurityReviewPrompt(contract, files)
+    }),
+    Task({
+      subagent_type: "general-purpose",
+      model: "haiku",
+      prompt: buildPerformanceReviewPrompt(contract, files)
+    }),
+    Task({
+      subagent_type: "general-purpose",
+      model: "haiku",
+      prompt: buildPatternReviewPrompt(contract, files, patterns)
+    })
+  ]);
+
+  // Merge findings
+  const reviewResult = mergeReviewFindings(securityReview, perfReview, patternReview);
+
+  // Include DRY and orthogonality analysis
+  reviewResult.dry = analyzeDRY(files);
+  reviewResult.orthogonality = analyzeOrthogonality(files, contract);
+
+  // Gate check
+  if (reviewResult.blockers.length === 0) {
+    // AUTO-PROCEED to Phase 4
+  } else {
+    // PAUSE - show blockers
+  }
+}
+```
 
 ### Refactoring Analysis
 
@@ -697,33 +830,42 @@ Combine all watcher reports and policer reports:
 }
 ```
 
-### Final Gate
+### Final Gate (Auto-Review)
 
 ```
-+---------------------------------------------------------------------+
-|  FINAL VALIDATION GATE                                               |
-|                                                                      |
-|  All Criteria:                                                       |
-|    domain-agent: 2/2 [OK]                                            |
-|    ui-agent: 2/2 [OK]                                                |
-|    api-agent: 1/1 [OK]                                               |
-|    e2e: 1/1 [OK]                                                     |
-|                                                                      |
-|  Test Summary:                                                       |
-|    Backend: 10 passing, 0 failing                                    |
-|    Frontend: 8 passing, 0 failing                                    |
-|    Integration: 3 passing, 0 failing                                 |
-|    E2E: 1 passing, 0 failing                                         |
-|                                                                      |
-|  Quality Score: 4.5/5.0                                              |
-|  Coverage (new code): 92%                                            |
-|                                                                      |
-|  Watcher Reports: All clear                                          |
-|                                                                      |
-|  Status: PASSED - Ready for PR                                       |
-|                                                                      |
-|  [p] Create PR  [r] Review details  [a] Archive feature              |
-+---------------------------------------------------------------------+
+═══════════════════════════════════════════════════════════════
+  Phase: 3/5 VALIDATION + REVIEW
+═══════════════════════════════════════════════════════════════
+Quality Score: 4.5/5.0 ✓
+
+Running multi-agent review...
+  Security: ✓ No issues
+  Performance: ✓ No issues
+  Patterns: ✓ No blockers (2 suggestions)
+  DRY Analysis: ✓ No duplication found
+  Orthogonality: ✓ Coupling score 0.25 (excellent)
+  Refactoring: ✓ Tech debt score 2.1/5.0
+
+Review passed. Auto-proceeding to Polish...
+```
+
+**If blockers found:**
+```
+═══════════════════════════════════════════════════════════════
+  Phase: 3/5 VALIDATION + REVIEW
+═══════════════════════════════════════════════════════════════
+Quality Score: 4.5/5.0 ✓
+
+Running multi-agent review...
+  Security: ✓ No issues
+  Performance: ✗ 1 blocker found
+  Patterns: ✓ No blockers
+
+BLOCKER: N+1 query in user_list.ex:45
+  → Preload users in initial query
+
+**PAUSED** - Fix blocker before proceeding
+Use /vibe fix "N+1 query in user_list" to resolve
 ```
 
 ### Phase 3 Final PR Checkpoint
@@ -1077,26 +1219,27 @@ function detectComplexity(spec) {
 
 ---
 
-## Phase 5: Learning
+## Phase 5: Learning + Archive (Automatic, Background)
 
 ### Trigger
 
-After Phase 4 completes (PR created or skipped):
+After Phase 4 completes, Phase 5 runs automatically in background:
 
 ```
 Phase 4: POLISH
-├── Polish suggestions applied or skipped
-└── PR created or skipped
+├── Auto-fix safe suggestions
+└── Auto-create final PR → main
         ↓
-Phase 5: LEARNING (automatic)
-├── Spawn continuous-learning-agent
-└── Non-blocking, runs in background
+Phase 5: LEARNING (automatic, background)
+├── Extract patterns (absorbed from /vibe learn)
+├── Archive feature (absorbed from /vibe archive)
+└── Non-blocking, user notified on completion
 ```
 
 ### Learning Agent Spawning
 
 ```typescript
-// After Phase 4 completes
+// After Phase 4 completes - runs in background
 if (phase4Complete) {
   Task({
     subagent_type: "general-purpose",
@@ -1107,6 +1250,7 @@ if (phase4Complete) {
       fixSessions: loadFixSessions(featureId),
       watcherReports: loadWatcherReports(featureId),
       refactoringReport: loadRefactoringReport(featureId),
+      reviewReport: loadReviewReport(featureId),
       currentPatterns: loadPatternIndex(),
       currentPitfalls: loadPitfalls()
     })
@@ -1114,27 +1258,39 @@ if (phase4Complete) {
 }
 ```
 
+### Learning Tasks (absorbed from /vibe learn)
+
+1. **Analyze human interventions** - Detect AI errors requiring fixes
+2. **Extract patterns** - Score reusability, promote HIGH patterns
+3. **Generate pitfalls** - From repeated mistakes
+4. **Update pattern index** - Usage stats, success rates
+5. **Record pattern feedback** - From actual usage in feature
+
+### Archive Tasks (absorbed from /vibe archive)
+
+1. **Verify completion** - All scenarios, tests passing
+2. **Move to archive** - `.claude/features/archived/{ID}/`
+3. **Merge deltas** - Update domain specs with changes
+4. **Update logs** - Add to completed.md
+
 ### Learning Outputs
 
 ```
-+---------------------------------------------------------------------+
-|  PHASE 5: LEARNING                                                   |
-|                                                                      |
-|  Extracting learnings from AUTH-001...                               |
-|                                                                      |
-|  Interventions analyzed: 2                                           |
-|  Pitfalls created: 1                                                 |
-|  Patterns extracted: 1 (ash-async-notification)                      |
-|  Pattern feedback recorded: 2 patterns                               |
-|                                                                      |
-|  Files updated:                                                      |
-|  * patterns/backend/ash-async-notification.md                        |
-|  * patterns/index.json                                               |
-|  * .claude/pitfalls.json                                             |
-|  * .claude/learnings.md                                              |
-|                                                                      |
-|  Learning complete. Feature AUTH-001 archived.                       |
-+---------------------------------------------------------------------+
+═══════════════════════════════════════════════════════════════
+  Phase: 5/5 LEARNING (background)
+═══════════════════════════════════════════════════════════════
+Extracting patterns... ✓
+Archiving feature... ✓
+Updating indexes... ✓
+
+Files updated:
+  patterns/backend/ash-async-notification.md (new)
+  patterns/index.json
+  .claude/pitfalls.json
+  .claude/learnings.md
+  .claude/completed.md
+
+COMPLETE! PR #{N} ready for human review.
 ```
 
 ---

@@ -1,6 +1,53 @@
 # Vibe Core Orchestrator
 
-> Agent-first parallel execution with tiered context loading for optimal performance.
+> Unified autonomous workflow with end-to-end execution. Pauses only when human judgment is required.
+
+---
+
+## Autonomy Settings (Default Behavior)
+
+```yaml
+auto_fix:
+  format: true                    # Always auto-fix format issues
+  lint_auto_fixable: true         # Auto-fix lint issues that can be automated
+  polish_safe: true               # Auto-fix safe polish suggestions
+
+auto_proceed:
+  tests_passing: true             # Continue when tests pass
+  quality_above_4: true           # Continue when quality >= 4.0
+  review_no_blockers: true        # Continue when review passes
+  pr_workflow: "stacked"          # Default to stacked PRs
+
+pause_only_on:
+  test_failures: true             # PAUSE - cannot auto-fix test logic
+  security_critical: true         # PAUSE - requires acknowledgment
+  quality_below_threshold: true   # PAUSE - may need scope adjustment
+  review_blockers: true           # PAUSE - must fix before PR
+  conflicts_unresolved: true      # PAUSE - naming/interface disputes
+```
+
+---
+
+## Commands (5 Essential)
+
+```
+/vibe [ID]           # Full autonomous workflow (features)
+/vibe quick [desc]   # Bugs/hotfixes (no spec needed)
+/vibe fix [desc]     # Recovery when paused
+/vibe pivot          # Course correction when stuck
+/vibe migrate [cmd]  # Legacy migration workflow
+```
+
+**Removed commands** (absorbed into workflow):
+- `/vibe generate` → Phase 0 auto-generates if ui_spec exists
+- `/vibe lint` → Watchers handle continuously
+- `/vibe validate` → Phase 0 auto-validates spec
+- `/vibe review` → Phase 3 auto-runs review --all
+- `/vibe analyze` → Included in review --all
+- `/vibe archive` → Phase 5 auto-archives
+- `/vibe learn` → Phase 5 auto-extracts patterns
+- `/vibe patterns` → Phase 1 auto-matches patterns
+- `/vibe tracer`, `/vibe convert-story`, `/vibe explore` → Removed
 
 ---
 
@@ -9,7 +56,6 @@
 ```
 /vibe [ID]         # Parallel mode (DEFAULT)
 /vibe [ID] --quick # Simple tasks (single agent)
-/vibe [ID] --solo  # Legacy sequential mode
 ```
 
 ### Agent Taxonomy
@@ -69,111 +115,93 @@ TIER 3 - CHECKPOINT (Restore from prior session)
 
 | Command | Mode | Context |
 |---------|------|---------|
-| `/vibe [ID]` | Parallel (default) | Orchestrator + agent files |
-| `/vibe [ID] --quick` | Quick | Single agent, minimal context |
-| `/vibe [ID] --solo` | Sequential | Legacy phase files |
-| `/vibe fix [ID] "desc"` | Fix | Targeted fix for reported issue |
-| `/vibe contract [ID]` | Contract gen | Contract schema |
-| `/vibe plan [sprint]` | Planning | Domain + PM |
-| `/vibe convert-story [ID]` | BMAD bridge | Convert story to spec |
+| `/vibe [ID]` | Full autonomous | Orchestrator + all phases |
+| `/vibe quick [desc]` | Quick fix | Single agent, minimal context |
+| `/vibe fix [desc]` | Recovery | Targeted fix when paused |
+| `/vibe pivot` | Correction | Course change when stuck |
+| `/vibe migrate [cmd]` | Migration | Legacy system migration |
 
 ---
 
 ## Workflow Skeleton
 
-### Parallel Mode (DEFAULT): `/vibe [FEATURE-ID]`
+### Full Autonomous Mode: `/vibe [FEATURE-ID]`
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│  PHASE 0: CONTRACT                                                   │
-│  Context: agents/orchestrator/core.md                                │
-│  Output: .claude/contracts/{ID}.json with agent_assignments          │
-│  ┌─────────────────────────────────────────────────────────────────┐│
-│  │ PR SETUP: Create integration branch: feature/{ID}-integration   ││
-│  │ Initial commit: docs/features/{ID}/README.md, scenarios.md      ││
-│  │ User choice: [c] stacked PRs  [s] single PR at end              ││
-│  └─────────────────────────────────────────────────────────────────┘│
+│  PHASE 0: CONTRACT (auto)                                            │
+│  ├── Validate spec (absorbed from /vibe validate)                    │
+│  ├── Generate scaffold (absorbed from /vibe generate)                │
+│  ├── Create integration branch                                       │
+│  ├── Setup stacked PRs (DEFAULT)                                     │
+│  └── AUTO-PROCEED                                                    │
 ├─────────────────────────────────────────────────────────────────────┤
-│  PHASE 1: PARALLEL IMPLEMENTATION                                    │
-│                                                                      │
-│  ┌─ domain-agent (opus) ───────────┐                                 │
-│  │ Ash resources, actions, tests   │                                 │
-│  └─────────────────────────────────┘                                 │
-│  ┌─ ui-agent (sonnet) ─────────────┐  ← Run in parallel              │
-│  │ Svelte components, UI tests     │                                 │
-│  └─────────────────────────────────┘                                 │
-│  ┌─ data-agent (sonnet) ───────────┐                                 │
-│  │ Migrations, seeds               │                                 │
-│  └─────────────────────────────────┘                                 │
-│                                                                      │
-│  + QA WATCHERS (background): format, lint, test, security            │
-│                                                                      │
-│  Output: Implementation complete, watchers report issues             │
+│  PHASE 1: PARALLEL IMPLEMENTATION (auto)                             │
+│  ├── Auto-match patterns (absorbed from /vibe patterns)              │
+│  ├── Spawn: domain-agent, ui-agent, data-agent                       │
+│  ├── Spawn: format/lint/test/security watchers                       │
+│  ├── Spawn: best-practices-policer, anti-pattern-detector            │
+│  ├── Context reinforcement at 25%, 50%, 75%                          │
+│  ├── Format issues: AUTO-FIX                                         │
+│  ├── Lint warnings: NOTIFY, proceed                                  │
+│  └── SYNC: All agents complete → AUTO-PROCEED                        │
 ├─────────────────────────────────────────────────────────────────────┤
-│  SYNC POINT: All implementation agents complete                      │
-│  ┌─────────────────────────────────────────────────────────────────┐│
-│  │ PR CHECKPOINT: Split into agent branches, create PRs            ││
-│  │   → data/{ID}-models          (~500 lines)                      ││
-│  │   → domain/{ID}-resources     (~500 lines)                      ││
-│  │   → ui/{ID}-components        (~500 lines)                      ││
-│  │ User choice: [a] all PRs  [1-3] specific  [s] skip              ││
-│  └─────────────────────────────────────────────────────────────────┘│
+│  PHASE 2: INTEGRATION (auto with gates)                              │
+│  ├── Create PRs: data/, domain/, ui/                                 │
+│  ├── Spawn: api-agent                                                │
+│  ├── GATE: Tests passing?                                            │
+│  │   ├── YES → AUTO-PROCEED                                          │
+│  │   └── NO → **PAUSE**                                              │
+│  └── Create PR: api/                                                 │
 ├─────────────────────────────────────────────────────────────────────┤
-│  PHASE 2: INTEGRATION                                                │
-│  Context: agents/implementation/api-agent.md                         │
-│  Output: LiveView handlers, wiring, E2E tests                        │
-│  GATE: Watcher issues become BLOCKING                                │
-│  ┌─────────────────────────────────────────────────────────────────┐│
-│  │ PR CHECKPOINT: Create api/{ID}-handlers PR                      ││
-│  │ User choice: [p] create PR  [s] skip                            ││
-│  └─────────────────────────────────────────────────────────────────┘│
+│  PHASE 3: VALIDATION + AUTO-REVIEW (auto with gates)                 │
+│  ├── Aggregate all reports                                           │
+│  ├── Run refactoring-analyzer                                        │
+│  ├── Calculate quality score                                         │
+│  ├── GATE: Quality >= 4.0?                                           │
+│  │   └── YES → Continue                                              │
+│  ├── AUTO-RUN: /vibe review --all (absorbed)                         │
+│  │   ├── 3 parallel agents (security, performance, patterns)         │
+│  │   ├── Include DRY analysis                                        │
+│  │   ├── Include orthogonality analysis                              │
+│  │   └── GATE: No blockers?                                          │
+│  │       ├── YES → AUTO-PROCEED                                      │
+│  │       └── NO → **PAUSE**                                          │
+│  └── Continue to Phase 4                                             │
 ├─────────────────────────────────────────────────────────────────────┤
-│  PHASE 3: VALIDATION                                                 │
-│  Aggregate watcher reports, calculate quality score                  │
-│  ┌─────────────────────────────────────────────────────────────────┐│
-│  │ FINAL PR CHECKPOINT: Create PR integration → main               ││
-│  │ User choice: [p] create final PR  [w] wait for reviews          ││
-│  └─────────────────────────────────────────────────────────────────┘│
+│  PHASE 4: POLISH (auto)                                              │
+│  ├── Run polish-watcher                                              │
+│  ├── Auto-fix safe suggestions                                       │
+│  ├── List remaining suggestions                                      │
+│  └── AUTO-CREATE final PR → main                                     │
 ├─────────────────────────────────────────────────────────────────────┤
-│  PHASE 4: POLISH (automatic, non-blocking)                           │
-│  Context: agents/watchers/polish-watcher.md                          │
-│  Output: Suggestions for CSS, LiveView, Ash, A11y, Performance       │
-│  User choice: auto-fix, view, skip, or create PR                     │
+│  PHASE 5: LEARNING (auto, background)                                │
+│  ├── Extract patterns (absorbed from /vibe learn)                    │
+│  ├── Archive feature (absorbed from /vibe archive)                   │
+│  ├── Generate pitfalls from interventions                            │
+│  └── Update pattern index                                            │
+├─────────────────────────────────────────────────────────────────────┤
+│  DONE! (Only paused if issues found)                                 │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### Quick Mode: `/vibe [FEATURE-ID] --quick`
+**Strategic Pause Points (Only 5):**
+1. Test failures (Phase 2)
+2. Security critical issues
+3. Quality below 4.0 threshold
+4. Review blockers found (Phase 3)
+5. Conflicts without clear resolution
+
+### Quick Mode: `/vibe quick [description]`
+
+For bugs and hotfixes that don't need a feature spec:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │  SINGLE AGENT (sonnet)                                               │
-│  Context: agents/implementation/{relevant-agent}.md                  │
-│  Actions: Write test → Implement → Run test → Verify                 │
-│  No watchers, no parallel agents                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### Solo Mode (Legacy): `/vibe [FEATURE-ID] --solo`
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│  PHASE 1: QA ENGINEER                                                │
-│  Context: phases/qa.md + roles/qa-engineer/core.md                   │
-│  Output: Test stubs (RED state)                                      │
-├─────────────────────────────────────────────────────────────────────┤
-│  PHASE 2: DESIGNER                                                   │
-│  Context: phases/designer.md + roles/designer/core.md                │
-│  Output: UX verification, component selection                        │
-├─────────────────────────────────────────────────────────────────────┤
-│  READINESS GATE                                                      │
-├─────────────────────────────────────────────────────────────────────┤
-│  PHASE 3: DEVELOPER                                                  │
-│  Context: phases/developer.md + roles/developer/core.md              │
-│  Output: Implementation (GREEN state)                                │
-├─────────────────────────────────────────────────────────────────────┤
-│  PHASE 4: QA VALIDATION                                              │
-│  Context: phases/validation.md + roles/qa-engineer/core.md           │
-│  Output: Quality score, PR ready                                     │
+│  Context: Minimal, focused on fix                                    │
+│  Actions: Analyze → Write test → Implement → Verify                  │
+│  No watchers, no parallel agents, no PR workflow                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -330,20 +358,18 @@ background_ops:
 ## Full Reference
 
 For complete documentation, see:
-- `prompts/vibe.md` - Full orchestrator (reference)
-- `prompts/commands/fix.md` - Fix command for user-reported issues
-- `agents/orchestrator/core.md` - Orchestrator guidance
+- `agents/orchestrator/core.md` - Orchestrator guidance (primary reference)
+- `prompts/commands/fix.md` - Fix command for recovery when paused
+- `prompts/commands/pivot.md` - Course correction when stuck
+- `prompts/commands/quick.md` - Bug/hotfix mode
+- `prompts/commands/migrate.md` - Legacy migration workflow
 - `agents/implementation/*.md` - Implementation agent specs
 - `agents/watchers/*.md` - QA watcher specs
-- `contracts/watcher-report.schema.json` - Watcher report schema
-- `contracts/fix-session.schema.json` - Fix session tracking schema
 - `context/loading-strategy.md` - Detailed tier system
 - `patterns/README.md` - Pattern discovery workflow
 
 ### BMAD Integration
 
-Vibe uses BMAD for planning, with a single bridge:
-- `/vibe convert-story [ID]` - Convert BMAD story to Vibe spec
-
-BMAD owns: stories, UX exploration, research, architecture
-Vibe owns: implementation (agents, TDD, quality gates)
+BMAD handles all planning and discovery. Vibe handles implementation.
+- BMAD owns: stories, UX exploration, research, architecture
+- Vibe owns: implementation (agents, TDD, quality gates, PRs)
