@@ -26,8 +26,9 @@ Run comprehensive verification on a PR in an isolated git worktree:
 ```bash
 /vibe check <PR_URL>                    # Full URL: https://github.com/owner/repo/pull/123
 /vibe check <PR_NUMBER>                 # Just number (uses current repo)
-/vibe check <PR_URL> --keep             # Keep worktree after for manual investigation
 /vibe check <PR_URL> --no-comment       # Run checks only, skip comment generation
+/vibe check <PR_URL> --no-design-system # Skip design system policer (for projects without design tokens)
+/vibe check --cleanup                   # Remove the persistent worktree
 ```
 
 ---
@@ -38,13 +39,13 @@ Run comprehensive verification on a PR in an isolated git worktree:
 +======================================================================+
 |  /vibe check <PR_URL>                                                 |
 |                                                                       |
-|  PHASE 1: SETUP      - Parse PR URL, create worktree                  |
+|  PHASE 1: SETUP      - Parse PR, switch worktree to PR branch         |
 |  PHASE 2: VERIFY     - Spawn parallel agents (backend + frontend)     |
 |                        + quality policers (best practices, anti-pattern)|
+|                        + design system policer                         |
 |  PHASE 3: COLLECT    - Aggregate all agent reports                    |
 |  PHASE 4: REVIEW     - Present findings, user confirmation            |
 |  PHASE 5: COMMENT    - Generate PR comment, user posts it             |
-|  PHASE 6: CLEANUP    - Remove worktree (unless --keep)                |
 +======================================================================+
 ```
 
@@ -58,11 +59,12 @@ All verification agents spawn in a single message with multiple Task calls:
 
 ```
 PHASE 2: VERIFY (all spawn in parallel)
-├── backend-checker     (haiku, ~15k ctx)  ─┐
-├── frontend-checker    (haiku, ~15k ctx)  ─┼─> Run simultaneously
-├── best-practices      (haiku, ~15k ctx)  ─┤
-├── anti-pattern        (haiku, ~15k ctx)  ─┤
-└── code-smell-detector (haiku, ~10k ctx)  ─┘
+├── backend-checker        (haiku, ~15k ctx)  ─┐
+├── frontend-checker       (haiku, ~15k ctx)  ─┼─> Run simultaneously
+├── best-practices         (haiku, ~15k ctx)  ─┤
+├── anti-pattern           (haiku, ~15k ctx)  ─┤
+├── code-smell-detector    (haiku, ~10k ctx)  ─┤
+└── design-system-policer  (haiku, ~15k ctx)  ─┘
 ```
 
 ### Model Selection
@@ -74,6 +76,7 @@ PHASE 2: VERIFY (all spawn in parallel)
 | **best-practices-policer** | `haiku` | ~15k | Rule-based pattern matching |
 | **anti-pattern-detector** | `haiku` | ~15k | Rule-based detection |
 | **code-smell-detector** | `haiku` | ~10k | Simple grep patterns |
+| **design-system-policer** | `haiku` | ~15k | Token matching against design spec |
 
 **Why haiku for all?** These are pattern-matching tasks against known rules. No deep reasoning needed. Saves cost and runs faster.
 
@@ -90,7 +93,9 @@ Accept URL or number:
 gh pr view {PR_NUMBER} --json headRefName,number,title,headRepositoryOwner,isCrossRepository,url
 ```
 
-### Create Isolated Worktree
+### Persistent Worktree (Reused Across Reviews)
+
+Uses a single persistent worktree at `../pr-check`. Created once, reused for all PR reviews.
 
 ```
 +======================================================================+
@@ -103,24 +108,39 @@ Fetching PR info...
   Author: contributor
   Type: Same-repo PR
 
-Creating worktree...
+Switching worktree to PR branch...
 ```
 
-**For same-repo PR:**
+**Worktree path (always the same):**
 ```bash
-WORKTREE_PATH="../pr-check-{PR_NUMBER}"
+WORKTREE_PATH="../pr-check"
+```
 
+**First time (worktree doesn't exist):**
+```bash
 git fetch origin {BRANCH_NAME}
 git worktree add $WORKTREE_PATH origin/{BRANCH_NAME}
 ```
 
-**For fork PR:**
+**Subsequent reviews (worktree exists, switch branch):**
 ```bash
-WORKTREE_PATH="../pr-check-{PR_NUMBER}"
+cd $WORKTREE_PATH
+git fetch origin {BRANCH_NAME}
+git checkout {BRANCH_NAME}
+git reset --hard origin/{BRANCH_NAME}
+cd -
+```
 
-git remote add pr-{PR_NUMBER} https://github.com/{FORK_OWNER}/{REPO}.git
-git fetch pr-{PR_NUMBER} {BRANCH_NAME}
-git worktree add $WORKTREE_PATH pr-{PR_NUMBER}/{BRANCH_NAME}
+**For fork PR (first time seeing this fork):**
+```bash
+# Add remote if not exists
+git remote add fork-{FORK_OWNER} https://github.com/{FORK_OWNER}/{REPO}.git 2>/dev/null || true
+git fetch fork-{FORK_OWNER} {BRANCH_NAME}
+
+# Switch branch in worktree
+cd $WORKTREE_PATH
+git checkout -B {BRANCH_NAME} fork-{FORK_OWNER}/{BRANCH_NAME}
+cd -
 ```
 
 ### Install Dependencies
@@ -142,6 +162,52 @@ Installing dependencies...
 Ready to verify.
 ```
 
+### Validate Design System File (Hard Requirement)
+
+Before spawning verification agents, check for the design system spec:
+
+```bash
+# Check if design-system.md exists (unless --no-design-system flag)
+DESIGN_SYSTEM_PATH="${WORKTREE_PATH}/{{paths.design_system:-architecture/design-system.md}}"
+
+if [ ! -f "$DESIGN_SYSTEM_PATH" ]; then
+  # BLOCK - Cannot proceed without design system spec
+  exit_with_error "Design system file required"
+fi
+```
+
+**Error Display When Missing:**
+
+```
++======================================================================+
+|  PR CHECK BLOCKED                                                     |
+|  Missing required file: architecture/design-system.md                 |
++======================================================================+
+
+The design system specification file is required for verification.
+
+To fix:
+  1. Copy template:
+     cp ~/.claude/vibe-ash-svelte/templates/design-system-template.md \
+        architecture/design-system.md
+
+  2. Customize with your project's tokens:
+     - OKLCH color palette
+     - Spacing scale
+     - Typography scale
+     - Component sizes
+
+  3. Commit the file to your branch
+
+Then re-run: /vibe check {PR_NUMBER}
+
+Or skip design system checks: /vibe check {PR_NUMBER} --no-design-system
+```
+
+**Skip Option:**
+
+With `--no-design-system` flag, the design-system-policer agent is skipped. Other 5 agents still run.
+
 ---
 
 ## Phase 2: VERIFY (Parallel Agents)
@@ -149,7 +215,7 @@ Ready to verify.
 **Spawn ALL agents in a single message with multiple Task calls:**
 
 ```typescript
-// Single message, 5 parallel Task calls
+// Single message, 6 parallel Task calls
 Task({ subagent_type: "general-purpose", model: "haiku", run_in_background: true,
        prompt: "BACKEND CHECKER: Run in {WORKTREE_PATH}..." })
 Task({ subagent_type: "general-purpose", model: "haiku", run_in_background: true,
@@ -160,12 +226,14 @@ Task({ subagent_type: "general-purpose", model: "haiku", run_in_background: true
        prompt: "ANTI-PATTERN DETECTOR: Scan {WORKTREE_PATH}..." })
 Task({ subagent_type: "general-purpose", model: "haiku", run_in_background: true,
        prompt: "CODE SMELL DETECTOR: Scan {WORKTREE_PATH}..." })
+Task({ subagent_type: "general-purpose", model: "haiku", run_in_background: true,
+       prompt: "DESIGN SYSTEM POLICER: Validate {WORKTREE_PATH}..." })  // NEW
 ```
 
 ```
 +======================================================================+
 |  RUNNING VERIFICATION                                                 |
-|  5 agents spawned in parallel                                         |
+|  6 agents spawned in parallel                                         |
 +======================================================================+
 
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -174,6 +242,7 @@ Task({ subagent_type: "general-purpose", model: "haiku", run_in_background: true
 │ best-practices     [running...]                                      │
 │ anti-pattern       [running...]                                      │
 │ code-smell         [running...]                                      │
+│ design-system      [running...]                                      │
 └─────────────────────────────────────────────────────────────────────┘
 
 You can continue working in your main worktree.
@@ -503,6 +572,99 @@ SCHEMA:
 }
 ```
 
+### Design System Policer Agent
+
+**Prompt:**
+```
+You are the Design System Policer for PR #{PR_NUMBER}.
+
+RESPONSIBILITY: Validate code against project design system tokens
+
+SPEC FILE: {WORKTREE_PATH}/{{paths.design_system:-architecture/design-system.md}}
+
+WORKFLOW:
+1. Read and parse the design system spec file
+2. Extract all token tables:
+   - Colors (OKLCH values → --color-* tokens)
+   - Spacing (px values → --space-* tokens)
+   - Typography (font sizes → --font-* tokens)
+   - Z-index layers (numbers → --z-* tokens)
+   - Border radius (px values → --radius-* tokens)
+3. Scan CSS/Svelte files in {WORKTREE_PATH}/assets/ for raw values
+4. For each raw value found:
+   - Match to appropriate token (exact, nearest, or range)
+   - Record violation with file, line, current value, expected token
+5. Check component sizes against mobile PWA requirements:
+   - Touch targets minimum 44px
+   - Safe area usage for edge layouts
+
+DETECTION COMMANDS:
+```bash
+# Raw OKLCH colors
+grep -rE "oklch\([^)]+\)" {WORKTREE_PATH}/assets/
+
+# Raw RGB colors
+grep -rE "rgba?\([^)]+\)" {WORKTREE_PATH}/assets/
+
+# Raw HEX colors
+grep -rE "(color|background|border):\s*#[0-9a-fA-F]+" {WORKTREE_PATH}/assets/
+
+# Raw spacing
+grep -rE "(margin|padding|gap):\s*[0-9]+px" {WORKTREE_PATH}/assets/
+
+# Raw z-index
+grep -rE "z-index:\s*[0-9]+" {WORKTREE_PATH}/assets/
+
+# Raw font-size
+grep -rE "font-size:\s*[0-9]+px" {WORKTREE_PATH}/assets/
+```
+
+SEVERITY RULES:
+- blocker: Touch target violations (< 44px for interactive elements)
+- warning: Raw color, spacing, typography, z-index values
+- info: Border radius, line-height (lower priority)
+
+OUTPUT: Write JSON report to {WORKTREE_PATH}/.claude/check-reports/design-system.json
+
+SCHEMA:
+{
+  "policer": "design-system",
+  "spec_path": "architecture/design-system.md",
+  "tokens_parsed": {
+    "colors": N,
+    "spacing": N,
+    "typography": N,
+    "z_index": N
+  },
+  "violations": [
+    {
+      "id": "DS-001",
+      "category": "color|spacing|typography|z-index|touch-target",
+      "severity": "blocker|warning|info",
+      "file": "path",
+      "line": N,
+      "message": "description",
+      "current": "raw value found",
+      "expected": "token to use",
+      "token_match": {
+        "token": "--color-primary",
+        "value": "oklch(50% 0.12 250)"
+      },
+      "auto_fixable": true|false
+    }
+  ],
+  "summary": {
+    "total_violations": N,
+    "blockers": N,
+    "warnings": N,
+    "by_category": {"color": N, "spacing": N, "typography": N, ...},
+    "auto_fixable": N
+  }
+}
+
+Create the .claude/check-reports directory if it doesn't exist.
+```
+
 ---
 
 ## Phase 3: COLLECT
@@ -516,6 +678,7 @@ const frontend = readJSON(`${WORKTREE_PATH}/.claude/check-reports/frontend.json`
 const bestPractices = readJSON(`${WORKTREE_PATH}/.claude/check-reports/best-practices.json`);
 const antiPatterns = readJSON(`${WORKTREE_PATH}/.claude/check-reports/anti-patterns.json`);
 const codeSmells = readJSON(`${WORKTREE_PATH}/.claude/check-reports/code-smells.json`);
+const designSystem = readJSON(`${WORKTREE_PATH}/.claude/check-reports/design-system.json`);
 
 // Aggregate
 const aggregated = {
@@ -524,13 +687,14 @@ const aggregated = {
     total_issues: sum of all issues,
     blockers: sum of blockers,
     warnings: sum of warnings,
-    by_category: { backend, frontend, best_practices, anti_patterns, code_smells }
+    by_category: { backend, frontend, best_practices, anti_patterns, code_smells, design_system }
   },
   backend,
   frontend,
   best_practices: bestPractices,
   anti_patterns: antiPatterns,
-  code_smells: codeSmells
+  code_smells: codeSmells,
+  design_system: designSystem
 };
 ```
 
@@ -593,13 +757,21 @@ CODE SMELLS (2 issues)
         TODO: fix validation
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DESIGN SYSTEM (3 issues)
+  [DS1] WARN - Button.svelte:45
+        oklch(50% 0.12 250) → var(--color-primary)
+  [DS2] WARN - Card.svelte:12
+        margin: 12px → var(--space-3)
+  [DS3] WARN - Modal.svelte:8
+        z-index: 500 → var(--z-modal)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 OPTIONS:
   [c] Generate PR comment with all issues
   [s] Select specific issues to include
   [v] View issue details (enter ID like B1, F2, BP1)
-  [k] Keep worktree for investigation
-  [q] Quit (cleanup worktree)
+  [q] Quit (worktree preserved for next review)
 ```
 
 ### View Issue Details
@@ -655,6 +827,7 @@ Generate comprehensive PR comment:
 | Best Practices | :x: | 2 | 1 |
 | Anti-Patterns | :x: | 2 | 1 |
 | Code Smells | :white_check_mark: | 0 | 2 |
+| Design System | :white_check_mark: | 0 | 3 |
 
 ---
 
@@ -708,6 +881,14 @@ Generate comprehensive PR comment:
 
 ---
 
+### Design System Violations
+
+- [ ] **Button.svelte:45** - `oklch(50% 0.12 250)` → `var(--color-primary)`
+- [ ] **Card.svelte:12** - `margin: 12px` → `var(--space-3)`
+- [ ] **Modal.svelte:8** - `z-index: 500` → `var(--z-modal)`
+
+---
+
 <sub>Generated by `/vibe check` - [Claude Code](https://claude.ai/claude-code)</sub>
 ```
 
@@ -740,44 +921,50 @@ View at: https://github.com/owner/repo/pull/123#issuecomment-{ID}
 
 ---
 
-## Phase 6: CLEANUP
+## Worktree Management
 
-### Standard Cleanup
+### Persistent Worktree (Default)
+
+The worktree at `../pr-check` is **kept between reviews**. This is faster since:
+- No need to recreate worktree each time
+- Dependencies already installed
+- Just switch branches and run checks
+
+```
++---------------------------------------------------------------------+
+|  REVIEW COMPLETE                                                     |
+|                                                                      |
+|  Worktree ready for next review: ../pr-check                         |
+|  Current branch: feature/auth-001-integration                        |
+|                                                                      |
+|  To investigate manually:                                            |
+|    cd ../pr-check                                                    |
++---------------------------------------------------------------------+
+```
+
+### Explicit Cleanup (--cleanup flag)
+
+To remove the persistent worktree:
+
+```bash
+/vibe check --cleanup
+```
 
 ```bash
 cd {ORIGINAL_DIR}
-git worktree remove ../pr-check-{PR_NUMBER}
+git worktree remove ../pr-check
 git worktree prune
-git remote remove pr-{PR_NUMBER} 2>/dev/null || true
+# Remove fork remotes if any
+git remote | grep "^fork-" | xargs -I {} git remote remove {}
 ```
 
 ```
 +---------------------------------------------------------------------+
 |  CLEANUP COMPLETE                                                    |
 |                                                                      |
-|  Removed: ../pr-check-{PR_NUMBER}                                    |
+|  Removed: ../pr-check                                                |
 |  Pruned worktree references                                          |
-|  Removed temp remote (if any)                                        |
-+---------------------------------------------------------------------+
-```
-
-### --keep Flag
-
-If `--keep` flag provided or user selected [k]:
-
-```
-+---------------------------------------------------------------------+
-|  WORKTREE PRESERVED                                                  |
-|                                                                      |
-|  Location: ../pr-check-{PR_NUMBER}                                   |
-|  Branch: feature/auth-001-integration                                |
-|                                                                      |
-|  To investigate:                                                     |
-|    cd ../pr-check-{PR_NUMBER}                                        |
-|                                                                      |
-|  To cleanup later:                                                   |
-|    git worktree remove ../pr-check-{PR_NUMBER}                       |
-|    git worktree prune                                                |
+|  Removed fork remotes                                                |
 +---------------------------------------------------------------------+
 ```
 
@@ -791,17 +978,17 @@ If `--keep` flag provided or user selected [k]:
 ├── frontend.json
 ├── best-practices.json
 ├── anti-patterns.json
-└── code-smells.json
+├── code-smells.json
+└── design-system.json
 ```
 
 ---
 
 ## Anti-Patterns for This Command
 
-- **Never run checks in user's current working directory** - Always create worktree
+- **Never run checks in user's current working directory** - Always use the persistent worktree
 - **Never auto-post comments without explicit user confirmation** - Always ask first
-- **Never delete worktree without asking if issues found** - Offer --keep option
-- **Never leave orphan worktrees or remotes** - Always cleanup unless --keep
+- **Never delete worktree automatically** - Keep it for reuse, cleanup is explicit
 - **Never use opus/sonnet for pattern-matching tasks** - Use haiku for all checkers
 - **Never run agents sequentially when they can run in parallel** - Single message, multiple Task calls
 
@@ -820,15 +1007,12 @@ Verify:
   - gh CLI is authenticated (gh auth status)
 ```
 
-### Worktree Path Exists
+### Worktree Has Uncommitted Changes
 
 ```
-Warning: Path ../pr-check-{PR_NUMBER} already exists.
+Warning: Worktree ../pr-check has uncommitted changes.
 
-This might be a leftover from a previous check.
-
-[r] Remove and recreate
-[u] Use existing (skip setup)
+[d] Discard changes and switch branch
 [c] Cancel
 ```
 
@@ -843,7 +1027,7 @@ This could indicate:
 
 [r] Retry
 [s] Skip deps, continue with checks (may fail)
-[c] Cancel and cleanup
+[c] Cancel
 ```
 
 ### Agent Timeout
@@ -884,11 +1068,15 @@ Issues found. Fix now?
 
 After implementation, verify:
 - [ ] Test with a real PR URL from the repo
-- [ ] Verify worktree is created in `../pr-check-{N}`
-- [ ] Verify all 5 agents spawn in parallel (single Task message)
+- [ ] Verify persistent worktree created at `../pr-check` on first run
+- [ ] Verify subsequent runs switch branches (no new worktree)
+- [ ] Verify all 6 agents spawn in parallel (single Task message)
+- [ ] Verify design-system-policer reads architecture/design-system.md
+- [ ] Verify design system violations report correct token suggestions
 - [ ] Verify user can continue working in main worktree during check
 - [ ] Verify all reports aggregate correctly
-- [ ] Verify cleanup removes worktree and temp remotes
-- [ ] Test `--keep` flag preserves worktree
+- [ ] Test `--cleanup` flag removes worktree
 - [ ] Test `--no-comment` flag skips comment generation
+- [ ] Test `--no-design-system` flag skips design system policer
 - [ ] Test with fork PR (cross-repository)
+- [ ] Test blocking behavior when design-system.md is missing

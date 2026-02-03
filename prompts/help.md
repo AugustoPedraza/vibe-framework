@@ -4,6 +4,7 @@
 
 ```
 /vibe [ID]           Full autonomous workflow (start here)
+/vibe check [PR]     PR verification with 6 parallel agents
 /vibe quick [desc]   Bug/hotfix without feature spec
 /vibe fix [desc]     Targeted fix when paused
 /vibe pivot          Course correction when approach fails
@@ -52,6 +53,10 @@ Everything else auto-proceeds with notification.
 ```bash
 # Feature implementation (full workflow)
 /vibe AUTH-001                    # Autonomous end-to-end
+
+# PR verification (6 parallel agents)
+/vibe check 123                   # Check PR by number
+/vibe check https://...           # Check PR by URL
 
 # Bug fixes (no spec needed)
 /vibe quick "fix login button"    # Quick single-agent fix

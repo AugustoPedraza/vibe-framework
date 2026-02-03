@@ -142,7 +142,7 @@ Do:
 | `/vibe review [scope]` | Multi-agent code review with fresh context |
 | `/vibe status` | Show current progress |
 | `/vibe retro` | Capture learnings, extract patterns |
-| `/vibe check` | Validate project structure + template sync |
+| `/vibe check [PR]` | PR verification with 6 parallel agents in isolated worktree |
 | `/vibe sync` | **NEW** Sync epics/features to GitHub Projects |
 | `/vibe --help` | Show command reference |
 
@@ -754,7 +754,7 @@ At the beginning of `/vibe [FEATURE-ID]`:
 
 ## Template Sync (AI-Driven)
 
-When user runs `/vibe check` or requests sync:
+When user requests template sync (e.g., "sync templates", "update from template"):
 
 ### Sync Process
 
