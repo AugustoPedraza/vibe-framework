@@ -125,8 +125,62 @@ Create `.claude/vibe.config.json` in your project:
 
 ---
 
+---
+
+## PARALLEL FEATURES
+
+Vibe automatically manages parallel feature development:
+
+### Starting a Second Feature
+
+When you run `/vibe [ID]` with another feature running:
+- Vibe detects the active feature
+- Checks for file ownership overlap (collision risk)
+- Suggests: wait, proceed with worktree, or pick alternative
+
+### Collision Detection
+
+Features modifying same files = collision risk
+
+| Overlap | Risk | Recommendation |
+|---------|------|----------------|
+| < 30% | Low | Proceed normally |
+| 30-70% | Medium | Worktree recommended |
+| > 70% | High | Wait suggested |
+
+### Worktrees (Automatic)
+
+If you proceed with a conflicting feature:
+1. Vibe creates git worktree automatically
+2. You open new Claude session in worktree directory
+3. Merge conflicts resolved in final PR
+
+```
+Worktree ready: ../project-AUTH-002
+
+Next steps:
+  1. Open new terminal
+  2. cd ../project-AUTH-002
+  3. Run: claude
+  4. Run: /vibe AUTH-002
+```
+
+### Pick Alternative
+
+Vibe queries GitHub project "Ready" column and suggests features with no collision with active work.
+
+### Context Auto-Clear
+
+After feature completion (Phase 5):
+- Feature removed from tracking
+- Context cleared automatically
+- Ready for next feature
+
+---
+
 ## MORE INFO
 
 - Framework: `~/.claude/vibe-ash-svelte/`
 - Orchestrator: `agents/orchestrator/core.md`
 - Patterns: `patterns/`
+- Parallel Features: `agents/coordination/`

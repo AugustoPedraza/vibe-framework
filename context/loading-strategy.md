@@ -205,6 +205,48 @@ tier3:  # On resume
 
 ---
 
+## Mandatory Context Clearing Rules
+
+### Auto-Clear Triggers
+
+```yaml
+must_clear:
+  after_feature_complete: true     # Always clear after Phase 5
+  context_load_critical: true      # When >75% context used
+  switching_features: true         # Before starting different feature
+
+should_clear:
+  after_3_fix_iterations: true     # Context may be polluted
+  after_long_debug_session: true   # Focus may be lost
+  different_domain_area: true      # e.g., auth → billing
+
+auto_clear_on_completion:
+  enabled: true
+  message: "Feature complete. Context cleared for next task."
+```
+
+### Clear Trigger Display
+
+After Phase 5 completion, the system automatically clears context:
+
+```
+═══════════════════════════════════════════════════════════════
+  Phase: 5/5 LEARNING (background)
+═══════════════════════════════════════════════════════════════
+COMPLETE! PR #130 ready.
+
+Context cleared automatically. Ready for next feature.
+```
+
+### Manual Clear Recommendations
+
+Recommend `/clear` in these situations:
+- After 3+ fix iterations on same issue (context may be polluted)
+- After long debugging session (focus may be lost)
+- Before switching domain areas (auth → billing) in same session
+
+---
+
 ## Implementation Notes
 
 ### For AI Orchestrator
@@ -214,6 +256,7 @@ tier3:  # On resume
 3. **Work Type Change**: Load appropriate role extension
 4. **Phase Complete**: Save context_cache to checkpoint
 5. **Session Resume**: Restore from context_cache first
+6. **Feature Complete**: Auto-clear context, remove from active-features.json
 
 ### For Human Reference
 
@@ -222,3 +265,4 @@ This strategy reduces context usage by 50-60% while maintaining quality by:
 - Loading patterns only when matched
 - Restoring decisions from checkpoint
 - Skipping already-incorporated context
+- Auto-clearing after feature completion

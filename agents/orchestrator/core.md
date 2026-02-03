@@ -40,6 +40,14 @@ The Orchestrator:
 
 ```
 PHASE 0: CONTRACT (auto)
+├── **Check for active features** ← NEW
+│   ├── Read .claude/active-features.json
+│   ├── If active features exist:
+│   │   ├── Load their contracts
+│   │   ├── Calculate file ownership overlap
+│   │   ├── If overlap > 30%: WARN + offer options
+│   │   └── Options: wait / proceed (worktree) / pick alternative
+│   └── Register new feature in active-features.json
 ├── **Validate spec** (absorbed from /vibe validate)
 │   ├── Check required sections exist
 │   ├── Verify acceptance criteria format
@@ -128,7 +136,10 @@ PHASE 5: LEARNING (auto, background)
 │   ├── Merge deltas into domain specs
 │   └── Update completed.md
 ├── Generate pitfalls from interventions
-└── Update pattern index
+├── Update pattern index
+├── **Remove from active-features.json** ← NEW
+└── **AUTO-CLEAR context** ← NEW
+    └── Message: "Context cleared. Ready for next feature."
 
 DONE! (Only paused if issues found)
 ```
@@ -172,6 +183,74 @@ All other situations auto-proceed with notification.
 ---
 
 ## Phase 0: Contract Generation
+
+### Active Feature Detection (NEW)
+
+Before starting a new feature, check for running features:
+
+```
+/vibe AUTH-002
+
+═══════════════════════════════════════════════════════════════
+  PARALLEL FEATURE DETECTION
+═══════════════════════════════════════════════════════════════
+
+Currently running: AUTH-001 (Phase 2, 65% complete)
+Requested: AUTH-002
+
+Collision Analysis:
+  ⚠️  OVERLAP DETECTED
+  - Both features modify: lib/accounts/, assets/svelte/auth/
+  - Risk: Merge conflicts likely
+
+Recommendation:
+  [w] Wait for AUTH-001 to complete (~15 min remaining)
+  [p] Proceed anyway (creates worktree, warns on conflicts)
+  [a] Pick alternative from Ready column:
+      → BILLING-001: Payment integration (no overlap)
+      → PROFILE-003: Avatar upload (no overlap)
+```
+
+#### Collision Detection Flow
+
+```yaml
+collision_check:
+  1. Load .claude/active-features.json
+  2. For each active feature:
+     - Load contract from .claude/contracts/{ID}.json
+     - Extract file ownership (agent_assignments.*.files)
+  3. Extract file ownership from new feature's spec
+  4. Calculate overlap percentage
+  5. Decision matrix:
+     - overlap < 30%: proceed normally
+     - overlap 30-70%: WARN (same domain)
+     - overlap > 70%: BLOCK (high conflict risk)
+```
+
+#### Worktree Auto-Creation
+
+If user proceeds with collision:
+
+```bash
+# Automatic worktree creation
+git worktree add ../project-{ID} -b feature/{ID}-integration main
+cp -r .claude/ ../project-{ID}/.claude/
+
+# Update active-features.json with worktree location
+```
+
+Display:
+```
+Worktree ready: ../project-AUTH-002
+
+Next steps:
+  1. Open new terminal
+  2. cd ../project-AUTH-002
+  3. Run: claude
+  4. Run: /vibe AUTH-002
+```
+
+---
 
 ### Input
 
@@ -1295,10 +1374,50 @@ COMPLETE! PR #{N} ready for human review.
 
 ---
 
+## Active Feature State Management
+
+### State File
+
+Location: `.claude/active-features.json`
+
+```json
+{
+  "features": {
+    "AUTH-001": {
+      "status": "in_progress",
+      "phase": 2,
+      "progress": 65,
+      "worktree": null,
+      "files_owned": ["lib/accounts/", "assets/svelte/auth/"],
+      "started_at": "2026-02-02T10:00:00Z"
+    }
+  }
+}
+```
+
+### On Feature Start
+
+1. Check active-features.json for running features
+2. Load contracts for all active features
+3. Compare file ownership for collision detection
+4. If collision > 30%: warn + suggest alternatives
+5. If user proceeds with collision: create worktree
+6. Register new feature in active-features.json
+
+### On Feature Complete (Phase 5)
+
+1. Remove from active-features.json
+2. If worktree was used: prompt for merge/cleanup
+3. Auto-clear context
+4. Display: "Context cleared. Ready for next feature."
+
+---
+
 ## Quality Checklist
 
 Orchestrator responsibilities:
 
+- [ ] Active features checked for collisions
 - [ ] Contract generated with valid agent_assignments
 - [ ] All criteria assigned to appropriate agents
 - [ ] No file ownership conflicts
@@ -1312,3 +1431,5 @@ Orchestrator responsibilities:
 - [ ] Quality score calculated
 - [ ] PR ready with full summary
 - [ ] Learning agent triggered after completion
+- [ ] Feature removed from active-features.json
+- [ ] Context auto-cleared on completion

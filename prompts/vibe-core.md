@@ -373,3 +373,76 @@ For complete documentation, see:
 BMAD handles all planning and discovery. Vibe handles implementation.
 - BMAD owns: stories, UX exploration, research, architecture
 - Vibe owns: implementation (agents, TDD, quality gates, PRs)
+
+---
+
+## Parallel Feature Coordination
+
+### Multi-Feature Detection
+
+When starting a feature while another is in progress:
+
+```
+/vibe AUTH-002
+
+Currently running: AUTH-001 (Phase 2, 65% complete)
+Requested: AUTH-002
+
+Collision Analysis:
+  ⚠️  OVERLAP DETECTED
+  - Both features modify: lib/accounts/, assets/svelte/auth/
+  - Risk: Merge conflicts likely
+
+Options:
+  [w] Wait for AUTH-001 to complete
+  [p] Proceed anyway (creates worktree)
+  [a] Pick alternative from Ready column
+```
+
+### Collision Detection
+
+Features are tracked in `.claude/active-features.json`. Before starting:
+1. Load contracts for all active features
+2. Compare file ownership from agent_assignments
+3. Calculate overlap percentage
+
+| Overlap | Risk | Action |
+|---------|------|--------|
+| < 30% | Low | Proceed normally |
+| 30-70% | Medium | Warn, suggest worktree |
+| > 70% | High | Strongly recommend wait |
+
+### Worktree Management
+
+If proceeding with collision, vibe auto-creates a worktree:
+
+```bash
+git worktree add ../project-{ID} -b feature/{ID}-integration main
+```
+
+Then prompts:
+```
+Worktree ready: ../project-AUTH-002
+
+Next steps:
+  1. Open new terminal
+  2. cd ../project-AUTH-002
+  3. Run: claude
+  4. Run: /vibe AUTH-002
+```
+
+### GitHub Ready Integration
+
+When collision detected, vibe queries GitHub Ready column:
+- Filters features with no file overlap with active work
+- Suggests top 3 non-conflicting features
+
+### Context Auto-Clear
+
+After Phase 5 completes:
+1. Remove feature from active-features.json
+2. Cleanup worktree if used
+3. Auto-clear context
+4. Display: "Context cleared. Ready for next feature."
+
+See: `agents/coordination/` for full protocols
