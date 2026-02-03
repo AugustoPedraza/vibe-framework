@@ -89,6 +89,10 @@ PHASE 1: PARALLEL IMPLEMENTATION (auto)
 
 PHASE 2: INTEGRATION (auto with gates)
 ├── Create PRs: data/, domain/, ui/
+├── **CI Auto-Fix: Stacked PRs** ← NEW
+│   ├── Monitor CI for each stacked PR
+│   ├── Auto-fix failures (max 3 retries)
+│   └── GATE: All CI green? → Continue : PAUSE
 ├── Spawn api-agent (opus)
 │   ├── Wire domain to UI
 │   ├── Create LiveView handlers
@@ -98,7 +102,11 @@ PHASE 2: INTEGRATION (auto with gates)
 ├── GATE: Tests passing?
 │   ├── YES → AUTO-PROCEED
 │   └── NO → **PAUSE** (strategic pause point)
-└── Create PR: api/
+├── Create PR: api/
+└── **CI Auto-Fix: API PR** ← NEW
+    ├── Monitor CI for API PR
+    ├── Auto-fix failures (max 3 retries)
+    └── GATE: CI green? → Continue : PAUSE
 
 PHASE 3: VALIDATION + AUTO-REVIEW (auto with gates)
 ├── Aggregate watcher reports
@@ -113,9 +121,13 @@ PHASE 3: VALIDATION + AUTO-REVIEW (auto with gates)
 │   ├── Include DRY analysis
 │   ├── Include orthogonality analysis
 │   └── GATE: No blockers?
-│       ├── YES → AUTO-PROCEED to Phase 4
+│       ├── YES → AUTO-PROCEED
 │       └── NO → **PAUSE** (strategic pause point)
-└── Continue to Phase 4: Polish
+├── Create final PR → main
+└── **CI Auto-Fix: Final PR** ← NEW
+    ├── Monitor CI for final PR
+    ├── Auto-fix failures (max 3 retries)
+    └── GATE: CI green? → Continue to Phase 4 : PAUSE
 
 PHASE 4: POLISH (auto)
 ├── Spawn polish-watcher (sonnet)
@@ -719,6 +731,50 @@ git commit -m "docs({ID}): update PR tracking"
 git push
 ```
 
+#### CI Auto-Fix (Stacked PRs)
+
+After stacked PRs are created, spawn CI Fixer for each:
+
+```typescript
+// For each created PR
+for (const pr of [dataPR, domainPR, uiPR]) {
+  Task({
+    subagent_type: "general-purpose",
+    model: "sonnet",
+    run_in_background: true,
+    prompt: buildCIFixerPrompt(pr.number, featureId)
+  });
+}
+
+// Wait for all CI to pass (max 3 retries each)
+const results = await Promise.all(ciFixers);
+
+if (results.some(r => r.status === "failed")) {
+  // PAUSE - show which PRs still have CI failures
+  displayCIFailureSummary(results);
+}
+```
+
+Display:
+```
+═══════════════════════════════════════════════════════════════
+  CI AUTO-FIX: Stacked PRs
+═══════════════════════════════════════════════════════════════
+
+PR #123 (data/AUTH-001-models)
+  ✓ CI passed (no fixes needed)
+
+PR #124 (domain/AUTH-001-resources)
+  ⏳ Fixing... attempt 1/3
+  → test failure: fixed missing import
+  ✓ CI passed after 1 fix
+
+PR #125 (ui/AUTH-001-components)
+  ✓ CI passed (no fixes needed)
+
+All stacked PRs green. Proceeding to Integration...
+```
+
 ---
 
 ## Phase 2: Integration
@@ -817,6 +873,42 @@ Requires PRs 1-3 to be merged first.
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 EOF
 )"
+```
+
+#### CI Auto-Fix (API PR)
+
+After API PR is created, spawn CI Fixer:
+
+```typescript
+const ciResult = await Task({
+  subagent_type: "general-purpose",
+  model: "sonnet",
+  prompt: buildCIFixerPrompt(apiPR.number, featureId)
+});
+
+if (ciResult.status === "failed") {
+  // PAUSE - API PR CI still failing after 3 attempts
+  displayCIFailureSummary(ciResult);
+}
+```
+
+Display:
+```
+═══════════════════════════════════════════════════════════════
+  CI AUTO-FIX: API PR #126
+═══════════════════════════════════════════════════════════════
+
+Monitoring CI...
+  ✗ test: integration test failure
+
+Fixing... attempt 1/3
+  → Missing LiveView mount callback
+  ✓ Added mount/3 callback
+
+Monitoring CI...
+  ✓ All checks passing
+
+API PR green. Proceeding to Validation...
 ```
 
 ---
@@ -1013,6 +1105,44 @@ EOF
 )"
 ```
 
+#### CI Auto-Fix (Final PR)
+
+After final PR is created, spawn CI Fixer:
+
+```typescript
+const ciResult = await Task({
+  subagent_type: "general-purpose",
+  model: "sonnet",
+  prompt: buildCIFixerPrompt(finalPR.number, featureId)
+});
+
+if (ciResult.status === "failed") {
+  // PAUSE - Final PR CI still failing after 3 attempts
+  displayCIFailureSummary(ciResult);
+} else {
+  // All CI green! Feature complete.
+  console.log("Final PR CI passed. Ready for human review.");
+}
+```
+
+Display:
+```
+═══════════════════════════════════════════════════════════════
+  CI AUTO-FIX: Final PR #130 → main
+═══════════════════════════════════════════════════════════════
+
+Monitoring CI...
+  ✓ test: passed
+  ✓ lint: passed
+  ✓ build: passed
+  ✓ security: passed
+
+All checks passing. No fixes needed.
+
+PR #130 ready for human review!
+Proceeding to Phase 4: Polish...
+```
+
 #### PR Status Tracking
 
 The orchestrator tracks PR status in `.claude/pr-status/{ID}.json`:
@@ -1026,27 +1156,36 @@ The orchestrator tracks PR status in `.claude/pr-status/{ID}.json`:
       "number": 123,
       "branch": "data/AUTH-001-models",
       "status": "merged",
-      "merged_at": "2026-01-29T10:00:00Z"
+      "merged_at": "2026-01-29T10:00:00Z",
+      "ci_fixes": 0
     },
     {
       "number": 124,
       "branch": "domain/AUTH-001-resources",
       "status": "merged",
-      "merged_at": "2026-01-29T10:05:00Z"
+      "merged_at": "2026-01-29T10:05:00Z",
+      "ci_fixes": 1
     },
     {
       "number": 125,
       "branch": "ui/AUTH-001-components",
       "status": "open",
-      "reviews_requested": true
+      "reviews_requested": true,
+      "ci_fixes": 0
     },
     {
       "number": 126,
       "branch": "api/AUTH-001-handlers",
-      "status": "draft"
+      "status": "draft",
+      "ci_fixes": 2
     }
   ],
-  "final_pr": null
+  "final_pr": {
+    "number": 130,
+    "status": "open",
+    "ci_status": "passing",
+    "ci_fixes": 0
+  }
 }
 ```
 

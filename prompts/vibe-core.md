@@ -446,3 +446,60 @@ After Phase 5 completes:
 4. Display: "Context cleared. Ready for next feature."
 
 See: `agents/coordination/` for full protocols
+
+---
+
+## CI Auto-Fix
+
+### Overview
+
+After every PR is created, vibe automatically monitors CI and fixes failures:
+
+```
+PR Created → Monitor CI → Red? → Read logs → Fix → Push → Re-monitor
+                ↓
+              Green? → Proceed (no human needed)
+```
+
+### When It Runs
+
+| Phase | Trigger | PRs Fixed |
+|-------|---------|-----------|
+| Phase 1 | Stacked PRs created | data/, domain/, ui/ |
+| Phase 2 | API PR created | api/ |
+| Phase 3 | Final PR created | → main |
+
+### Fix Strategy
+
+1. **Fetch failure logs** via `gh run view --log-failed`
+2. **Analyze root cause** (test, lint, build, typecheck)
+3. **Generate minimal fix** following best practices
+4. **Verify locally** before pushing
+5. **Commit and push** to trigger new CI run
+6. **Repeat** until green or max 3 retries
+
+### Failure Types Handled
+
+| Type | Example | Fix Approach |
+|------|---------|--------------|
+| Test | Assertion failure | Fix code or test logic |
+| Lint | Style violation | Auto-fix or manual correction |
+| Format | Formatting diff | Run auto-formatter |
+| Build | Missing import | Add import statement |
+| TypeCheck | Type mismatch | Fix type annotations |
+
+### Max Retries
+
+After 3 failed fix attempts, vibe **PAUSES** with:
+- Summary of remaining failures
+- Fixes already attempted
+- Options: retry, skip (not recommended), manual fix
+
+### Best Practices Enforced
+
+- Fix root cause, not symptoms
+- Never skip or disable tests
+- Verify locally before pushing
+- Preserve existing functionality
+
+See: `agents/watchers/ci-fixer.md` for full protocol

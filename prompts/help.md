@@ -178,6 +178,49 @@ After feature completion (Phase 5):
 
 ---
 
+## CI AUTO-FIX
+
+Vibe automatically monitors and fixes CI failures after PR creation.
+
+### How It Works
+
+```
+PR Created → CI runs → Failure? → Auto-fix → Push → Re-run CI
+                         ↓
+                      Success? → Continue to next phase
+```
+
+### What Gets Fixed
+
+| Failure Type | Auto-Fix Approach |
+|--------------|-------------------|
+| Test failures | Analyze assertion, fix code or test |
+| Lint errors | Apply auto-fix or manual correction |
+| Format issues | Run formatter |
+| Build errors | Fix imports, syntax, types |
+| TypeScript errors | Fix type annotations |
+
+### Max Retries
+
+- **3 attempts** per PR before pausing
+- After 3 failures: human intervention requested
+- Summary shows what was tried and what remains
+
+### When It Runs
+
+- After stacked PRs (data/, domain/, ui/)
+- After API PR
+- After final PR to main
+
+### No Human Needed
+
+If CI passes (even after fixes), vibe proceeds automatically.
+You only get notified if:
+- CI passes with fixes applied (info)
+- Max retries reached (pause)
+
+---
+
 ## MORE INFO
 
 - Framework: `~/.claude/vibe-ash-svelte/`
