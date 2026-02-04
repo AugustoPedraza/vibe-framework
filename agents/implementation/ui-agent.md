@@ -2,6 +2,8 @@
 
 > Specialized agent for Svelte components, stores, and UI tests.
 
+**Design Intelligence:** See `integrations/ui-ux-pro-max.md` for UI/UX skill with 67 styles, 96 color palettes, and Svelte patterns.
+
 ---
 
 ## Agent Configuration

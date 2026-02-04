@@ -6,6 +6,30 @@
 
 > See: `roles/_shared/architecture-refs.md` for complete architecture reference
 > See: `roles/_shared/platform-constraints.md` for PWA platform limitations
+> See: `integrations/ui-ux-pro-max.md` for design intelligence skill
+
+### UI/UX Pro Max Skill (Design Intelligence)
+
+Use the integrated design skill for major design decisions:
+
+```bash
+# Style exploration (67 styles)
+python3 {SKILL_PATH}/scripts/search.py "dashboard" --domain style
+
+# Color palettes (96 palettes by industry)
+python3 {SKILL_PATH}/scripts/search.py "saas professional" --domain color
+
+# Typography (57 font pairings)
+python3 {SKILL_PATH}/scripts/search.py "mobile modern" --domain typography
+
+# UX validation (99 guidelines)
+python3 {SKILL_PATH}/scripts/search.py "form best practices" --domain ux
+
+# Svelte component patterns
+python3 {SKILL_PATH}/scripts/search.py "modal" --stack svelte
+```
+
+**When to use:** Before major style/color/typography decisions. See `integrations/ui-ux-pro-max.md` for full documentation.
 
 ### Designer-Specific References
 
