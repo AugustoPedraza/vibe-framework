@@ -1,0 +1,34 @@
+{
+  "$schema": "https://docs.anthropic.com/hooks-schema.json",
+  "description": "Vibe framework hooks for automated enforcement. Copy to target project's .claude/hooks.json",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "description": "Auto-format Elixir files after modification",
+        "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.ex ]] || [[ \"$FILE\" == *.exs ]]; then mix format \"$FILE\" 2>/dev/null; fi'",
+        "timeout_ms": 10000
+      },
+      {
+        "matcher": "Write|Edit",
+        "description": "Auto-format frontend files after modification",
+        "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.svelte ]] || [[ \"$FILE\" == *.ts ]] || [[ \"$FILE\" == *.js ]] || [[ \"$FILE\" == *.css ]]; then npx prettier --write \"$FILE\" 2>/dev/null; fi'",
+        "timeout_ms": 10000
+      },
+      {
+        "matcher": "Write|Edit",
+        "description": "Check for raw color values in Svelte/CSS files (design system enforcement)",
+        "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.svelte ]] || [[ \"$FILE\" == *.css ]]; then if grep -qE \"(bg|text|border)-(red|blue|green|yellow|purple|pink|gray|slate|zinc)-[0-9]+\" \"$FILE\" 2>/dev/null; then echo \"WARNING: Raw Tailwind color found. Use design tokens (bg-primary, text-foreground, etc.)\"; fi; fi'",
+        "timeout_ms": 5000
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "description": "Quality check before git commits",
+        "command": "bash -c 'CMD=\"$CLAUDE_BASH_COMMAND\"; if echo \"$CMD\" | grep -q \"git commit\"; then echo \"Pre-commit: Ensure tests pass and code is formatted before committing.\"; fi'",
+        "timeout_ms": 5000
+      }
+    ]
+  }
+}
