@@ -1,0 +1,187 @@
+/*
+ * Tailwind CSS v4 @theme Configuration Template
+ *
+ * This template uses Tailwind v4's CSS-native @theme directive.
+ * It resets ALL default Tailwind namespaces and re-exposes ONLY
+ * your design tokens — meaning raw classes like bg-red-500 don't exist.
+ *
+ * Based on production-grade project configuration.
+ * Customize the values below, but keep the namespace resets as-is.
+ *
+ * Usage: Save as tailwind.config.css and import in your main CSS:
+ *   @import "tailwindcss";
+ *   @import "./tailwind.config.css";
+ */
+
+@theme {
+  /* ============================================================
+   * NAMESPACE RESETS — Keep these to prevent raw Tailwind classes
+   * ============================================================ */
+  --color-*: initial;
+  --spacing-*: initial;
+  --radius-*: initial;
+  --z-*: initial;
+  --shadow-*: initial;
+  --font-size-*: initial;
+  --font-weight-*: initial;
+
+  /* ============================================================
+   * COLORS — Customize OKLCH values for your brand
+   *
+   * Only colors defined here will generate utility classes.
+   * bg-red-500, text-purple-300, etc. will NOT work.
+   * ============================================================ */
+
+  /* Brand / Primary — buttons, active nav, links, focus rings */
+  --color-primary: oklch(50% 0.12 250);
+  --color-primary-light: oklch(65% 0.10 250);
+  --color-primary-dark: oklch(35% 0.14 250);
+
+  /* Semantic — status indicators, validation, alerts */
+  --color-success: oklch(55% 0.15 145);
+  --color-warning: oklch(70% 0.15 85);
+  --color-error: oklch(50% 0.18 25);
+  --color-info: oklch(55% 0.12 250);
+
+  /* Surfaces — backgrounds, cards, panels */
+  --color-surface: oklch(99% 0 0);
+  --color-surface-dim: oklch(95% 0.01 250);
+  --color-surface-bright: oklch(100% 0 0);
+  --color-background: oklch(98% 0.005 250);
+
+  /* Text — headings, body, captions, disabled */
+  --color-foreground: oklch(20% 0.02 250);
+  --color-muted: oklch(55% 0.01 250);
+  --color-muted-foreground: oklch(40% 0.02 250);
+  --color-inverse: oklch(98% 0 0);
+
+  /* Borders — inputs, cards, dividers */
+  --color-border: oklch(85% 0.01 250);
+  --color-border-strong: oklch(70% 0.02 250);
+  --color-border-subtle: oklch(92% 0.005 250);
+
+  /* Disabled — form elements, inactive buttons */
+  --color-disabled: oklch(92% 0.005 250);
+  --color-disabled-foreground: oklch(65% 0.01 250);
+
+  /*
+   * Gray scale — for when semantic tokens don't fit.
+   * Prefer semantic tokens (bg-surface, text-muted) when possible.
+   * Remove or adjust these based on your project needs.
+   */
+  --color-gray-50: oklch(98.5% 0.002 250);
+  --color-gray-100: oklch(96% 0.004 250);
+  --color-gray-200: oklch(92% 0.006 250);
+  --color-gray-300: oklch(87% 0.008 250);
+  --color-gray-400: oklch(70% 0.01 250);
+  --color-gray-500: oklch(55% 0.014 250);
+  --color-gray-600: oklch(45% 0.016 250);
+  --color-gray-700: oklch(37% 0.018 250);
+  --color-gray-800: oklch(28% 0.02 250);
+  --color-gray-900: oklch(20% 0.02 250);
+
+  /* ============================================================
+   * SPACING — Customize base unit (default: 4px per step)
+   *
+   * Only defined steps generate utilities.
+   * p-7, m-9, gap-11, etc. will NOT work.
+   * ============================================================ */
+  --spacing-0: 0px;
+  --spacing-px: 1px;
+  --spacing-0_5: 2px;
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+  --spacing-16: 64px;
+  --spacing-20: 80px;
+  --spacing-24: 96px;
+
+  /* ============================================================
+   * BORDER RADIUS — Customize for your design personality
+   *
+   * Preset guidance:
+   *   linear  → favor sm/md
+   *   clean   → favor md/lg
+   *   friendly → favor lg/xl
+   * ============================================================ */
+  --radius-none: 0px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* ============================================================
+   * Z-INDEX — Named layers prevent z-index wars
+   *
+   * NEVER use z-50, z-[100], etc. Always use named tokens.
+   * ============================================================ */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-fixed: 300;
+  --z-overlay: 350;
+  --z-modal-backdrop: 400;
+  --z-modal: 500;
+  --z-popover: 600;
+  --z-toast: 700;
+  --z-tooltip: 800;
+
+  /* ============================================================
+   * SHADOWS — Elevation system using OKLCH for consistency
+   * ============================================================ */
+  --shadow-sm: 0 1px 2px oklch(0% 0 0 / 0.05);
+  --shadow-md: 0 4px 6px oklch(0% 0 0 / 0.07);
+  --shadow-lg: 0 10px 15px oklch(0% 0 0 / 0.10);
+  --shadow-xl: 0 20px 25px oklch(0% 0 0 / 0.15);
+
+  /* ============================================================
+   * TYPOGRAPHY — Font sizes with built-in line heights
+   * ============================================================ */
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;    /* 20px */
+  --font-size-2xl: 1.5rem;    /* 24px */
+  --font-size-3xl: 1.875rem;  /* 30px */
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+}
+
+/* ============================================================
+ * DARK MODE — Override color tokens
+ * ============================================================ */
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-surface: oklch(15% 0.01 250);
+    --color-surface-dim: oklch(12% 0.01 250);
+    --color-surface-bright: oklch(20% 0.01 250);
+    --color-background: oklch(10% 0.005 250);
+    --color-foreground: oklch(92% 0.01 250);
+    --color-muted: oklch(55% 0.01 250);
+    --color-muted-foreground: oklch(70% 0.01 250);
+    --color-border: oklch(25% 0.01 250);
+    --color-border-strong: oklch(35% 0.02 250);
+    --color-border-subtle: oklch(18% 0.005 250);
+  }
+}
+
+/* ============================================================
+ * REDUCED MOTION — Disable animations
+ * ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-scale: 0;
+  }
+}

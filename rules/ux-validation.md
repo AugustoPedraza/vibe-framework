@@ -6,17 +6,24 @@
 
 ### DT001: No Raw Tailwind Colors (Error)
 
+**Always invalid** (not in project config):
 | Invalid | Valid |
 |---------|-------|
-| `bg-blue-500` | `bg-primary` |
 | `bg-red-500` | `bg-error` |
-| `bg-green-500` | `bg-success` |
 | `bg-yellow-500` | `bg-warning` |
-| `bg-gray-100` | `bg-muted` |
-| `bg-white` | `bg-background` |
-| `text-gray-500` | `text-muted-foreground` |
-| `text-gray-900` | `text-foreground` |
-| `border-gray-200` | `border-border` |
+| `bg-purple-300` | `bg-primary` (or custom token) |
+| `bg-pink-400` | Define semantic token |
+| `bg-slate-*`, `bg-zinc-*` | Use `gray` scale or semantic |
+
+**Project-allowed color scales** (explicitly in tailwind.config.css):
+| Scale | Valid Values | Prefer Instead |
+|-------|-------------|----------------|
+| `gray-50..900` | `bg-gray-50`, `text-gray-900`, etc. | `bg-surface`, `text-foreground`, `text-muted` |
+| `blue-50/500/900` | `bg-blue-500`, `text-blue-900` | `bg-primary`, `text-primary` |
+| `green-50/500` | `bg-green-50`, `bg-green-500` | `bg-success`, `text-success` |
+
+> **Prefer semantic tokens** (`bg-surface`, `text-muted`, `bg-primary`) over gray/blue/green scales
+> when the semantic meaning is clear. Use raw scales only when no semantic token matches.
 
 Foreground tokens for text ON colored backgrounds:
 ```svelte
@@ -41,8 +48,10 @@ Disabled state:
 
 ### DT003: Standard Spacing Only (Error)
 
-Valid: `0, px, 0.5, 1, 2, 3, 4, 6, 8, 12, 16, 20, 24`
-Invalid: `p-5, p-7, p-9, p-10, p-11, p-14, m-5, gap-5`
+Valid: `0, px, 0.5, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24`
+Invalid: `p-7, p-9, p-11, p-13, p-14, p-15, m-7, gap-9`
+
+> Project defines `--spacing-5` and `--spacing-10` in tailwind.config.css.
 
 ### DT004: Named Z-Index Only (Error)
 
@@ -60,8 +69,10 @@ Invalid: `p-5, p-7, p-9, p-10, p-11, p-14, m-5, gap-5`
 
 ### DT005: Standard Border Radius (Error)
 
-Valid: `rounded-none, rounded-sm, rounded-md, rounded-lg, rounded-full`
-Invalid: `rounded-xl, rounded-2xl, rounded-3xl`
+Valid: `rounded-none, rounded-sm, rounded-md, rounded-lg, rounded-xl, rounded-full`
+Invalid: `rounded-2xl, rounded-3xl`
+
+> Project defines `--radius-xl` in tailwind.config.css and tokens.css.
 
 ## UI State Rules
 

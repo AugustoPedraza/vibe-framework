@@ -26,12 +26,15 @@ Working directory: `assets/`
 
 ## Workflow
 
-1. **Analyze contract** - Extract props, states, events, accessibility requirements
-2. **Write tests first (TDD)** - One test per acceptance criterion
-3. **Implement component** - Svelte 5 runes, design tokens, all 4 states
-4. **Verify states** - default, loading, error, success (+ empty for lists)
-5. **Check accessibility** - aria-labels, keyboard nav, focus management
-6. **Check design tokens** - No raw colors, proper spacing, named z-index
+1. **Search for existing components** - Before creating ANY component, search `ui/` and `features/shared/` for similar components. Extend via snippet/prop before creating new.
+2. **Analyze contract** - Extract props, states, events, accessibility requirements
+3. **Write tests first (TDD)** - One test per acceptance criterion
+4. **Implement component** - Svelte 5 runes, design tokens, all 4 states
+5. **Verify states** - default, loading, error, success (+ empty for lists)
+6. **Check component size** - If >250 lines, STOP and decompose using folder structure (index.svelte + sibling sub-components) before continuing
+7. **Check accessibility** - aria-labels, keyboard nav, focus management
+8. **Check design tokens** - No raw colors (gray/blue/green allowed, semantic preferred), proper spacing (5/10 valid), named z-index, no arbitrary values
+9. **UX validation** - Validate patterns (forms, navigation, loading states) against UX guidelines. Use `ui-ux-pro-max --domain ux` for complex interactions.
 
 ## Svelte 5 Patterns (Required)
 
@@ -75,6 +78,10 @@ Every async component MUST handle all states:
 
 - Using `export let` instead of `$props()` (Svelte 4 syntax)
 - Using `$effect` for derived values (use `$derived`)
-- Using raw Tailwind colors instead of design tokens
+- Using raw Tailwind colors instead of design tokens (gray/blue/green scales allowed but prefer semantic)
+- Using arbitrary values (`w-[300px]`, `p-[15px]`) instead of token scale
+- Using hardcoded z-index instead of named tokens (`z-modal`, `z-dropdown`)
+- Creating a new component without checking `ui/` and `features/shared/` first
+- Components exceeding 300 lines without decomposition
 - Calling real backend APIs (use mocks in tests)
 - Missing any of the 4 states

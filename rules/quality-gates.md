@@ -17,9 +17,11 @@
 - Input validation present at system boundaries
 
 ### Design Tokens
-- No raw Tailwind colors (use `bg-primary`, `text-foreground`, etc.)
+- No raw Tailwind colors (use `bg-primary`, `text-foreground`, etc.) — gray/blue/green scales allowed but prefer semantic
 - No hardcoded z-index values (use `z-modal`, `z-dropdown`, etc.)
-- Standard spacing scale only (0, 0.5, 1, 2, 3, 4, 6, 8, 12, 16, 20, 24)
+- Standard spacing scale only (0, 0.5, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24)
+- No arbitrary values (`w-[300px]`, `p-[15px]`) — use token scale
+- Component size limit: 300 lines per .svelte file
 - Use existing components, don't recreate
 
 ## Test Coverage Thresholds
@@ -47,14 +49,22 @@ pattern: "(password|secret|api_key|token)\\s*=\\s*[\"'][^\"']{8,}[\"']"
 paths: ["lib/", "assets/"]
 exclude: ["test/", "*_test.exs", "*.test.ts"]
 
-# Raw Tailwind colors (warning)
-pattern: "bg-(red|blue|green|yellow|purple|pink|gray)-[0-9]+"
+# Raw Tailwind colors — not in project config (warning)
+pattern: "bg-(red|yellow|purple|pink|orange|teal|indigo|violet|fuchsia|rose|slate|zinc|stone|amber|lime|emerald|cyan|sky)-[0-9]+"
 paths: ["assets/svelte/"]
 
 # Hardcoded z-index (warning)
 pattern: "z-\\[?[0-9]+"
 paths: ["assets/svelte/"]
 exclude: ["**/tailwind.config.*"]
+
+# Arbitrary Tailwind values (warning)
+pattern: "[whmpt]-\\["
+paths: ["assets/svelte/"]
+
+# Non-standard border radius (warning)
+pattern: "rounded-(2xl|3xl)"
+paths: ["assets/svelte/"]
 ```
 
 ## Auto-Fixable Issues

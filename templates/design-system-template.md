@@ -18,48 +18,51 @@
 
 ## Color Palette
 
+> **AI guidance:** Prefer semantic tokens over raw color scales. Use `bg-primary` not `bg-blue-500`,
+> `text-muted` not `text-gray-500`. Only use raw scales when no semantic token matches the intent.
+
 ### Primary Colors
 
-| Token | OKLCH Value | Usage |
-|-------|-------------|-------|
-| `--color-primary` | `oklch(50% 0.12 250)` | Primary brand color |
-| `--color-primary-light` | `oklch(65% 0.10 250)` | Hover states, backgrounds |
-| `--color-primary-dark` | `oklch(35% 0.14 250)` | Active states, text on light |
+| Token | OKLCH Value | When to Use |
+|-------|-------------|-------------|
+| `--color-primary` | `oklch(50% 0.12 250)` | Primary buttons, active nav, links, focus rings |
+| `--color-primary-light` | `oklch(65% 0.10 250)` | Hover states, selected row backgrounds, badges |
+| `--color-primary-dark` | `oklch(35% 0.14 250)` | Active/pressed states, text on light primary bg |
 
 ### Semantic Colors
 
-| Token | OKLCH Value | Usage |
-|-------|-------------|-------|
-| `--color-success` | `oklch(55% 0.15 145)` | Success states, confirmations |
-| `--color-warning` | `oklch(70% 0.15 85)` | Warning states, cautions |
-| `--color-error` | `oklch(50% 0.18 25)` | Error states, destructive actions |
-| `--color-info` | `oklch(55% 0.12 250)` | Informational states |
+| Token | OKLCH Value | When to Use |
+|-------|-------------|-------------|
+| `--color-success` | `oklch(55% 0.15 145)` | Form validation pass, save confirmations, online indicators |
+| `--color-warning` | `oklch(70% 0.15 85)` | Approaching limits, unsaved changes, expiring items |
+| `--color-error` | `oklch(50% 0.18 25)` | Form validation errors, delete confirmations, failed operations |
+| `--color-info` | `oklch(55% 0.12 250)` | Help text, informational banners, feature hints |
 
 ### Surface Colors
 
-| Token | OKLCH Value | Usage |
-|-------|-------------|-------|
-| `--color-surface` | `oklch(99% 0 0)` | Card backgrounds, panels |
-| `--color-surface-dim` | `oklch(95% 0.01 250)` | Subtle backgrounds |
-| `--color-surface-bright` | `oklch(100% 0 0)` | Elevated surfaces |
-| `--color-background` | `oklch(98% 0.005 250)` | Page background |
+| Token | OKLCH Value | When to Use |
+|-------|-------------|-------------|
+| `--color-surface` | `oklch(99% 0 0)` | Card backgrounds, panels, dropdown menus |
+| `--color-surface-dim` | `oklch(95% 0.01 250)` | Subtle backgrounds, alternating table rows, disabled areas |
+| `--color-surface-bright` | `oklch(100% 0 0)` | Elevated surfaces, floating cards, modals |
+| `--color-background` | `oklch(98% 0.005 250)` | Page background, main content area |
 
 ### Text Colors
 
-| Token | OKLCH Value | Usage |
-|-------|-------------|-------|
-| `--color-text-primary` | `oklch(20% 0.02 250)` | Primary text, headings |
-| `--color-text-secondary` | `oklch(40% 0.02 250)` | Secondary text, captions |
-| `--color-text-muted` | `oklch(55% 0.01 250)` | Disabled, placeholder |
-| `--color-text-inverse` | `oklch(98% 0 0)` | Text on dark backgrounds |
+| Token | OKLCH Value | When to Use |
+|-------|-------------|-------------|
+| `--color-text-primary` | `oklch(20% 0.02 250)` | Primary text, headings, input values |
+| `--color-text-secondary` | `oklch(40% 0.02 250)` | Secondary text, captions, timestamps |
+| `--color-text-muted` | `oklch(55% 0.01 250)` | Disabled text, placeholder text, helper text |
+| `--color-text-inverse` | `oklch(98% 0 0)` | Text on dark/colored backgrounds (buttons, badges) |
 
 ### Border Colors
 
-| Token | OKLCH Value | Usage |
-|-------|-------------|-------|
-| `--color-border` | `oklch(85% 0.01 250)` | Default borders |
-| `--color-border-strong` | `oklch(70% 0.02 250)` | Emphasized borders |
-| `--color-border-subtle` | `oklch(92% 0.005 250)` | Subtle dividers |
+| Token | OKLCH Value | When to Use |
+|-------|-------------|-------------|
+| `--color-border` | `oklch(85% 0.01 250)` | Default borders, input borders, card outlines |
+| `--color-border-strong` | `oklch(70% 0.02 250)` | Focused inputs, emphasized sections, active states |
+| `--color-border-subtle` | `oklch(92% 0.005 250)` | Subtle dividers, section separators, list dividers |
 
 ---
 
@@ -97,21 +100,40 @@
 
 ## Spacing Scale
 
-Base unit: **8px**
+Base unit: **8px** (adjustable via density multiplier)
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--space-0` | 0px | No spacing |
-| `--space-1` | 4px | Tight spacing, icon gaps |
-| `--space-2` | 8px | Small gaps, inline spacing |
-| `--space-3` | 12px | Medium gaps |
-| `--space-4` | 16px | Default component padding |
-| `--space-5` | 20px | Section gaps |
-| `--space-6` | 24px | Card padding |
-| `--space-8` | 32px | Large gaps |
-| `--space-10` | 40px | Section margins |
-| `--space-12` | 48px | Page margins |
-| `--space-16` | 64px | Large sections |
+| Token | Value | When to Use |
+|-------|-------|-------------|
+| `--space-0` | 0px | No spacing, flush alignment |
+| `--space-1` | 4px | Icon-to-text gaps, tight inline spacing |
+| `--space-2` | 8px | Small gaps, badge padding, inline element spacing |
+| `--space-3` | 12px | Medium gaps, compact list item padding |
+| `--space-4` | 16px | Default component padding, form field spacing |
+| `--space-5` | 20px | Card content padding, between related groups |
+| `--space-6` | 24px | Card outer padding, between form sections |
+| `--space-8` | 32px | Large section gaps, page section spacing |
+| `--space-10` | 40px | Section margins, hero content spacing |
+| `--space-12` | 48px | Page margins, large section dividers |
+| `--space-16` | 64px | Major page sections, header/footer spacing |
+
+### Semantic Gaps
+
+| Token | Maps To | When to Use |
+|-------|---------|-------------|
+| `--gap-form` | `var(--space-6)` | Between form fields in a form group |
+| `--gap-section` | `var(--space-8)` | Between page sections |
+| `--gap-inline` | `var(--space-2)` | Between inline elements (icon + text) |
+| `--gap-stack` | `var(--space-4)` | Between stacked elements in a column |
+
+### Density System
+
+Spacing scales with a density multiplier (`--density: 1` default):
+
+| Density | Multiplier | Use Case |
+|---------|-----------|----------|
+| Compact | `0.85` | Data-dense tables, admin panels |
+| Default | `1.0` | Standard UI, forms, content |
+| Comfortable | `1.15` | Touch-first interfaces, accessibility |
 
 ---
 
@@ -180,31 +202,46 @@ Base unit: **8px**
 
 ## Z-Index Layers
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--z-base` | 0 | Default layer |
-| `--z-dropdown` | 100 | Dropdown menus |
-| `--z-sticky` | 200 | Sticky headers |
-| `--z-fixed` | 300 | Fixed navigation |
-| `--z-modal-backdrop` | 400 | Modal backdrop |
-| `--z-modal` | 500 | Modal content |
-| `--z-popover` | 600 | Popovers, tooltips |
-| `--z-toast` | 700 | Toast notifications |
-| `--z-max` | 9999 | Maximum z-index |
+> **AI guidance:** NEVER use numeric z-index (`z-50`, `z-[100]`). Always use named tokens.
+
+| Token | Value | When to Use |
+|-------|-------|-------------|
+| `--z-base` | 0 | Default layer, normal document flow |
+| `--z-raised` | 10 | Slightly raised elements (cards with hover) |
+| `--z-dropdown` | 100 | Dropdown menus, select popups, autocomplete |
+| `--z-sticky` | 200 | Sticky headers, floating action buttons |
+| `--z-fixed` | 300 | Fixed navigation bars, bottom tabs |
+| `--z-overlay` | 350 | Background overlays, dim layers |
+| `--z-modal-backdrop` | 400 | Modal backdrop (click to dismiss) |
+| `--z-modal` | 500 | Modal content, dialog boxes |
+| `--z-popover` | 600 | Popovers, tooltips, context menus |
+| `--z-toast` | 700 | Toast notifications (always on top of modals) |
+| `--z-max` | 9999 | Emergency override only — avoid using |
 
 ---
 
 ## Motion / Animation
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--duration-fast` | 100ms | Micro-interactions |
-| `--duration-base` | 200ms | Default transitions |
-| `--duration-slow` | 300ms | Page transitions |
-| `--duration-slower` | 500ms | Complex animations |
-| `--ease-default` | `cubic-bezier(0.4, 0, 0.2, 1)` | Standard easing |
-| `--ease-in` | `cubic-bezier(0.4, 0, 1, 1)` | Entering elements |
-| `--ease-out` | `cubic-bezier(0, 0, 0.2, 1)` | Exiting elements |
+| Token | Value | When to Use |
+|-------|-------|-------------|
+| `--duration-fast` | 100ms | Button press, toggle, checkbox, micro-interactions |
+| `--duration-base` | 200ms | Dropdown open, tab switch, default transitions |
+| `--duration-slow` | 300ms | Modal open/close, page transitions, drawer slide |
+| `--duration-slower` | 500ms | Complex animations, skeleton shimmer, progress |
+| `--ease-default` | `cubic-bezier(0.4, 0, 0.2, 1)` | Most transitions, general purpose |
+| `--ease-in` | `cubic-bezier(0.4, 0, 1, 1)` | Elements entering the screen |
+| `--ease-out` | `cubic-bezier(0, 0, 0.2, 1)` | Elements leaving the screen |
+
+### Motion Scale System
+
+Respects user's `prefers-reduced-motion` preference:
+
+| Setting | `--motion-scale` | Effect |
+|---------|------------------|--------|
+| Normal | `1.0` | Full animations |
+| Reduced | `0` | Instant transitions, no animation |
+
+Apply to all durations: `calc(var(--duration-base) * var(--motion-scale))`
 
 ---
 
@@ -299,6 +336,25 @@ padding-right: env(safe-area-inset-right);
 
 ---
 
+## Preset System
+
+Design tokens support presets that change the visual personality without modifying individual tokens:
+
+| Preset | Personality | Border Radius | Spacing Feel | Shadow Intensity |
+|--------|------------|---------------|--------------|------------------|
+| `linear` | Sharp, professional | Small (`--radius-sm`) | Tight | Minimal |
+| `clean` | Balanced, modern | Medium (`--radius-md`) | Default | Moderate |
+| `friendly` | Soft, approachable | Large (`--radius-lg`) | Generous | Prominent |
+
+Set in `tokens.css`:
+```css
+:root { --preset: clean; }
+```
+
+Tokens reference the preset: `--radius-button: var(--radius-md)` (changes with preset).
+
+---
+
 ## Customization Guide
 
 To customize this template for your project:
@@ -306,8 +362,11 @@ To customize this template for your project:
 1. **Colors**: Update OKLCH values to match your brand palette
 2. **Typography**: Adjust font families and sizes for your design
 3. **Spacing**: Modify base unit if not using 8px grid
-4. **Components**: Add project-specific component size specs
-5. **Mobile**: Adjust breakpoints for your target devices
+4. **Density**: Adjust `--density` multiplier for your target audience
+5. **Preset**: Choose `linear`, `clean`, or `friendly` personality
+6. **Components**: Add project-specific component size specs
+7. **Mobile**: Adjust breakpoints for your target devices
+8. **Motion**: Set `--motion-scale` behavior for reduced motion
 
 ---
 

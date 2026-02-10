@@ -18,7 +18,31 @@
       {
         "matcher": "Write|Edit",
         "description": "Check for raw color values in Svelte/CSS files (design system enforcement)",
-        "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.svelte ]] || [[ \"$FILE\" == *.css ]]; then if grep -qE \"(bg|text|border)-(red|blue|green|yellow|purple|pink|gray|slate|zinc)-[0-9]+\" \"$FILE\" 2>/dev/null; then echo \"WARNING: Raw Tailwind color found. Use design tokens (bg-primary, text-foreground, etc.)\"; fi; fi'",
+        "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.svelte ]] || [[ \"$FILE\" == *.css ]]; then if grep -qE \"(bg|text|border)-(red|yellow|purple|pink|orange|teal|indigo|violet|fuchsia|rose|slate|zinc|stone|amber|lime|emerald|cyan|sky)-[0-9]+\" \"$FILE\" 2>/dev/null; then echo \"WARNING: Raw Tailwind color found. Use design tokens (bg-primary, text-foreground, etc.). Gray/blue/green scales are allowed but prefer semantic tokens.\"; fi; fi'",
+        "timeout_ms": 5000
+      },
+      {
+        "matcher": "Write|Edit",
+        "description": "Check for hardcoded z-index in Svelte files",
+        "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.svelte ]]; then if grep -qE \"\\bz-(\\[|[0-9]+)\" \"$FILE\" 2>/dev/null && ! grep -qE \"z-(base|raised|dropdown|sticky|overlay|modal|popover|toast|tooltip)\" \"$FILE\" 2>/dev/null; then echo \"WARNING: Hardcoded z-index found. Use named tokens: z-base, z-raised, z-dropdown, z-sticky, z-overlay, z-modal, z-popover, z-toast, z-tooltip.\"; fi; fi'",
+        "timeout_ms": 5000
+      },
+      {
+        "matcher": "Write|Edit",
+        "description": "Check for arbitrary Tailwind values in Svelte files",
+        "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.svelte ]]; then if grep -qE \"[whmpt]-\\[\" \"$FILE\" 2>/dev/null; then echo \"WARNING: Arbitrary Tailwind value found (e.g. w-[300px]). Use design token scale instead.\"; fi; fi'",
+        "timeout_ms": 5000
+      },
+      {
+        "matcher": "Write|Edit",
+        "description": "Check for non-standard border radius in Svelte files",
+        "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.svelte ]]; then if grep -qE \"rounded-(2xl|3xl)\" \"$FILE\" 2>/dev/null; then echo \"WARNING: Non-standard border radius. Use rounded-sm, rounded-md, rounded-lg, rounded-xl, or rounded-full.\"; fi; fi'",
+        "timeout_ms": 5000
+      },
+      {
+        "matcher": "Write|Edit",
+        "description": "Check Svelte component size (300 line limit)",
+        "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.svelte ]]; then LINES=$(wc -l < \"$FILE\" 2>/dev/null); if [ \"$LINES\" -gt 300 ] 2>/dev/null; then echo \"WARNING: Component is $LINES lines (limit: 300). Decompose using component folder structure pattern (index.svelte + sibling sub-components).\"; fi; fi'",
         "timeout_ms": 5000
       }
     ],
