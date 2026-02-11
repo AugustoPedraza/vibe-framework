@@ -52,6 +52,14 @@ export default ts.config(
         parser: ts.parser,
       },
     },
+    rules: {
+      // Warn on inline styles — catches hardcoded values bypassing design tokens.
+      // Set to "warn" (not "error") because style: directives are the correct
+      // Svelte 5 pattern for data-driven values (progress bars, drag positions,
+      // charts, themes via CSS custom properties). Use eslint-disable-next-line
+      // with a justification comment for legitimate dynamic uses.
+      "svelte/no-inline-styles": ["warn", { allowTransitions: true }],
+    },
   },
 
   // Ignore build output

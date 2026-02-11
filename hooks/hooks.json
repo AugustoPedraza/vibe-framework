@@ -47,6 +47,12 @@
       },
       {
         "matcher": "Write|Edit",
+        "description": "Check for hardcoded values in style attributes/directives (allows dynamic bindings and CSS custom properties)",
+        "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.svelte ]]; then ISSUES=\"\"; while IFS= read -r line; do linenum=$(echo \"$line\" | cut -d: -f1); content=$(echo \"$line\" | cut -d: -f2-); if echo \"$content\" | grep -qE \"style:[a-z].*=\\\"[^{]\"; then if ! echo \"$content\" | grep -qE \"style:--\"; then ISSUES=\"$ISSUES  Line $linenum: Hardcoded style: directive — use Tailwind class or dynamic binding\\n\"; fi; fi; done < <(grep -nE \"style[:=]\" \"$FILE\" 2>/dev/null); while IFS= read -r line; do linenum=$(echo \"$line\" | cut -d: -f1); content=$(echo \"$line\" | cut -d: -f2-); ISSUES=\"$ISSUES  Line $linenum: Raw style=\\\"\\\" attribute — use style: directives or Tailwind classes\\n\"; done < <(grep -nE \"\\bstyle=\\\"[^{]\" \"$FILE\" 2>/dev/null); if [ -n \"$ISSUES\" ]; then echo \"WARNING: Inline style issues found:\"; echo -e \"$ISSUES\"; echo \"Allowed: style:prop=\\\"{dynamic}\\\", style:--custom-prop={value}\"; echo \"Use Tailwind classes for static values. See rules/svelte-patterns.md #Dynamic Styles.\"; fi; fi'",
+        "timeout_ms": 5000
+      },
+      {
+        "matcher": "Write|Edit",
         "description": "Check for missing async states in Svelte components (loading/error/empty)",
         "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.svelte ]]; then HAS_ASYNC=false; if grep -qE \"(\\{#await|fetch\\(|onMount.*async|\\$effect.*fetch|loading)\" \"$FILE\" 2>/dev/null; then HAS_ASYNC=true; fi; if [ \"$HAS_ASYNC\" = true ]; then MISSING=\"\"; if ! grep -qE \"(skeleton|Skeleton|spinner|loading|shimmer)\" \"$FILE\" 2>/dev/null; then MISSING=\"$MISSING loading-pattern\"; fi; if ! grep -qE \"(role=.alert.|error|catch)\" \"$FILE\" 2>/dev/null; then MISSING=\"$MISSING error-state\"; fi; if ! grep -qE \"(EmptyState|empty|No .* found|No .* yet|length === 0|\\.length === 0)\" \"$FILE\" 2>/dev/null; then MISSING=\"$MISSING empty-state\"; fi; if [ -n \"$MISSING\" ]; then echo \"WARNING: Async component missing states:$MISSING. See rules/ux-validation.md for canonical pattern.\"; fi; fi; fi'",
         "timeout_ms": 5000
