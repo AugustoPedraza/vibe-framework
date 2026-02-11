@@ -181,9 +181,54 @@ This file bridges BMAD and Vibe:
 
 | Source | Data | Target |
 |--------|------|--------|
-| BMAD epics.md | Stories, acceptance criteria | project-context.md |
+| BMAD screen specs | Screen-level specs, acceptance criteria | project-context.md |
+| BMAD epics.md | Stories (legacy format) | project-context.md |
 | Vibe features/*.md | Feature specs, status | project-context.md |
 | project-context.md | Unified view | BMAD agents |
+
+---
+
+## Screen Spec Pipeline
+
+Screen specs are the **primary work item format** for BMAD→Vibe integration. Each screen spec is an atomic unit of work that maps to a single `/vibe` run.
+
+### Pipeline Flow
+
+```
+BMAD UX Design → Screen Specs → /vibe [SPEC-ID] → Small PR
+```
+
+### Configuration
+
+Screen spec paths are configured in `vibe.config.json`:
+
+```json
+{
+  "bmad": {
+    "enabled": true,
+    "screen_specs_path": "_bmad-output/implementation-artifacts/screen-specs/",
+    "screen_spec_template": "_bmad/bmm/templates/screen-spec-template.md"
+  },
+  "patterns": {
+    "catalog_path": "docs/domain/ui-ux/patterns/",
+    "screen_types_path": "docs/domain/ui-ux/patterns/screen-types.md"
+  }
+}
+```
+
+### Integration Files
+
+| File | Purpose |
+|------|---------|
+| `integrations/bmad-screen-specs.md` | How vibe reads and implements screen specs |
+| `integrations/screen-spec-reader.md` | Parsing instructions for screen spec format |
+
+### Workflow
+
+1. BMAD generates screen specs at `{bmad.screen_specs_path}`
+2. `/vibe [SPEC-ID]` reads the spec, loads referenced patterns from `{patterns.catalog_path}`
+3. Vibe maps spec sections to implementation phases and agents
+4. Each spec produces a focused PR (~200-400 lines)
 
 ---
 
@@ -191,7 +236,15 @@ This file bridges BMAD and Vibe:
 
 ### BMAD → Vibe Conversion
 
-**Stories → Feature Specs**
+**Screen Specs → Implementation** (primary)
+
+```
+{bmad.screen_specs_path}/[FEAT-ID]-[NUM].md
+         ↓ /vibe [SPEC-ID]
+Small, focused PR per screen spec
+```
+
+**Stories → Feature Specs** (legacy)
 
 ```
 _bmad-output/epics.md (Story)

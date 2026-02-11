@@ -356,6 +356,48 @@
         }
       }
     },
+    "patterns": {
+      "type": "object",
+      "description": "Project-level UX pattern configuration. Extends framework patterns.",
+      "properties": {
+        "catalog_path": {
+          "type": "string",
+          "description": "Path to project's UX pattern catalog directory (relative to project root)",
+          "default": "docs/domain/ui-ux/patterns/"
+        },
+        "screen_types_path": {
+          "type": "string",
+          "description": "Path to screen-types matrix for completeness intelligence",
+          "default": "docs/domain/ui-ux/patterns/screen-types.md"
+        },
+        "manifest_path": {
+          "type": ["string", "null"],
+          "description": "Path to project-level pattern manifest.json (if exists, merged with framework patterns)",
+          "default": null
+        }
+      }
+    },
+    "bmad": {
+      "type": "object",
+      "description": "BMAD integration configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether BMAD integration is active",
+          "default": true
+        },
+        "screen_specs_path": {
+          "type": "string",
+          "description": "Path to screen spec files (atomic work items)",
+          "default": "_bmad-output/implementation-artifacts/screen-specs/"
+        },
+        "screen_spec_template": {
+          "type": "string",
+          "description": "Path to screen spec template",
+          "default": "_bmad/bmm/templates/screen-spec-template.md"
+        }
+      }
+    },
     "ui_validation": {
       "type": "object",
       "description": "UI validation configuration for visual correctness during /vibe workflow. Enables AI to validate components render correctly before committing.",

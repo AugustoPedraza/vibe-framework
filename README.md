@@ -82,6 +82,8 @@ Phase 5: LEARN       → Extract patterns, update auto memory
 | Integration | Purpose | Config |
 |-------------|---------|--------|
 | **BMAD** | Planning and discovery | `integrations/bmad.md` |
+| **BMAD Screen Specs** | Atomic work items from BMAD pipeline | `integrations/bmad-screen-specs.md` |
+| **Screen Spec Reader** | Parsing screen spec format | `integrations/screen-spec-reader.md` |
 | **UI/UX Pro Max** | Design intelligence | `integrations/ui-ux-pro-max.md` |
 | **Playwright MCP** | UI validation via browser | `.mcp.json` in target project |
 
@@ -141,12 +143,13 @@ Your project needs:
 
 ## Pattern Library
 
-Patterns are discovered during retrospectives and stored in `patterns/`. They're indexed by `manifest.json` and retrieved based on the current feature's technology needs.
+Patterns are loaded from two sources: **framework patterns** (built-in) and **project patterns** (configured via `vibe.config.json > patterns`). Project patterns override framework patterns when IDs collide. See [`docs/pattern-discovery.md`](docs/pattern-discovery.md) for full details.
 
 ```
 /vibe AUTH-001
-→ Pattern retrieval: "ash auth" matches patterns/pwa/auth.md
-→ Agent receives relevant patterns in prompt
+→ Framework patterns: manifest.json matches "ash auth" → patterns/pwa/auth.md
+→ Project patterns: {patterns.catalog_path} loaded if configured
+→ Agents receive merged patterns in prompt
 ```
 
 ## Rules
