@@ -39,6 +39,7 @@ pause_only_on:
 /vibe fix [desc]     # Targeted fix when paused
 /vibe pivot          # Course correction when stuck
 /vibe migrate [cmd]  # Legacy migration workflow
+/vibe polish [path]  # UI polish validation (single or --all)
 ```
 
 ## Agent Taxonomy
@@ -114,9 +115,22 @@ Use plan mode for spec analysis (safe read-only exploration before implementatio
 2. **Run refactoring-analyzer** - DRY, orthogonality, tech debt scoring
 3. **Calculate quality score** - Combined metric from all checks
 4. **GATE**: Quality >= 4.0? YES -> Continue, NO -> **PAUSE**
-5. **Auto-review** - Spawn 3 parallel agents (security, performance, patterns)
-6. **GATE**: No blockers? YES -> AUTO-PROCEED, NO -> **PAUSE**
-7. **Create final PR** -> main + spawn ci-fixer
+5. **UI polish validation** (main session — MCP cannot run in subagents):
+   ```
+   If MCP available:
+     For each modified .svelte file:
+       - Navigate to component route via Playwright MCP
+       - Validate at 375px and 1280px viewports
+       - Check: states, touch targets, design tokens, responsiveness
+       - Auto-fix safe issues (spacing, aria-labels, dvh)
+       - Report state matrix
+   Else:
+     Run /vibe polish in static analysis mode for each modified component
+     Log: "Install Playwright MCP for visual validation — see docs/mcp-browser-setup.md"
+   ```
+6. **Auto-review** - Spawn 3 parallel agents (security, performance, patterns)
+7. **GATE**: No blockers? YES -> AUTO-PROCEED, NO -> **PAUSE**
+8. **Create final PR** -> main + spawn ci-fixer
 
 ### Phase 4: POLISH
 
@@ -204,5 +218,7 @@ No watchers, no parallel agents, no PR workflow.
 - `commands/pivot.md` - Course correction
 - `commands/quick.md` - Bug/hotfix mode
 - `commands/migrate.md` - Legacy migration
+- `commands/polish.md` - UI polish validation
 - `agents/*.md` - Agent specifications
 - `patterns/README.md` - Pattern discovery
+- `docs/mcp-browser-setup.md` - Playwright MCP setup

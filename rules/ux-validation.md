@@ -76,9 +76,59 @@ Invalid: `rounded-2xl, rounded-3xl`
 
 ## UI State Rules
 
-- **Loading**: Components with async operations MUST show skeleton/loading state
-- **Error**: All async operations MUST handle error state with `role="alert"`
-- **Empty**: Lists/data components MUST handle empty state with `EmptyState` component
+Every async component MUST handle ALL four states. Missing any state is a blocking error.
+
+### Canonical Async Component Pattern
+
+```svelte
+{#await promise}
+  <!-- LOADING: skeleton with shimmer, NOT spinner -->
+  <div class="skeleton h-6 w-3/4 mb-2"></div>
+  <div class="skeleton h-4 w-1/2"></div>
+{:then data}
+  {#if data.length === 0}
+    <!-- EMPTY: guidance + call-to-action -->
+    <div class="flex flex-col items-center gap-4 py-12 text-muted">
+      <svg class="w-12 h-12 text-gray-300" aria-hidden="true"><!-- icon --></svg>
+      <p class="text-lg font-medium">No items yet</p>
+      <p class="text-sm">Get started by creating your first item.</p>
+      <button class="btn btn-primary" onclick={handleCreate}>Create first item</button>
+    </div>
+  {:else}
+    <!-- SUCCESS: actual content -->
+    <ul>
+      {#each data as item}
+        <li>{item.name}</li>
+      {/each}
+    </ul>
+  {/if}
+{:catch error}
+  <!-- ERROR: alert role + retry action -->
+  <div role="alert" class="flex flex-col items-center gap-3 py-8 text-error">
+    <p class="font-medium">Something went wrong</p>
+    <p class="text-sm text-muted">{error.message}</p>
+    <button class="btn btn-secondary" onclick={retry}>Try again</button>
+  </div>
+{/await}
+```
+
+### State Requirements
+
+| State | Required Elements | Anti-Pattern |
+|-------|------------------|-------------|
+| Loading | Skeleton shimmer matching content layout | Spinner, blank screen, "Loading..." text |
+| Empty | Icon + message + CTA button | Blank area, just "No data" |
+| Error | `role="alert"` + message + retry button | Console.error only, generic 500 page |
+| Success | Actual content with data | N/A |
+
+### Detection: Async Indicators
+
+If a component contains ANY of these, it MUST have all four states:
+- `{#await ...}`
+- `fetch(`, `$effect` with API calls
+- `onMount` with async operations
+- `loading` prop or state
+- Store subscriptions to async data
 
 ## Alignment Rules
 

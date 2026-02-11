@@ -1,6 +1,29 @@
 # MCP Browser Setup Guide
 
-> Required for UI validation during `/vibe` workflow
+> Required for UI validation during `/vibe` and `/vibe polish` workflows
+
+## Quick Setup (3 commands)
+
+```bash
+# 1. Install Playwright MCP server
+npm install -D @anthropic-ai/mcp-server-playwright
+
+# 2. Install browser
+npx playwright install chromium
+
+# 3. Add to ~/.claude/settings.json (or copy mcpServers from templates/mcp.json):
+# {
+#   "mcpServers": {
+#     "playwright": {
+#       "command": "npx",
+#       "args": ["@anthropic-ai/mcp-server-playwright"],
+#       "env": { "PLAYWRIGHT_HEADLESS": "true" }
+#     }
+#   }
+# }
+```
+
+**Note:** MCP tools are only available in the main session. Subagents spawned via Task tool cannot access MCP servers (Claude Code limitation). The `/vibe polish` command and Phase 3 MCP validation account for this by running in the main session.
 
 ---
 
@@ -468,6 +491,7 @@ Results merged into single report. Max agents controlled by `parallel.max_agents
 
 ## Related Docs
 
-- [vibe.md](../prompts/vibe.md) - Main workflow documentation
-- [lint.md](../prompts/commands/lint.md) - Static linting (complements runtime validation)
-- [designer.md](../roles/designer.md) - UX requirements and patterns
+- [vibe.md](../commands/vibe.md) - Main workflow documentation
+- [polish.md](../commands/polish.md) - UI polish validation
+- [ui-polish.md](../rules/ui-polish.md) - UI polish rules (auto-loaded)
+- [ui-agent.md](../agents/ui-agent.md) - UI agent workflow

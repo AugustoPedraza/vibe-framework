@@ -25,6 +25,10 @@ commands:
     description: Test-driven migration workflow for strangler fig pattern
     args: "[subcommand]"
     file: commands/migrate.md
+  - name: vibe polish
+    description: UI polish validation — single component or full codebase scan
+    args: "[component-path|route|--all]"
+    file: commands/polish.md
 ---
 
 # Vibe Framework
@@ -40,6 +44,8 @@ commands:
 /vibe fix "broken"     # Targeted fix
 /vibe pivot            # Course correction
 /vibe migrate init     # Legacy migration
+/vibe polish Button.svelte  # Single component polish
+/vibe polish --all     # Full codebase polish
 ```
 
 ## Architecture

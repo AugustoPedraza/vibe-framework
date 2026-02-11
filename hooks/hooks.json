@@ -44,6 +44,12 @@
         "description": "Check Svelte component size (300 line limit)",
         "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.svelte ]]; then LINES=$(wc -l < \"$FILE\" 2>/dev/null); if [ \"$LINES\" -gt 300 ] 2>/dev/null; then echo \"WARNING: Component is $LINES lines (limit: 300). Decompose using component folder structure pattern (index.svelte + sibling sub-components).\"; fi; fi'",
         "timeout_ms": 5000
+      },
+      {
+        "matcher": "Write|Edit",
+        "description": "Check for missing async states in Svelte components (loading/error/empty)",
+        "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.svelte ]]; then HAS_ASYNC=false; if grep -qE \"(\\{#await|fetch\\(|onMount.*async|\\$effect.*fetch|loading)\" \"$FILE\" 2>/dev/null; then HAS_ASYNC=true; fi; if [ \"$HAS_ASYNC\" = true ]; then MISSING=\"\"; if ! grep -qE \"(skeleton|Skeleton|spinner|loading|shimmer)\" \"$FILE\" 2>/dev/null; then MISSING=\"$MISSING loading-pattern\"; fi; if ! grep -qE \"(role=.alert.|error|catch)\" \"$FILE\" 2>/dev/null; then MISSING=\"$MISSING error-state\"; fi; if ! grep -qE \"(EmptyState|empty|No .* found|No .* yet|length === 0|\\.length === 0)\" \"$FILE\" 2>/dev/null; then MISSING=\"$MISSING empty-state\"; fi; if [ -n \"$MISSING\" ]; then echo \"WARNING: Async component missing states:$MISSING. See rules/ux-validation.md for canonical pattern.\"; fi; fi; fi'",
+        "timeout_ms": 5000
       }
     ],
     "PreToolUse": [
@@ -52,6 +58,21 @@
         "description": "Quality check before git commits",
         "command": "bash -c 'CMD=\"$CLAUDE_BASH_COMMAND\"; if echo \"$CMD\" | grep -q \"git commit\"; then echo \"Pre-commit: Ensure tests pass and code is formatted before committing.\"; fi'",
         "timeout_ms": 5000
+      }
+    ],
+    "Stop": [
+      {
+        "type": "agent",
+        "description": "UI quality gate — validate all modified Svelte files before task completion",
+        "command": "bash -c 'ISSUES=\"\"; for FILE in $(git diff --name-only HEAD 2>/dev/null | grep \"\\.svelte$\"); do if [ -f \"$FILE\" ]; then NAME=$(basename \"$FILE\"); HAS_ASYNC=false; if grep -qE \"(\\{#await|fetch\\(|onMount.*async|\\$effect.*fetch|loading)\" \"$FILE\" 2>/dev/null; then HAS_ASYNC=true; fi; if [ \"$HAS_ASYNC\" = true ]; then if ! grep -qE \"(skeleton|Skeleton|shimmer)\" \"$FILE\" 2>/dev/null; then ISSUES=\"$ISSUES\\n$NAME: Missing loading/skeleton state\"; fi; if ! grep -qE \"(role=.alert.|catch)\" \"$FILE\" 2>/dev/null; then ISSUES=\"$ISSUES\\n$NAME: Missing error state (role=alert)\"; fi; if ! grep -qE \"(EmptyState|empty|No .* found|length === 0)\" \"$FILE\" 2>/dev/null; then ISSUES=\"$ISSUES\\n$NAME: Missing empty state\"; fi; fi; if grep -qE \"(button|btn|Button)\" \"$FILE\" 2>/dev/null; then if ! grep -qE \"(hover:|:hover|active:|:active)\" \"$FILE\" 2>/dev/null; then ISSUES=\"$ISSUES\\n$NAME: Buttons missing hover/active states\"; fi; fi; if grep -qE \"outline:\\s*none\" \"$FILE\" 2>/dev/null; then if ! grep -qE \"focus-visible\" \"$FILE\" 2>/dev/null; then ISSUES=\"$ISSUES\\n$NAME: outline:none without focus-visible replacement\"; fi; fi; fi; done; if [ -n \"$ISSUES\" ]; then echo \"UI QUALITY GATE — issues found:\"; echo -e \"$ISSUES\"; echo \"\"; echo \"Fix these before completing. See rules/ui-polish.md and rules/ux-validation.md.\"; fi'",
+        "timeout_ms": 15000
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "description": "Verify tests pass before marking task complete",
+        "command": "bash -c 'if [ -f \"assets/package.json\" ] && grep -q \"vitest\" \"assets/package.json\" 2>/dev/null; then cd assets && npx vitest run --reporter=json 2>/dev/null | tail -1 | python3 -c \"import sys,json; d=json.load(sys.stdin); sys.exit(0 if d.get(\\\"success\\\") else 1)\" 2>/dev/null; if [ $? -ne 0 ]; then echo \"WARNING: Tests are not passing. Fix before marking task complete.\"; fi; fi'",
+        "timeout_ms": 60000
       }
     ]
   }

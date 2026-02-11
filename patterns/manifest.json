@@ -123,6 +123,22 @@
       "triggers": ["loading spinner", "reduced motion", "a11y spinner", "accessible loading", "prefers-reduced-motion"],
       "stack": ["tailwind"],
       "score": 4
+    },
+    {
+      "id": "skeleton-loading",
+      "category": "ux",
+      "semantic_group": "loading",
+      "triggers": ["loading", "skeleton", "async", "fetch", "await", "shimmer", "placeholder", "content loading"],
+      "stack": ["svelte5", "css"],
+      "score": 7
+    },
+    {
+      "id": "mobile-pwa-checklist",
+      "category": "ux",
+      "semantic_group": "mobile",
+      "triggers": ["mobile", "pwa", "responsive", "touch", "offline", "safe area", "viewport", "service worker"],
+      "stack": ["svelte5", "css", "typescript"],
+      "score": 6
     }
   ],
   "matching": {
