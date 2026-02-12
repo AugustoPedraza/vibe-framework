@@ -15,6 +15,9 @@ auto_fix:
   format: true                    # Always auto-fix format issues
   lint_auto_fixable: true         # Auto-fix lint issues that can be automated
   polish_safe: true               # Auto-fix safe polish suggestions
+  debug_statements: true          # Auto-remove debug statements from non-test code
+  svelte4_syntax: true            # Auto-convert Svelte 4 → Svelte 5 patterns
+  unused_imports: true            # Auto-remove unused imports
 
 auto_proceed:
   tests_passing: true             # Continue when tests pass
@@ -115,7 +118,31 @@ Use plan mode for spec analysis (safe read-only exploration before implementatio
 2. **Run refactoring-analyzer** - DRY, orthogonality, tech debt scoring
 3. **Calculate quality score** - Combined metric from all checks
 4. **GATE**: Quality >= 4.0? YES -> Continue, NO -> **PAUSE**
-5. **UI polish validation** (main session — MCP cannot run in subagents):
+5. **Pre-PR verification** (catches CI failures before PR creation):
+   ```
+   5a. CLI Tool Sweep (two parallel groups):
+       Backend: mix compile --warnings-as-errors, mix credo --strict, mix test
+       Frontend (cd assets): eslint --max-warnings=0, svelte-check, tsc --noEmit, vitest run
+       (Skip: mix format, prettier — already handled by hooks)
+
+   5b. Code Hygiene Scan (parallel Task subagent, modified files only via git diff):
+       - Debug statements (console.log, IO.inspect, dbg, debugger) in non-test files → blocker
+       - TODO/FIXME in new code → warning
+       - Svelte 4 syntax leaks (export let, <slot/>, $:) → blocker
+       - N+1 query patterns (Ash.read!/get! inside Enum.map/each) → blocker
+       - Unused imports → warning
+
+   5c. Auto-fix pass (per autonomy settings):
+       - eslint --fix for auto-fixable errors
+       - Remove debug statements from non-test files
+       - Convert Svelte 4 → Svelte 5 patterns
+       - Remove unused imports
+       - Re-run failed checks to confirm fixes
+
+   5d. GATE: Blockers remaining after auto-fix? YES → PAUSE, NO → proceed
+       (Warnings reported but non-blocking)
+   ```
+6. **UI polish validation** (main session — MCP cannot run in subagents):
    ```
    If MCP available:
      For each modified .svelte file:
@@ -128,9 +155,9 @@ Use plan mode for spec analysis (safe read-only exploration before implementatio
      Run /vibe polish in static analysis mode for each modified component
      Log: "Install Playwright MCP for visual validation — see docs/mcp-browser-setup.md"
    ```
-6. **Auto-review** - Spawn 3 parallel agents (security, performance, patterns)
-7. **GATE**: No blockers? YES -> AUTO-PROCEED, NO -> **PAUSE**
-8. **Create final PR** -> main + spawn ci-fixer
+7. **Auto-review** - Spawn 3 parallel agents (security, performance, patterns)
+8. **GATE**: No blockers? YES -> AUTO-PROCEED, NO -> **PAUSE**
+9. **Create final PR** -> main + spawn ci-fixer
 
 ### Phase 4: POLISH
 
@@ -148,13 +175,14 @@ Use plan mode for spec analysis (safe read-only exploration before implementatio
 
 **DONE!** (Only paused if issues found)
 
-## Strategic Pause Points (Only 5)
+## Strategic Pause Points (Only 6)
 
 | Pause Point | Condition | Why Human Needed |
 |-------------|-----------|------------------|
 | Tests failing | Phase 2 test gate fails | Cannot auto-fix test logic |
 | Security critical | Security issue found | Requires acknowledgment |
 | Quality below 4.0 | Quality score low | May need scope adjustment |
+| Pre-PR verification | CLI/hygiene blockers unfixable | Compile errors, type errors, N+1 patterns |
 | Review blockers | Auto-review finds blockers | Must fix before PR |
 | Conflicts unresolved | Agent disagreements | Need decision |
 
@@ -171,6 +199,11 @@ Use plan mode for spec analysis (safe read-only exploration before implementatio
 | Quality < 4.0 | **PAUSE** |
 | Review no blockers | Auto-proceed |
 | PR creation | Auto-create |
+| CLI check failures | Auto-fix if possible, else **PAUSE** |
+| Debug statements | Auto-remove (non-test files) |
+| Svelte 4 syntax | Auto-convert to Svelte 5 |
+| TODO/FIXME comments | Warn, proceed |
+| N+1 query pattern | **PAUSE** (structural fix needed) |
 | Polish suggestions | Auto-fix safe ones |
 
 ## Pattern Retrieval (RAG-Lite)
