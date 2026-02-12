@@ -5,19 +5,18 @@
 ## Quick Setup (3 commands)
 
 ```bash
-# 1. Install Playwright MCP server
-npm install -D @anthropic-ai/mcp-server-playwright
+# 1. Install Playwright MCP server (Microsoft official)
+npm install -D @playwright/mcp
 
 # 2. Install browser
 npx playwright install chromium
 
-# 3. Add to ~/.claude/settings.json (or copy mcpServers from templates/mcp.json):
+# 3. Add to ~/.claude/settings.json:
 # {
 #   "mcpServers": {
 #     "playwright": {
 #       "command": "npx",
-#       "args": ["@anthropic-ai/mcp-server-playwright"],
-#       "env": { "PLAYWRIGHT_HEADLESS": "true" }
+#       "args": ["@playwright/mcp", "--headless"]
 #     }
 #   }
 # }
@@ -53,10 +52,10 @@ The UI validation feature uses MCP (Model Context Protocol) browser tools to:
 
 ```bash
 # Install globally
-npm install -g @anthropic-ai/mcp-server-playwright
+npm install -g @playwright/mcp
 
 # Or add to your project
-npm install --save-dev @anthropic-ai/mcp-server-playwright
+npm install --save-dev @playwright/mcp
 ```
 
 **Configure in Claude settings** (`~/.claude/settings.json`):
@@ -66,10 +65,7 @@ npm install --save-dev @anthropic-ai/mcp-server-playwright
   "mcpServers": {
     "playwright": {
       "command": "npx",
-      "args": ["@anthropic-ai/mcp-server-playwright"],
-      "env": {
-        "PLAYWRIGHT_HEADLESS": "true"
-      }
+      "args": ["@playwright/mcp", "--headless"]
     }
   }
 }
