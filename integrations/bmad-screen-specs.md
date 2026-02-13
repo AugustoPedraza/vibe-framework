@@ -13,24 +13,24 @@ Screen specs are located at the path configured in `vibe.config.json > bmad.scre
 When `/vibe [SCREEN-SPEC-ID]` is invoked:
 
 1. **Locate spec**: Read `{bmad.screen_specs_path}/[ID].md`
-2. **Parse sections**: Extract structured data from the spec (see screen-spec-reader.md)
-3. **Load patterns**: Read referenced UX patterns from `{patterns.catalog_path}`
+2. **Parse sections**: Extract structured data from the spec
+3. **Auto-match patterns**: Extract keywords from spec, match against `patterns/manifest.json`, load top 3
 
-## Section → Phase Mapping
+## Section → Build Layer Mapping
 
-| Screen Spec Section | Vibe Phase | Agent |
-|---------------------|-----------|-------|
-| Data Requirements → Ash Resources | Phase 1: Domain | domain-agent |
-| Data Requirements → LiveView Assigns | Phase 1: Domain | domain-agent |
-| UI Specification → Layout | Phase 2: UI | ui-agent |
-| UI Specification → Components | Phase 2: UI | ui-agent |
-| UI Specification → States | Phase 2: UI | ui-agent |
-| UI Specification → Interactions | Phase 2: UI | ui-agent |
-| UI Specification → Navigation | Phase 2: UI | ui-agent |
-| Completeness Review → Table Stakes | Phase 3: QA | qa-agent |
-| Acceptance Criteria | Phase 4: Testing | test-agent |
-| Dev Notes → Token Mappings | Phase 2: UI | ui-agent |
-| Dev Notes → Testing Approach | Phase 4: Testing | test-agent |
+| Screen Spec Section | Build Layer | Reference Guide |
+|---------------------|-------------|-----------------|
+| Data Requirements → Ash Resources | DATA + DOMAIN | `references/domain-layer.md` |
+| Data Requirements → LiveView Assigns | API | `references/api-layer.md` |
+| UI Specification → Layout | UI | `references/ui-layer.md` |
+| UI Specification → Components | UI | `references/ui-layer.md` |
+| UI Specification → States | UI | `references/ui-layer.md` |
+| UI Specification → Interactions | UI | `references/ui-layer.md` |
+| UI Specification → Navigation | UI + WIRE | `references/api-layer.md` |
+| Acceptance Criteria | ALL (TDD per layer) | — |
+| Table-Stakes Audit | VERIFY (Phase 3) | — |
+| Dev Notes → Token Mappings | UI | `references/ui-layer.md` |
+| Dev Notes → Testing Approach | ALL (TDD per layer) | — |
 
 ## Pattern Enforcement
 
@@ -42,22 +42,12 @@ For each pattern listed in the spec's `UX Patterns` field:
 
 ## Completeness Verification
 
-Before marking implementation complete:
+Before marking implementation complete (Phase 3 spec-compliance check):
 1. All `[x]` items in Table Stakes Audit must have corresponding code
-2. All acceptance criteria must have corresponding test assertions
+2. All acceptance criteria must have corresponding tagged test assertions (`@tag :ac_N` or `AC-N:`)
 3. All four states (loading, empty, error, success) must be implemented
 4. Navigation entry/exit points must be wired up
-
-## Example: `/vibe FEAT-001-01`
-
-```
-1. Read {bmad.screen_specs_path}/FEAT-001-01.md
-2. Screen Type: Message List → load relevant patterns
-3. Phase 1: Create/verify Ash resources per Data Requirements
-4. Phase 2: Implement Svelte components per UI Specification
-5. Phase 3: Run table-stakes audit against implementation
-6. Phase 4: Write tests per Acceptance Criteria
-```
+5. Component registered in `assets/js/app.js`
 
 ## Anti-Patterns
 

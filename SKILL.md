@@ -1,10 +1,10 @@
 ---
 name: vibe
-description: Autonomous feature implementation framework for Ash/Elixir + Svelte projects. Agent-first parallel architecture with TDD, quality gates, and stacked PRs.
+description: Autonomous feature implementation framework for Ash/Elixir + Svelte projects. Single-agent TDD pipeline with parallel validation, quality gates, and one PR per spec.
 commands:
   - name: vibe
     description: Full autonomous workflow for feature implementation
-    args: "[FEATURE-ID]"
+    args: "[SCREEN-SPEC-ID]"
     file: commands/vibe.md
   - name: vibe check
     description: Standalone PR verification with parallel agents
@@ -50,41 +50,51 @@ commands:
 
 ## Architecture
 
-Vibe is a **thin orchestration layer** on top of native Claude Code capabilities:
+Vibe is a **single-agent TDD pipeline** with parallel validation, built on native Claude Code capabilities:
 
-- **TaskCreate/TaskUpdate** for progress tracking and state management
-- **Auto memory** for persistent decisions and patterns learned
-- **Hooks** for automated format/lint enforcement
-- **Rules** auto-loaded into every session for anti-patterns and quality gates
-- **Subagents** via Task tool for parallel implementation
+- **3 phases**: PREP → BUILD → VERIFY (not 5 phases with parallel agents)
+- **Single focused agent** implements full vertical slice (DATA → DOMAIN → API → UI → WIRE)
+- **Strict TDD**: test first → red → implement → green, per layer
+- **Parallel validation**: 3 background agents verify backend, frontend, and spec-compliance
+- **One PR per spec** to main (not stacked PRs)
 
-## Agent Taxonomy
+### Core Capabilities Used
 
-**Implementation Agents** (spawned via Task tool):
-- `domain-agent` - Ash resources, actions, validations, policies
-- `api-agent` - LiveView handlers, routing, API wiring
-- `ui-agent` - Svelte components, stores, interactions
-- `data-agent` - Migrations, seeds, data layer
+- **Layer reference guides** (`references/`) — checklists consulted per build layer
+- **Auto memory** — persistent decisions and patterns learned
+- **Hooks** — automated format/lint/size enforcement
+- **Rules** — auto-loaded anti-patterns and quality gates
+- **Background Task agents** — parallel verification in Phase 3
 
-**QA Agents** (spawned in background):
-- `ci-fixer` - Auto-fix CI failures after PR creation
-- `refactoring-analyzer` - DRY, orthogonality, tech debt analysis
+## Layer References
+
+| Layer | Reference Guide | Purpose |
+|-------|----------------|---------|
+| DATA | `references/data-layer.md` | Migrations, seeds, schema |
+| DOMAIN | `references/domain-layer.md` | Ash resources, actions, policies |
+| API | `references/api-layer.md` | LiveView handlers, routing, wiring |
+| UI | `references/ui-layer.md` | Svelte components, stores, a11y |
+
+## QA Agents (Background)
+
+- `agents/ci-fixer.md` — Auto-fix CI failures after PR creation
+- `agents/refactoring-analyzer.md` — DRY, orthogonality, tech debt analysis
 
 ## Integration
 
-- **BMAD** - Planning and discovery (see `integrations/bmad.md`)
-- **UI/UX Pro Max** - Design intelligence (see `integrations/ui-ux-pro-max.md`)
-- **Playwright MCP** - UI validation via browser inspection (see `templates/mcp.json`)
+- **BMAD** — Planning and discovery (see `integrations/bmad-screen-specs.md`)
+- **Playwright MCP** — UI validation via browser inspection (see `docs/mcp-browser-setup.md`)
 
 ## File Structure
 
 ```
 commands/       # Command prompts (one per command)
-agents/         # Agent prompts for Task tool injection
+references/     # Layer reference guides (checklists for build phase)
+agents/         # QA agent prompts (ci-fixer, refactoring-analyzer)
 patterns/       # Reusable implementation patterns (RAG-lite)
 rules/          # Output templates for .claude/rules/ in target projects
 hooks/          # Hook configs + shell scripts
-integrations/   # BMAD, UI/UX Pro Max
+integrations/   # BMAD screen spec integration
 templates/      # Feature, domain, migration, and MCP templates
 config/         # Project config schema
 docs/           # Reference documentation

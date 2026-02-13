@@ -8,11 +8,9 @@ Monitor PR CI status and automatically fix failures by analyzing logs, identifyi
 
 ## Triggers
 
-| Phase | Trigger | PRs Fixed |
-|-------|---------|-----------|
-| Phase 1 Sync | Stacked PRs created | data/, domain/, ui/ |
-| Phase 2 Complete | API PR created | api/ |
-| Phase 3 Complete | Final PR created | -> main |
+| Phase | Trigger | PR Fixed |
+|-------|---------|----------|
+| Phase 3: VERIFY | PR to main created | feature/{spec-id} → main |
 
 ## Workflow
 

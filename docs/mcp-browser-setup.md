@@ -490,4 +490,4 @@ Results merged into single report. Max agents controlled by `parallel.max_agents
 - [vibe.md](../commands/vibe.md) - Main workflow documentation
 - [polish.md](../commands/polish.md) - UI polish validation
 - [ui-polish.md](../rules/ui-polish.md) - UI polish rules (auto-loaded)
-- [ui-agent.md](../agents/ui-agent.md) - UI agent workflow
+- [ui-layer.md](../references/ui-layer.md) - UI layer reference guide

@@ -29,15 +29,15 @@ Fix user-reported issues by routing to specialized agents with minimal overhead:
 
 ## Triage System
 
-| Pattern Match | Category | Agent |
-|--------------|----------|-------|
-| button, layout, style, spacing, color, css | `ui` | ui-agent |
-| validation, error, constraint, rule, policy | `logic` | domain-agent |
-| submit, event, click, handler, flow, socket | `integration` | api-agent |
-| migration, schema, database, query, index | `data` | data-agent |
-| login broken, flow fails, end-to-end | `mixed` | api-agent + others |
+| Pattern Match | Category | Start Layer |
+|--------------|----------|-------------|
+| button, layout, style, spacing, color, css | `ui` | UI (references/ui-layer.md) |
+| validation, error, constraint, rule, policy | `logic` | DOMAIN (references/domain-layer.md) |
+| submit, event, click, handler, flow, socket | `integration` | API (references/api-layer.md) |
+| migration, schema, database, query, index | `data` | DATA (references/data-layer.md) |
+| login broken, flow fails, end-to-end | `mixed` | API → full vertical slice |
 
-Priority: exact match -> multiple matches -> default to api-agent
+Priority: exact match -> multiple matches -> default to API layer
 
 ## Workflow
 

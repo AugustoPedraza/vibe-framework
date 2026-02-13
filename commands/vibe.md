@@ -1,12 +1,12 @@
 ---
 name: vibe
 description: Full autonomous workflow for feature implementation
-args: "[FEATURE-ID]"
+args: "[SCREEN-SPEC-ID]"
 ---
 
-# Vibe Core Orchestrator
+# Vibe Core — Single-Agent TDD Pipeline
 
-> Autonomous feature implementation with parallel agents. Pauses only when human judgment is required.
+> Autonomous feature implementation. Single focused agent, 3 phases: PREP → BUILD → VERIFY. Pauses only when human judgment is required.
 
 ## Autonomy Settings
 
@@ -23,20 +23,20 @@ auto_proceed:
   tests_passing: true             # Continue when tests pass
   quality_above_4: true           # Continue when quality >= 4.0
   review_no_blockers: true        # Continue when review passes
-  pr_workflow: "stacked"          # Default to stacked PRs
+  pr_workflow: "single"           # One PR per spec to main
 
 pause_only_on:
-  test_failures: true             # PAUSE - cannot auto-fix test logic
+  test_failures: true             # PAUSE - cannot auto-fix test logic after 3 attempts
   security_critical: true         # PAUSE - requires acknowledgment
   quality_below_threshold: true   # PAUSE - may need scope adjustment
   review_blockers: true           # PAUSE - must fix before PR
-  conflicts_unresolved: true      # PAUSE - naming/interface disputes
+  n_plus_one: true                # PAUSE - structural fix needed
 ```
 
 ## Commands
 
 ```
-/vibe [ID]           # Full autonomous workflow (features)
+/vibe [ID]           # Full autonomous workflow (screen spec)
 /vibe check <PR>     # Standalone PR verification
 /vibe quick [desc]   # Bugs/hotfixes (no spec needed)
 /vibe fix [desc]     # Targeted fix when paused
@@ -45,23 +45,20 @@ pause_only_on:
 /vibe polish [path]  # UI polish validation (single or --all)
 ```
 
-## Agent Taxonomy
+## Layer References
 
-**Implementation Agents** (spawned via Task tool):
+Single agent consults these as checklists while building each layer:
 
-| Agent | Responsibility | Files |
-|-------|---------------|-------|
-| domain-agent | Ash resources, actions, validations, policies | `agents/domain-agent.md` |
-| api-agent | LiveView handlers, routing, API wiring | `agents/api-agent.md` |
-| ui-agent | Svelte components, stores, interactions | `agents/ui-agent.md` |
-| data-agent | Migrations, seeds, data layer | `agents/data-agent.md` |
+| Layer | Reference Guide | When |
+|-------|----------------|------|
+| DATA | `references/data-layer.md` | Migrations needed |
+| DOMAIN | `references/domain-layer.md` | Ash resources/actions |
+| API | `references/api-layer.md` | LiveView wiring |
+| UI | `references/ui-layer.md` | Svelte components |
 
-**QA Agents** (spawned in background):
-
-| Agent | Responsibility | Files |
-|-------|---------------|-------|
-| ci-fixer | Auto-fix CI failures after PR creation | `agents/ci-fixer.md` |
-| refactoring-analyzer | DRY, orthogonality, tech debt | `agents/refactoring-analyzer.md` |
+**QA Agents** (spawned as background Task agents):
+- `agents/ci-fixer.md` — Auto-fix CI failures after PR creation
+- `agents/refactoring-analyzer.md` — Spec-compliance and tech debt analysis
 
 ## Project Validation (Session Start)
 
@@ -77,146 +74,11 @@ pause_only_on:
     └── features/                 # Feature specs
 ```
 
-Validate on first command only - skip on subsequent commands in session.
-
-## Workflow: `/vibe [FEATURE-ID]`
-
-### Phase 0: CONTRACT
-
-1. **Verify worktree isolation** - Check `.env.worktree` exists. If missing, **PAUSE** (see "Worktree Isolation" above)
-2. **Validate spec** - Check required sections, verify acceptance criteria format
-3. **Generate scaffold** - If `ui_spec` exists, create component scaffolds and test stubs
-4. **Generate contract** - Parse spec, classify criteria by agent, assign to TaskCreate with metadata
-5. **Create integration branch** - `feature/{ID}-integration`, setup stacked PRs
-6. **AUTO-PROCEED** to Phase 1
-
-Use plan mode for spec analysis (safe read-only exploration before implementation).
-
-### Phase 1: PARALLEL IMPLEMENTATION
-
-1. **Match patterns** - Query `patterns/manifest.json`, load matched patterns into agent context
-2. **Spawn implementation agents** via Task tool (parallel, `run_in_background: true`):
-   - domain-agent, ui-agent, data-agent working simultaneously
-3. **Track progress** via TaskCreate/TaskUpdate with metadata:
-   ```json
-   {"phase": 1, "criteria_completed": 2, "criteria_total": 5, "tests_passing": true}
-   ```
-4. **Auto-fix** format issues via hooks (PostToolUse)
-5. **SYNC**: All agents complete -> AUTO-PROCEED to Phase 2
-
-### Phase 2: INTEGRATION
-
-1. **Create stacked PRs** - data/, domain/, ui/ branches
-2. **Spawn ci-fixer** (background) for each PR - auto-fix failures (max 3 retries)
-3. **Spawn api-agent** - Wire domain to UI, create LiveView handlers
-4. **GATE**: Tests passing? YES -> AUTO-PROCEED, NO -> **PAUSE**
-5. **Create API PR** + spawn ci-fixer
-
-### Phase 3: VALIDATION + AUTO-REVIEW
-
-1. **Aggregate reports** - Collect all agent/watcher results
-2. **Run refactoring-analyzer** - DRY, orthogonality, tech debt scoring
-3. **Calculate quality score** - Combined metric from all checks
-4. **GATE**: Quality >= 4.0? YES -> Continue, NO -> **PAUSE**
-5. **Pre-PR verification** (catches CI failures before PR creation):
-   ```
-   5a. CLI Tool Sweep (two parallel groups):
-       Backend: mix compile --warnings-as-errors, mix credo --strict, mix test
-       Frontend (cd assets): eslint --max-warnings=0, svelte-check, tsc --noEmit, vitest run
-       (Skip: mix format, prettier — already handled by hooks)
-
-   5b. Code Hygiene Scan (parallel Task subagent, modified files only via git diff):
-       - Debug statements (console.log, IO.inspect, dbg, debugger) in non-test files → blocker
-       - TODO/FIXME in new code → warning
-       - Svelte 4 syntax leaks (export let, <slot/>, $:) → blocker
-       - N+1 query patterns (Ash.read!/get! inside Enum.map/each) → blocker
-       - Unused imports → warning
-
-   5c. Auto-fix pass (per autonomy settings):
-       - eslint --fix for auto-fixable errors
-       - Remove debug statements from non-test files
-       - Convert Svelte 4 → Svelte 5 patterns
-       - Remove unused imports
-       - Re-run failed checks to confirm fixes
-
-   5d. GATE: Blockers remaining after auto-fix? YES → PAUSE, NO → proceed
-       (Warnings reported but non-blocking)
-   ```
-6. **UI polish validation** (main session — MCP cannot run in subagents):
-   ```
-   If MCP available:
-     For each modified .svelte file:
-       - Navigate to component route via Playwright MCP
-       - Validate at 375px and 1280px viewports
-       - Check: states, touch targets, design tokens, responsiveness
-       - Auto-fix safe issues (spacing, aria-labels, dvh)
-       - Report state matrix
-   Else:
-     Run /vibe polish in static analysis mode for each modified component
-     Log: "Install Playwright MCP for visual validation — see docs/mcp-browser-setup.md"
-   ```
-7. **Auto-review** - Spawn 3 parallel agents (security, performance, patterns)
-8. **GATE**: No blockers? YES -> AUTO-PROCEED, NO -> **PAUSE**
-9. **Create final PR** -> main + spawn ci-fixer
-
-### Phase 4: POLISH
-
-1. **Run proactive checks** - CSS, LiveView, Ash, A11y, Performance
-2. **Auto-fix safe suggestions** - spacing, tokens, aria-labels
-3. **List remaining suggestions** (info only, non-blocking)
-
-### Phase 5: LEARNING (background)
-
-1. **Extract patterns** - Analyze implementation for reusable patterns, score reusability
-2. **Write to auto memory** - `memory/patterns-learned.md`, `memory/pitfalls.md`
-3. **Archive feature** - Move spec to archived, update completed.md
-4. **Update `rules/project-pitfalls.md`** with new pitfalls from interventions
-5. **Cleanup** - Remove feature tracking, auto-clear context
-
-**DONE!** (Only paused if issues found)
-
-## Strategic Pause Points (Only 6)
-
-| Pause Point | Condition | Why Human Needed |
-|-------------|-----------|------------------|
-| Tests failing | Phase 2 test gate fails | Cannot auto-fix test logic |
-| Security critical | Security issue found | Requires acknowledgment |
-| Quality below 4.0 | Quality score low | May need scope adjustment |
-| Pre-PR verification | CLI/hygiene blockers unfixable | Compile errors, type errors, N+1 patterns |
-| Review blockers | Auto-review finds blockers | Must fix before PR |
-| Conflicts unresolved | Agent disagreements | Need decision |
-
-## Auto-Proceed Decision Matrix
-
-| Decision Point | Autonomous Behavior |
-|----------------|---------------------|
-| PR workflow | Stacked PRs default |
-| Format issues | Auto-fix always (via hooks) |
-| Lint warnings | Notify, proceed |
-| Tests passing | Auto-proceed |
-| Tests failing | **PAUSE** |
-| Quality >= 4.0 | Auto-proceed to review |
-| Quality < 4.0 | **PAUSE** |
-| Review no blockers | Auto-proceed |
-| PR creation | Auto-create |
-| CLI check failures | Auto-fix if possible, else **PAUSE** |
-| Debug statements | Auto-remove (non-test files) |
-| Svelte 4 syntax | Auto-convert to Svelte 5 |
-| TODO/FIXME comments | Warn, proceed |
-| N+1 query pattern | **PAUSE** (structural fix needed) |
-| Polish suggestions | Auto-fix safe ones |
-
-## Pattern Retrieval (RAG-Lite)
-
-1. Read `patterns/manifest.json` (lightweight index)
-2. Match feature requirements against pattern triggers
-3. Filter by project stack (from `vibe.config.json`)
-4. Rank by reusability_score (5+ = recommended)
-5. Load ONLY matched pattern files into agent context
+Validate on first command only — skip on subsequent commands in session.
 
 ## Worktree Isolation (Required)
 
-Every `/vibe` run MUST execute inside a worktree slot. Phase 0 enforces this:
+Every `/vibe` run MUST execute inside a worktree slot. Phase 1 enforces this:
 
 1. Check if `.env.worktree` exists in project root
 2. If YES: read it, confirm `PHX_PORT`/`VITE_PORT`/`POSTGRES_DB` are set, proceed
@@ -235,6 +97,134 @@ Every `/vibe` run MUST execute inside a worktree slot. Phase 0 enforces this:
    ```
 4. Do NOT proceed — wait for user to switch terminals
 
+---
+
+## Workflow: `/vibe [SCREEN-SPEC-ID]`
+
+### Phase 1: PREP (~1 min)
+
+1. **Verify worktree** — Check `.env.worktree` exists. If missing, **PAUSE** (see "Worktree Isolation" above)
+2. **Load screen spec** — Read `{bmad.screen_specs_path}/{ID}.md`, validate Status is `spec-ready` or `building`
+3. **Auto-match patterns** — Extract keywords from spec title + acceptance criteria + UX Patterns field:
+   ```
+   1. Extract keywords from: spec title, screen type, UX Patterns field, AC text
+   2. Match against patterns/manifest.json triggers (case-insensitive)
+   3. Filter by stack intersection (from vibe.config.json)
+   4. Sort by score descending
+   5. Load top 3 pattern files into context
+   6. Log which patterns were matched and why
+   ```
+4. **Load critical rules** — Read `project-context.md` "Critical Don't-Miss Rules" section only (not the full file), plus the relevant layer reference guide(s) for this spec
+5. **Create branch** — `git checkout -b feature/{ID}` from main (if not already on it)
+6. **AUTO-PROCEED** to Phase 2
+
+### Phase 2: BUILD (the core — single-agent TDD)
+
+Single agent implements full vertical slice in dependency order:
+
+```
+1. DATA    — migration if new tables/columns needed
+2. DOMAIN  — Ash resource/action + tests (TDD: test first → implement → green)
+3. API     — LiveView mount/handle_event/render + integration test
+4. UI      — Svelte component + vitest (TDD: test first → implement → green)
+5. WIRE    — Register component in app.js, update router, verify end-to-end
+```
+
+**Per layer**, the agent:
+- Consults the **layer reference guide** (`references/{layer}-layer.md`) as a checklist
+- **Strict TDD**: writes test FIRST (tagged `@tag :ac_N` for Elixir, named `AC-N:` for vitest), verifies it FAILS (red), then implements until green
+- **AC traceability**: every acceptance criterion in the spec MUST map to at least one tagged test. Track coverage as you go.
+- Implements until test passes
+- Moves to next layer
+
+**Hard gates per layer** (self-check before moving on):
+
+| Layer | Gate |
+|-------|------|
+| DATA | Migration runs forward AND rolls back cleanly |
+| DOMAIN | All AC-tagged tests pass. No `@tag :skip`. Policies test both allowed and denied. |
+| API | LiveView thin shell (<100 lines). `assign_async` for all data loading. Serialization to camelCase maps. |
+| UI | All 4 states implemented (loading skeleton, empty CTA, error with retry + `role="alert"`, success). Component <300 lines (decompose if over). Touch targets 44px min. No arbitrary Tailwind values. Svelte 5 runes only. |
+| WIRE | Component registered in `app.js`. Route exists. End-to-end navigation works. |
+
+**Auto-fix** rules:
+- Format: `mix format` / `prettier` (via hooks, already running)
+- Debug statements: auto-remove from non-test files
+- Svelte 4 syntax: auto-convert to Svelte 5
+- Unused imports: auto-remove
+
+**PAUSE only on**:
+- Tests failing after 3 fix attempts
+- Security issue found
+- N+1 query pattern detected
+- Component >300 lines and no clear decomposition path
+
+### Phase 3: VERIFY + SHIP (~3 min)
+
+**3a. Parallel validation** — spawn 3 background Task agents simultaneously:
+
+1. **backend-verify**: `mix compile --warnings-as-errors && mix credo --strict && mix test`
+2. **frontend-verify**: `cd assets && npx eslint svelte/ && npx svelte-check && npx vitest run`
+3. **spec-compliance** (read-only audit agent):
+   - **AC coverage**: For each acceptance criterion, find the tagged test (`@tag :ac_N` or `AC-N:`). Missing = BLOCKER.
+   - **4-state audit**: For each async component, grep for loading/skeleton, error/role="alert", empty/EmptyState, success patterns. Missing state = BLOCKER.
+   - **Table-stakes audit**: For each `[x]` item in spec's Table-Stakes Audit section, verify corresponding code exists. Missing = BLOCKER.
+   - **Touch targets**: Check interactive elements for `min-h-11` or equivalent 44px. Missing = warning.
+   - **Design tokens**: Check for raw colors, arbitrary values, hardcoded z-index. Violations = warning (hooks already catch these).
+   - **Component sizes**: Any `.svelte` file >300 lines = BLOCKER.
+
+**3b. Visual validation** (main session, if MCP Playwright available):
+- Start dev server if not running
+- For each new/modified screen route:
+  - Navigate to route at 375px width (mobile) — take screenshot
+  - Navigate at 1280px width (desktop) — take screenshot
+  - Verify: content renders, no layout breaks, touch targets visible
+- If MCP not available: skip with note "Install Playwright MCP for visual validation"
+
+**3c. Auto-fix** any fixable issues (eslint --fix, format, etc.)
+
+**3d. GATE**: Blockers remaining? YES → **PAUSE** with specific items. NO → continue.
+
+**3e. Create PR** — single PR to main with:
+- Title: `{SPEC-ID}: {Spec Title}`
+- Body: Summary of changes, AC checklist (checkboxes), spec-compliance score
+- Labels: `screen-spec`, feature-flow label
+
+**3f. Update spec status** to `review`
+
+**3g. Spawn ci-fixer** in background (max 3 retries)
+
+---
+
+## Strategic Pause Points
+
+| Pause Point | Condition | Why Human Needed |
+|-------------|-----------|------------------|
+| Tests failing | 3 fix attempts exhausted | Cannot auto-fix test logic |
+| Security critical | Security issue found | Requires acknowledgment |
+| Pre-PR verification | Blockers unfixable | Compile errors, type errors, N+1 patterns |
+| Review blockers | Spec-compliance audit BLOCKER | Must fix before PR |
+
+## Auto-Proceed Decision Matrix
+
+| Decision Point | Autonomous Behavior |
+|----------------|---------------------|
+| PR workflow | Single PR to main |
+| Format issues | Auto-fix always (via hooks) |
+| Lint warnings | Notify, proceed |
+| Tests passing | Auto-proceed |
+| Tests failing | **PAUSE** after 3 attempts |
+| Quality >= 4.0 | Auto-proceed to review |
+| Quality < 4.0 | **PAUSE** |
+| Review no blockers | Auto-proceed |
+| PR creation | Auto-create |
+| CLI check failures | Auto-fix if possible, else **PAUSE** |
+| Debug statements | Auto-remove (non-test files) |
+| Svelte 4 syntax | Auto-convert to Svelte 5 |
+| TODO/FIXME comments | Warn, proceed |
+| N+1 query pattern | **PAUSE** (structural fix needed) |
+| Polish suggestions | Auto-fix safe ones |
+
 ## CI Auto-Fix
 
 After every PR is created, spawn ci-fixer agent in background:
@@ -249,21 +239,21 @@ After every PR is created, spawn ci-fixer agent in background:
 
 BMAD handles planning and discovery. Vibe handles implementation.
 - BMAD owns: stories, UX exploration, research, architecture
-- Vibe owns: implementation (agents, TDD, quality gates, PRs)
+- Vibe owns: implementation (TDD, quality gates, PRs)
 
 ## Quick Mode: `/vibe quick [description]`
 
-Single agent handles: Analyze -> Write test -> Implement -> Verify.
-No watchers, no parallel agents, no PR workflow.
+Single agent handles: Analyze → Write test → Implement → Verify.
+No parallel validation agents, no PR workflow.
 
 ## References
 
-- `commands/check.md` - PR verification
-- `commands/fix.md` - Targeted fix
-- `commands/pivot.md` - Course correction
-- `commands/quick.md` - Bug/hotfix mode
-- `commands/migrate.md` - Legacy migration
-- `commands/polish.md` - UI polish validation
-- `agents/*.md` - Agent specifications
-- `patterns/README.md` - Pattern discovery
-- `docs/mcp-browser-setup.md` - Playwright MCP setup
+- `commands/check.md` — PR verification
+- `commands/fix.md` — Targeted fix
+- `commands/pivot.md` — Course correction
+- `commands/quick.md` — Bug/hotfix mode
+- `commands/migrate.md` — Legacy migration
+- `commands/polish.md` — UI polish validation
+- `references/*.md` — Layer reference guides (checklists)
+- `patterns/README.md` — Pattern discovery
+- `docs/mcp-browser-setup.md` — Playwright MCP setup

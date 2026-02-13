@@ -41,8 +41,8 @@
       },
       {
         "matcher": "Write|Edit",
-        "description": "Check Svelte component size (300 line limit)",
-        "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.svelte ]]; then LINES=$(wc -l < \"$FILE\" 2>/dev/null); if [ \"$LINES\" -gt 300 ] 2>/dev/null; then echo \"WARNING: Component is $LINES lines (limit: 300). Decompose using component folder structure pattern (index.svelte + sibling sub-components).\"; fi; fi'",
+        "description": "BLOCKER: Svelte component size (300 line limit)",
+        "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.svelte ]]; then LINES=$(wc -l < \"$FILE\" 2>/dev/null); if [ \"$LINES\" -gt 300 ] 2>/dev/null; then echo \"BLOCKER: Component is $LINES lines (limit: 300). Decompose using component folder structure pattern (index.svelte + sibling sub-components).\"; exit 1; fi; fi'",
         "timeout_ms": 5000
       },
       {
@@ -53,9 +53,21 @@
       },
       {
         "matcher": "Write|Edit",
-        "description": "Check for missing async states in Svelte components (loading/error/empty)",
-        "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.svelte ]]; then HAS_ASYNC=false; if grep -qE \"(\\{#await|fetch\\(|onMount.*async|\\$effect.*fetch|loading)\" \"$FILE\" 2>/dev/null; then HAS_ASYNC=true; fi; if [ \"$HAS_ASYNC\" = true ]; then MISSING=\"\"; if ! grep -qE \"(skeleton|Skeleton|spinner|loading|shimmer)\" \"$FILE\" 2>/dev/null; then MISSING=\"$MISSING loading-pattern\"; fi; if ! grep -qE \"(role=.alert.|error|catch)\" \"$FILE\" 2>/dev/null; then MISSING=\"$MISSING error-state\"; fi; if ! grep -qE \"(EmptyState|empty|No .* found|No .* yet|length === 0|\\.length === 0)\" \"$FILE\" 2>/dev/null; then MISSING=\"$MISSING empty-state\"; fi; if [ -n \"$MISSING\" ]; then echo \"WARNING: Async component missing states:$MISSING. See rules/ux-validation.md for canonical pattern.\"; fi; fi; fi'",
+        "description": "BLOCKER: Missing async states in Svelte components (loading/error/empty)",
+        "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.svelte ]]; then HAS_ASYNC=false; if grep -qE \"(\\{#await|fetch\\(|onMount.*async|\\$effect.*fetch|loading)\" \"$FILE\" 2>/dev/null; then HAS_ASYNC=true; fi; if [ \"$HAS_ASYNC\" = true ]; then MISSING=\"\"; if ! grep -qE \"(skeleton|Skeleton|spinner|loading|shimmer)\" \"$FILE\" 2>/dev/null; then MISSING=\"$MISSING loading-pattern\"; fi; if ! grep -qE \"(role=.alert.|error|catch)\" \"$FILE\" 2>/dev/null; then MISSING=\"$MISSING error-state\"; fi; if ! grep -qE \"(EmptyState|empty|No .* found|No .* yet|length === 0|\\.length === 0)\" \"$FILE\" 2>/dev/null; then MISSING=\"$MISSING empty-state\"; fi; if [ -n \"$MISSING\" ]; then echo \"BLOCKER: Async component missing states:$MISSING. All 4 states required (loading/error/empty/success). See rules/ux-validation.md.\"; exit 1; fi; fi; fi'",
         "timeout_ms": 5000
+      },
+      {
+        "matcher": "Write|Edit",
+        "description": "Run related Elixir test after modifying implementation files",
+        "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == lib/syna/*.ex ]] && [[ \"$FILE\" != *_test.exs ]]; then TEST=$(echo \"$FILE\" | sed \"s|lib/|test/|;s|\\.ex$|_test.exs|\"); if [ -f \"$TEST\" ]; then mix test \"$TEST\" --no-color 2>&1 | tail -3; fi; fi'",
+        "timeout_ms": 30000
+      },
+      {
+        "matcher": "Write|Edit",
+        "description": "Run related vitest after modifying Svelte components",
+        "command": "bash -c 'FILE=\"$CLAUDE_FILE_PATH\"; if [[ \"$FILE\" == *.svelte ]]; then TESTDIR=$(dirname \"$FILE\" | sed \"s|svelte/components|tests/components|\"); TESTFILE=\"$TESTDIR/$(basename \"$FILE\" .svelte).test.ts\"; if [ -f \"$TESTFILE\" ]; then cd assets && npx vitest run \"$TESTFILE\" --reporter=dot 2>&1 | tail -3; fi; fi'",
+        "timeout_ms": 30000
       }
     ],
     "PreToolUse": [

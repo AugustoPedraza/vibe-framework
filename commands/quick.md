@@ -48,10 +48,10 @@ Skip quick mode when:
 
 | Aspect | Quick | Full |
 |--------|-------|------|
-| Phases | 2 | 5 |
-| Agents | Single | Parallel |
-| PR workflow | Optional | Stacked PRs |
-| Watchers | None | Background |
+| Phases | 2 | 3 (PREP → BUILD → VERIFY) |
+| Agent | Single | Single (full vertical slice) |
+| PR workflow | Optional | Single PR to main |
+| Validation | None | Parallel background agents |
 
 ## Anti-Patterns
 

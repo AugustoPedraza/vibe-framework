@@ -29,10 +29,10 @@
 
 | Command | Description |
 |---------|-------------|
-| `/vibe [ID]` | Full autonomous feature implementation (parallel agents, stacked PRs) |
+| `/vibe [ID]` | Full autonomous feature implementation (single-agent TDD, one PR) |
 | `/vibe quick [desc]` | Bug/hotfix (condensed 2-phase: Dev → Verify) |
-| `/vibe check <PR>` | Standalone PR verification with 6 parallel analysis agents |
-| `/vibe fix [ID] "desc"` | Targeted fix with triage routing and model escalation |
+| `/vibe check <PR>` | Standalone PR verification with parallel analysis agents |
+| `/vibe fix [ID] "desc"` | Targeted fix with triage routing |
 | `/vibe pivot` | Course correction (ASSESS → DECIDE → RESUME) |
 | `/vibe migrate [sub]` | Strangler fig migration (init, status, or feature-based) |
 
@@ -48,16 +48,24 @@ Vibe is a **thin orchestration layer** on native Claude Code features:
 | **Rules** (`rules/`) | Custom tier loading, reinforcement protocol |
 | **Subagents** (Task tool) | Sequential role-based workflow |
 
-### Agent Taxonomy
+### Single-Agent TDD Pipeline
 
-**Implementation Agents** (spawned via Task tool, run in parallel):
+Single focused agent implements full vertical slice in 3 phases:
 
-| Agent | Responsibility | File Ownership |
-|-------|---------------|----------------|
-| `domain-agent` | Ash resources, actions, validations, policies | `lib/{domain}/` |
-| `api-agent` | LiveView handlers, routing, API wiring | `lib/{app}_web/live/` |
-| `ui-agent` | Svelte components, stores, interactions | `assets/svelte/` |
-| `data-agent` | Migrations, seeds, data layer | `priv/repo/` |
+```
+Phase 1: PREP     → Load spec, auto-match patterns, create branch
+Phase 2: BUILD    → TDD per layer: DATA → DOMAIN → API → UI → WIRE
+Phase 3: VERIFY   → Parallel validation, visual check, create PR
+```
+
+**Layer Reference Guides** (checklists consulted during BUILD):
+
+| Layer | Reference | Purpose |
+|-------|-----------|---------|
+| DATA | `references/data-layer.md` | Migrations, seeds, schema |
+| DOMAIN | `references/domain-layer.md` | Ash resources, actions, policies |
+| API | `references/api-layer.md` | LiveView handlers, routing, wiring |
+| UI | `references/ui-layer.md` | Svelte components, stores, a11y |
 
 **QA Agents** (spawned in background):
 
@@ -65,17 +73,6 @@ Vibe is a **thin orchestration layer** on native Claude Code features:
 |-------|---------------|
 | `ci-fixer` | Auto-fix CI failures after PR creation (max 3 retries) |
 | `refactoring-analyzer` | DRY, orthogonality, tech debt scoring |
-
-### Workflow Phases
-
-```
-Phase 0: CONTRACT    → Parse feature spec, generate agent contracts (plan mode)
-Phase 1: SYNC        → Data + Domain + UI agents in parallel, stacked PRs
-Phase 2: INTEGRATE   → API agent wires domain↔UI, integration PR
-Phase 3: VALIDATE    → Quality gates, refactoring analysis, security scan
-Phase 4: POLISH      → Auto-fix issues, final PR to main
-Phase 5: LEARN       → Extract patterns, update auto memory
-```
 
 ## Integrations
 
@@ -99,11 +96,12 @@ Phase 5: LEARN       → Extract patterns, update auto memory
 │   ├── fix.md            # Targeted fix
 │   ├── pivot.md          # Course correction
 │   └── migrate.md        # Legacy migration
-├── agents/               # Agent prompts for Task tool injection
-│   ├── domain-agent.md
-│   ├── api-agent.md
-│   ├── ui-agent.md
-│   ├── data-agent.md
+├── references/           # Layer reference guides (checklists for build phase)
+│   ├── data-layer.md
+│   ├── domain-layer.md
+│   ├── api-layer.md
+│   └── ui-layer.md
+├── agents/               # QA agent prompts (background Task agents)
 │   ├── ci-fixer.md
 │   └── refactoring-analyzer.md
 ├── patterns/             # Reusable implementation patterns (RAG-lite)
