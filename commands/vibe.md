@@ -83,7 +83,7 @@ Validate on first command only - skip on subsequent commands in session.
 
 ### Phase 0: CONTRACT
 
-1. **Check active features** - Use TaskList to detect running features, check for file overlap
+1. **Verify worktree isolation** - Check `.env.worktree` exists. If missing, **PAUSE** (see "Worktree Isolation" above)
 2. **Validate spec** - Check required sections, verify acceptance criteria format
 3. **Generate scaffold** - If `ui_spec` exists, create component scaffolds and test stubs
 4. **Generate contract** - Parse spec, classify criteria by agent, assign to TaskCreate with metadata
@@ -214,18 +214,26 @@ Use plan mode for spec analysis (safe read-only exploration before implementatio
 4. Rank by reusability_score (5+ = recommended)
 5. Load ONLY matched pattern files into agent context
 
-## Parallel Feature Coordination
+## Worktree Isolation (Required)
 
-When starting a feature while another is in progress:
+Every `/vibe` run MUST execute inside a worktree slot. Phase 0 enforces this:
 
-1. Use TaskList to detect active features in current session
-2. Check if currently running inside a worktree (look for `.env.worktree` in project root)
-3. If in worktree: proceed normally — isolation is already handled by the slot
-4. If in main worktree and active features detected:
-   - Warn about potential collision
-   - Suggest: `just wt-switch {slot} feature/{spec_id}` (pick an available slot via `just wt-list`)
-   - **PAUSE** — tell user to switch terminal to the worktree tmux session, then re-run `/vibe`
-5. If no collision detected: proceed normally in main
+1. Check if `.env.worktree` exists in project root
+2. If YES: read it, confirm `PHX_PORT`/`VITE_PORT`/`POSTGRES_DB` are set, proceed
+3. If NO (running in main): **PAUSE** immediately with:
+   ```
+   /vibe must run inside a worktree slot for isolation.
+
+   Quick setup:
+     just wt-setup 1                          # one-time (~1-3 min)
+     just wt-switch 1 feature/{spec_id}       # switch to feature branch
+     just wt-tmux 1                           # open tmux session
+
+   Then re-run /vibe from that terminal.
+
+   Tip: /bmad-bmm-implement-screen-spec handles this automatically.
+   ```
+4. Do NOT proceed — wait for user to switch terminals
 
 ## CI Auto-Fix
 
