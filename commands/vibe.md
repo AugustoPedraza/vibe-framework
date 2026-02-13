@@ -218,10 +218,14 @@ Use plan mode for spec analysis (safe read-only exploration before implementatio
 
 When starting a feature while another is in progress:
 
-1. Use TaskList to detect active features
-2. Compare file ownership from agent assignments
-3. If overlap > 30%: warn, suggest worktree or alternative feature
-4. If proceeding with collision: auto-create worktree
+1. Use TaskList to detect active features in current session
+2. Check if currently running inside a worktree (look for `.env.worktree` in project root)
+3. If in worktree: proceed normally — isolation is already handled by the slot
+4. If in main worktree and active features detected:
+   - Warn about potential collision
+   - Suggest: `just wt-switch {slot} feature/{spec_id}` (pick an available slot via `just wt-list`)
+   - **PAUSE** — tell user to switch terminal to the worktree tmux session, then re-run `/vibe`
+5. If no collision detected: proceed normally in main
 
 ## CI Auto-Fix
 

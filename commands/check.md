@@ -40,14 +40,14 @@ Run comprehensive verification on a PR in an isolated git worktree:
 # Parse PR info
 gh pr view {PR_NUMBER} --json headRefName,number,title,headRepositoryOwner,isCrossRepository,url
 
-# Persistent worktree (reused across reviews)
-WORKTREE_PATH="../pr-check"
+# Per-PR worktree (allows parallel PR reviews)
+WORKTREE_PATH="../pr-check-{PR_NUMBER}"
 
 # First time:
 git fetch origin {BRANCH_NAME}
 git worktree add $WORKTREE_PATH origin/{BRANCH_NAME}
 
-# Subsequent reviews:
+# Subsequent reviews of same PR:
 cd $WORKTREE_PATH && git fetch origin {BRANCH_NAME} && git checkout {BRANCH_NAME} && git reset --hard origin/{BRANCH_NAME} && cd -
 
 # Install deps
@@ -91,8 +91,10 @@ Post via: `gh pr comment {PR_NUMBER} --body "$(cat comment.md)"`
 
 ## Worktree Management
 
-- Worktree at `../pr-check` is **kept between reviews** (faster: deps already installed)
-- `--cleanup` removes it: `git worktree remove ../pr-check && git worktree prune`
+- Each PR gets its own worktree at `../pr-check-{PR_NUMBER}` (allows parallel reviews)
+- Worktrees are **kept between reviews** of the same PR (faster: deps already installed)
+- `--cleanup` removes the worktree for the given PR: `git worktree remove ../pr-check-{PR_NUMBER} && git worktree prune`
+- `--cleanup-all` removes all PR check worktrees: `rm -rf ../pr-check-* && git worktree prune`
 
 ## Anti-Patterns
 
