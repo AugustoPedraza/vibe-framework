@@ -125,8 +125,11 @@ Add UI validation config to your project's `.claude/vibe.config.json`:
 
     "dev_server": {
       "url": "http://localhost:4000",
+      "worktree_url_pattern": "http://localhost:{PHX_PORT}",
       "startup_command": "mix phx.server",
-      "ready_timeout": 30
+      "worktree_startup_command": "just wt-dev {slot}",
+      "ready_timeout": 30,
+      "note": "In worktrees, read .env.worktree for PHX_PORT. NEVER use 'just dev' in a worktree."
     },
 
     "temp_file": {

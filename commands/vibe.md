@@ -165,16 +165,23 @@ Single agent implements full vertical slice in dependency order:
 
 1. **backend-verify**: `mix compile --warnings-as-errors && mix credo --strict && mix test`
 2. **frontend-verify**: `cd assets && npx eslint svelte/ && npx svelte-check && npx vitest run`
-3. **spec-compliance** (read-only audit agent):
+3. **adversarial-spec-compliance** (read-only audit agent — ADVERSARIAL):
+   - **Philosophy**: NEVER accept "looks good". Find minimum 3 specific, actionable issues. If <3 found, look harder: edge cases, null handling, integration issues, architecture violations.
    - **AC coverage**: For each acceptance criterion, find the tagged test (`@tag :ac_N` or `AC-N:`). Missing = BLOCKER.
    - **4-state audit**: For each async component, grep for loading/skeleton, error/role="alert", empty/EmptyState, success patterns. Missing state = BLOCKER.
    - **Table-stakes audit**: For each `[x]` item in spec's Table-Stakes Audit section, verify corresponding code exists. Missing = BLOCKER.
+   - **Architecture compliance**: Thin shell (<100 lines), assign_async, camelCase serialization, Svelte 5 runes only. Violations = BLOCKER.
+   - **Code quality deep dive**: Security (injection, auth), performance (N+1, loops), error handling, test quality (real assertions vs placeholders).
    - **Touch targets**: Check interactive elements for `min-h-11` or equivalent 44px. Missing = warning.
    - **Design tokens**: Check for raw colors, arbitrary values, hardcoded z-index. Violations = warning (hooks already catch these).
    - **Component sizes**: Any `.svelte` file >300 lines = BLOCKER.
+   - **Severity output**: Categorize all findings as HIGH (must fix before PR), MEDIUM (should fix), LOW (nice to fix). Auto-fix HIGH and MEDIUM where possible.
 
 **3b. Visual validation** (main session, if MCP Playwright available):
-- Start dev server if not running
+- Start dev server if not running:
+  - **In worktree**: `just wt-dev <slot>` (starts Phoenix + Vite with isolated ports) — or manually: `source .env.worktree && cd assets && npx vite --port $VITE_PORT &` then `mix phx.server`
+  - **NEVER use `just dev`** in a worktree — it starts Docker and conflicts with the main repo's postgres container
+  - Read `.env.worktree` for the correct URL (e.g., `http://localhost:4010` for slot 1)
 - For each new/modified screen route:
   - Navigate to route at 375px width (mobile) — take screenshot
   - Navigate at 1280px width (desktop) — take screenshot
