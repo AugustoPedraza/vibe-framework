@@ -6,7 +6,7 @@ args: "[SCREEN-SPEC-ID]"
 
 # Vibe Core — Single-Agent TDD Pipeline
 
-> Autonomous feature implementation. Single focused agent, 3 phases: PREP → BUILD → VERIFY. Pauses only when human judgment is required.
+> Autonomous feature implementation. Single focused agent, 4 phases: PREP → BUILD → VERIFY → MONITOR. Pauses only when human judgment is required.
 
 ## Autonomy Settings
 
@@ -36,7 +36,7 @@ pause_only_on:
 ## Commands
 
 ```
-/vibe [ID]           # Full autonomous workflow (screen spec)
+/vibe [ID]           # Full autonomous workflow (screen spec) — includes runtime monitoring after PR
 /vibe check <PR>     # Standalone PR verification
 /vibe quick [desc]   # Bugs/hotfixes (no spec needed)
 /vibe fix [desc]     # Targeted fix when paused
@@ -177,16 +177,20 @@ Single agent implements full vertical slice in dependency order:
    - **Component sizes**: Any `.svelte` file >300 lines = BLOCKER.
    - **Severity output**: Categorize all findings as HIGH (must fix before PR), MEDIUM (should fix), LOW (nice to fix). Auto-fix HIGH and MEDIUM where possible.
 
-**3b. Visual validation** (main session, if MCP Playwright available):
+**3b. Runtime + visual validation** (main session):
 - Start dev server if not running:
-  - **In worktree**: `just wt-dev <slot>` (starts Phoenix + Vite with isolated ports) — or manually: `source .env.worktree && cd assets && npx vite --port $VITE_PORT &` then `mix phx.server`
+  - **In worktree**: `source .env.worktree && mix phx.server > .smoke-server.log 2>&1 &` then `cd assets && source ../.env.worktree && npx vite --port $VITE_PORT > ../.smoke-vite.log 2>&1 &`
   - **NEVER use `just dev`** in a worktree — it starts Docker and conflicts with the main repo's postgres container
   - Read `.env.worktree` for the correct URL (e.g., `http://localhost:4010` for slot 1)
-- For each new/modified screen route:
+  - Wait for server ready: curl poll the URL, max 30s
+- **Server log check**: Read `.smoke-server.log` for `[error]`, `[warning]`, compile errors
+- For each new/modified screen route (if MCP Playwright available):
   - Navigate to route at 375px width (mobile) — take screenshot
+  - `browser_console_messages` — capture JS errors/warnings
   - Navigate at 1280px width (desktop) — take screenshot
-  - Verify: content renders, no layout breaks, touch targets visible
-- If MCP not available: skip with note "Install Playwright MCP for visual validation"
+  - `browser_snapshot` — verify content renders, no layout breaks, touch targets visible
+- Report runtime issues (console errors, server log errors) as part of the 3d gate check
+- If MCP not available: server-log-only mode (skip browser checks), note "Install Playwright MCP for visual + console validation"
 
 **3c. Auto-fix** any fixable issues (eslint --fix, format, etc.)
 
@@ -200,6 +204,42 @@ Single agent implements full vertical slice in dependency order:
 **3f. Update spec status** to `review`
 
 **3g. Spawn ci-fixer** in background (max 3 retries)
+
+### Phase 4: MONITOR (after PR)
+
+> Server under Claude's control. Proactive error detection while user tests. The user NEVER copy-pastes logs.
+
+**4a. Start server** (if not already running from Phase 3b):
+- Read `.env.worktree` for `PHX_PORT`/`VITE_PORT`
+- Start Phoenix: `source .env.worktree && mix phx.server > .smoke-server.log 2>&1 &`
+- Start Vite: `cd assets && source ../.env.worktree && npx vite --port $VITE_PORT > ../.smoke-vite.log 2>&1 &`
+- **NEVER `just dev`** in a worktree
+- Wait for ready (curl poll, max 30s)
+
+**4b. Proactive scan** (Playwright MCP required):
+- For each route from the screen spec:
+  - `browser_navigate` to route
+  - `browser_console_messages` — capture JS errors/warnings
+  - `browser_snapshot` — verify content renders
+  - Check at mobile (375px) and desktop (1280px)
+- Read `.smoke-server.log` for `[error]`, `[warning]`, compile errors
+- If issues found: fix → re-scan (max 3 cycles)
+- If MCP not available: server-log-only mode (skip browser checks)
+
+**4c. Hand off to user**:
+- Print: "Server running at {URL}"
+- Print: route list with what to test (from spec acceptance criteria)
+- Print: issues found and fixed (if any)
+- Print: "I'm watching server logs. Just test — I'll catch errors."
+
+**4d. Active monitoring loop** (ZERO copy-paste — Claude has direct access to everything):
+- On **EVERY** user message: automatically read `.smoke-server.log` for new lines since last check
+- If user says "check"/"status"/"re-scan": full browser + server log scan
+- If user says "there's an error on X page": Claude navigates to X via Playwright, reads console + server log, finds root cause
+- Errors found:
+  - **Trivial** (missing import, typo, format, missing route): fix immediately, tell user what changed
+  - **Complex** (logic error, missing handler, data issue): explain the bug clearly + propose solution, ask for confirmation before applying
+- On "done"/"looks good"/"ship it": exit monitoring, print final summary
 
 ---
 
