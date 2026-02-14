@@ -106,6 +106,17 @@
 
 ---
 
+## Provenance
+
+> Only for patterns discovered via web research. Delete this section for patterns extracted from retros.
+
+- **Source tier**: [Official docs | Community battle-tested | Community guide | Framework-specific]
+- **URL**: [url where the approach was found]
+- **Community signal**: [e.g., "847 upvotes on SO", "142 stars on GH", "n/a for official docs"]
+- **Human-vetted**: [YES — human selected this approach from N options during {SPEC-ID}]
+
+---
+
 ## Source
 
 - **Discovered in**: [Project name] / [Feature ID]

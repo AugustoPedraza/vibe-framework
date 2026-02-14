@@ -121,9 +121,42 @@ Every `/vibe` run MUST execute inside a worktree slot. Phase 1 enforces this:
    5. Load top 3 pattern files into context
    6. Log which patterns were matched and why
    ```
-4. **Load critical rules** — Read `project-context.md` "Critical Don't-Miss Rules" section only (not the full file), plus the relevant layer reference guide(s) for this spec
-5. **Create branch** — `git checkout -b feature/{ID}` from main (if not already on it)
-6. **AUTO-PROCEED** to Phase 2
+4. **Research gap analysis** — If pattern matching yields <2 results OR no result scores ≥5, AND spec contains interaction-pattern keywords (see `manifest.json` → `research_triggers`):
+   - Run multi-source research (max 3 searches, max 5 fetches, max 30 seconds):
+     1. `WebSearch` "{stack} {keyword} best practice" → official docs (MDN, framework docs)
+     2. `WebSearch` "{stack} {keyword} site:stackoverflow.com OR site:github.com" → community solutions
+     3. `WebFetch` top 2-3 results across different source tiers (official, community, framework-specific)
+   - Synthesize findings into **2-3 distinct approaches** with trade-offs
+   - **PAUSE** — Present options to human:
+     ```
+     Research found N approaches for "{keyword}":
+
+     **Option A: {name}** (Official — MDN/framework docs)
+     - Approach: {1-2 sentence summary}
+     - Pros: {standards-compliant, well-documented}
+     - Cons: {may not handle edge case X}
+     - Source: {url}
+
+     **Option B: {name}** (Community — SO {N} upvotes / GH discussion)
+     - Approach: {1-2 sentence summary}
+     - Pros: {handles edge case X, battle-tested}
+     - Cons: {non-standard, may break with framework update}
+     - Source: {url}
+
+     **Option C: {name}** (Local pattern / training data)
+     - Approach: {1-2 sentence summary}
+     - Pros: {already proven in this stack}
+     - Cons: {may not cover this specific case}
+
+     Which approach should I use? (or describe a different one)
+     ```
+   - If only 1 viable approach found → still present for confirmation, don't silently proceed
+   - Human selects → load chosen approach into BUILD context
+   - Log: "Research: {keyword} → chosen: Option {X} from {source_url}"
+   - If pattern matching yields ≥2 results with scores ≥5 → skip research, local patterns are sufficient
+5. **Load critical rules** — Read `project-context.md` "Critical Don't-Miss Rules" section only (not the full file), plus the relevant layer reference guide(s) for this spec
+6. **Create branch** — `git checkout -b feature/{ID}` from main (if not already on it)
+7. **AUTO-PROCEED** to Phase 2 (or after human selects research approach, if research was triggered)
 
 ### Phase 2: BUILD (the core — single-agent TDD)
 
@@ -159,6 +192,32 @@ Single agent implements full vertical slice in dependency order:
 - Debug statements: auto-remove from non-test files
 - Svelte 4 syntax: auto-convert to Svelte 5
 - Unused imports: auto-remove
+
+**Research recovery** (before burning retries on interaction/DOM/CSS issues):
+
+When a build attempt fails, classify the failure before retrying:
+1. **Is it a browser behavior / interaction pattern issue?** (focus not working, scroll jumping, event not firing, CSS not applying as expected, DOM API mismatch)
+2. If YES → run multi-source research before retrying:
+   - `WebSearch` for the specific problem + community workarounds
+   - `WebFetch` top SO answer + official doc
+   - **PAUSE** — Present findings to human:
+     ```
+     Build failed: {error description}
+
+     I researched this and found:
+
+     **Option A: {community workaround}** ({N} upvotes on SO)
+     - {1-2 sentence description}
+     - Source: {url}
+
+     **Option B: {official recommendation}**
+     - {1-2 sentence description}
+     - Source: {url}
+
+     Which approach? (or "retry" to try again without change)
+     ```
+   - Human selects → apply research to next attempt
+3. If NO (logic error, missing import, typo, test assertion) → standard retry without research
 
 **PAUSE only on**:
 - Tests failing after 3 fix attempts
@@ -208,9 +267,15 @@ Single agent implements full vertical slice in dependency order:
 - Body: Summary of changes, AC checklist (checkboxes), spec-compliance score
 - Labels: `screen-spec`, feature-flow label
 
-**3f. Update spec status** to `review`
+**3f. Pattern capture** (if web research was used during this build):
+- Evaluate if the research-informed solution is **pattern-worthy** (reusable, domain-independent, non-obvious)
+- If yes: create pattern file `patterns/{category}/{id}.md` following `TEMPLATE.md`, including `## Provenance` section
+- Add entry to `manifest.json` with triggers extracted from the research query
+- Log: "Pattern captured: {id} (source: {tier} — {url})"
 
-**3g. Spawn ci-fixer** in background (max 3 retries)
+**3g. Update spec status** to `review`
+
+**3h. Spawn ci-fixer** in background (max 3 retries)
 
 ### Phase 4: MONITOR (after PR)
 
@@ -254,6 +319,8 @@ Single agent implements full vertical slice in dependency order:
 
 | Pause Point | Condition | Why Human Needed |
 |-------------|-----------|------------------|
+| Research approach selection | Web research found multiple approaches | Human picks best approach for this context |
+| Research-informed recovery | Build failed on interaction/DOM issue | Human picks community vs official fix |
 | Tests failing | 3 fix attempts exhausted | Cannot auto-fix test logic |
 | Security critical | Security issue found | Requires acknowledgment |
 | Pre-PR verification | Blockers unfixable | Compile errors, type errors, N+1 patterns |

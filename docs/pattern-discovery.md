@@ -60,6 +60,34 @@ Project:   { "id": "mobile-first-layout", "source": "docs/domain/ui-ux/patterns/
 Result:    Project version wins — the project has a more specific implementation
 ```
 
+### 3. Web Research (On-Demand)
+
+When local patterns don't cover the spec's interaction requirements, vibe runs live web research.
+
+- **Trigger**: Pattern matching yields <2 results OR no score ≥5, AND spec contains `research_triggers` keywords (see `manifest.json`)
+- **Sources**: Multi-tier search across official docs, community (SO, GitHub), guides (Dev.to, Reddit), and framework-specific resources
+- **Human gate**: Agent presents 2-3 distinct approaches with trade-offs. Human picks the approach before build proceeds.
+- **Pattern capture**: After successful build, research-informed solutions that are reusable get saved as local patterns with `## Provenance` section tracking source tier, URL, and community signal.
+- **Compounding**: Each captured pattern reduces future research needs — the catalog grows organically from real implementation challenges.
+
+#### Source Tiers
+
+| Tier | Sources | Why |
+|------|---------|-----|
+| **1. Official docs** | MDN, svelte.dev, hexdocs.pm, ash-hq.org | Canonical, correct, authoritative |
+| **2. Community battle-tested** | Stack Overflow (highest-voted), GitHub issues/discussions | Real-world workarounds, edge cases covered |
+| **3. Community guides** | Dev.to, Reddit (r/sveltejs, r/elixir), blog posts | Practical tutorials, opinionated but useful |
+| **4. Framework-specific** | Svelte REPL examples, Ash cookbook, Phoenix forum | Stack-specific idioms |
+
+#### Search Strategy
+
+```
+1. WebSearch "{stack} {keyword} best practice" → official/canonical approach
+2. WebSearch "{stack} {keyword} site:stackoverflow.com OR site:github.com" → community solutions
+3. WebFetch top 2-3 results across different tiers (not all from same source)
+4. Synthesize into 2-3 distinct approaches → PAUSE for human selection
+```
+
 ## Pattern Matching
 
 During `/vibe [ID]` execution:

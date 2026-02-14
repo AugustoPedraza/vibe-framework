@@ -148,12 +148,32 @@
       "2. Match against 'triggers' array (case-insensitive, partial match OK)",
       "3. Filter by 'stack' intersection with project's vibe.config.json stack",
       "4. Sort by 'score' descending (higher = more broadly applicable)",
-      "5. Return top 3-5 matches"
+      "5. Return top 3-5 matches",
+      "6. If <2 matches OR no score >=5, AND spec contains research_triggers keywords → run web research gap analysis (see commands/vibe.md Phase 1 step 4)"
     ],
     "score_thresholds": {
       "high": 6,
       "medium": 5,
       "low": 4
+    },
+    "research_triggers": {
+      "description": "Keywords that suggest web research would help when no local pattern matches. If spec contains any of these AND local pattern coverage is insufficient, trigger multi-source web research with human decision gate.",
+      "keywords": [
+        "focus management", "virtual keyboard", "keyboard handling",
+        "drag drop", "drag and drop", "sortable", "reorder",
+        "clipboard", "copy paste", "clipboard API",
+        "intersection observer", "lazy loading", "virtualized list",
+        "scroll restoration", "scroll locking", "scroll snap",
+        "ARIA pattern", "screen reader", "live region", "aria-live",
+        "push notification", "background sync", "service worker",
+        "web animation", "web animations API", "FLIP animation",
+        "file upload", "media capture", "camera", "microphone",
+        "gesture", "swipe", "pinch", "long press",
+        "contenteditable", "rich text", "text editor",
+        "web socket reconnection", "offline sync", "optimistic update",
+        "position sticky", "overflow scroll", "z-index stacking context",
+        "portal", "teleport", "focus trap", "focus ring"
+      ]
     }
   },
   "paths": {

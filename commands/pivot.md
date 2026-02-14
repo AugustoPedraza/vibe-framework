@@ -32,6 +32,7 @@ Options:
 | Option | Action |
 |--------|--------|
 | **Update spec** | Go back to Phase 0 with updated requirements |
+| **Research** | Multi-source web search (official + community), present approaches to human, then proceed with chosen one |
 | **Change approach** | Stay in current phase, try alternative strategy |
 | **Capture as debt** | Record in backlog, continue with reduced scope |
 | **Rollback** | Revert changes, restart with lessons learned |

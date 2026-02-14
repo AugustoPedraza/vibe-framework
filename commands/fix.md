@@ -72,6 +72,35 @@ When user reports again:
 4. Escalate scope: quick -> standard verification
 5. Track new attempt
 
+## Research-Assisted Fix
+
+If the fix involves browser interaction, DOM behavior, or CSS quirks (focus, scroll, events, positioning):
+
+1. **Before attempting fix**: run multi-source research for the specific symptom
+   - `WebSearch` "{stack} {symptom} best practice" → official docs
+   - `WebSearch` "{stack} {symptom} site:stackoverflow.com OR site:github.com" → community solutions
+   - `WebFetch` top 2-3 results across different source tiers
+2. **PAUSE** — Present top approaches from community + official sources with trade-offs:
+   ```
+   Fix for: {description}
+
+   **Option A: {name}** ({source tier} — {url})
+   - {1-2 sentence description}
+   - Pros: {why this works}
+   - Cons: {trade-offs}
+
+   **Option B: {name}** ({source tier} — {url})
+   - {1-2 sentence description}
+   - Pros: {why this works}
+   - Cons: {trade-offs}
+
+   Which approach? (or describe a different one)
+   ```
+3. Human selects approach → apply it (not trial-and-error)
+4. If research yields a reusable solution: capture as pattern (see `patterns/TEMPLATE.md`)
+
+**Skip research for**: logic bugs, missing imports, typos, test assertion errors — these don't need community input.
+
 ## Anti-Patterns
 
 - Never refactor unrelated code

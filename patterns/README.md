@@ -37,6 +37,8 @@ patterns/
 
 ## How Patterns Are Added
 
+### From Retrospectives
+
 1. **During retrospective** (`/vibe retro`)
 2. AI detects reusable patterns in implementation
 3. AI scores pattern reusability (HIGH/MEDIUM)
@@ -44,6 +46,24 @@ patterns/
 5. AI creates pattern file using TEMPLATE.md
 6. File added to appropriate category folder
 7. This README index is updated
+
+### From Web Research (Automatic)
+
+When `/vibe` encounters an interaction pattern not covered by local patterns, it runs multi-source web research and the human selects the best approach. If the chosen approach is pattern-worthy, it gets captured automatically:
+
+1. **During build** — local patterns insufficient for the spec's interaction requirements
+2. AI runs multi-source research across 4 tiers:
+   - **Official docs** (MDN, svelte.dev, hexdocs.pm, ash-hq.org)
+   - **Community battle-tested** (Stack Overflow highest-voted, GitHub issues/discussions)
+   - **Community guides** (Dev.to, Reddit, blog posts)
+   - **Framework-specific** (Svelte REPL, Ash cookbook, Phoenix forum)
+3. AI presents 2-3 approaches with trade-offs to human
+4. **Human selects** the approach to use
+5. After successful build, AI evaluates if the solution is pattern-worthy
+6. If yes: creates pattern file with `## Provenance` section (source tier, URL, community signal)
+7. Pattern added to manifest.json — available for all future builds
+
+This creates a **compounding effect**: each research investment grows the local catalog, reducing future research needs.
 
 ---
 
