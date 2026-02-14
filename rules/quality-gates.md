@@ -23,6 +23,7 @@
 - No arbitrary values (`w-[300px]`, `p-[15px]`) — use token scale
 - Component size limit: 300 lines per .svelte file
 - Use existing components, don't recreate
+- All modified files must be staged — no selective exclusion to bypass hooks (see `rules/no-shortcuts.md`)
 
 ## Test Coverage Thresholds
 - Statement coverage >= 80%

@@ -67,6 +67,29 @@ Using deprecated `<slot />` instead of Svelte 5 snippets.
 
 Using `bg-blue-500` instead of semantic tokens like `bg-primary`.
 
+### PIT-006: Excluding Files to Bypass Pre-Commit Hooks
+
+When a pre-commit hook blocks on a file (e.g., component over 300 lines), the agent
+excludes the file from the commit instead of fixing the issue. The violation stays in
+the codebase and the next session inherits the debt.
+
+```yaml
+# Detection: modified .svelte files not in staged set during commit
+# Severity: blocker
+# Fix: Fix the hook violation (decompose, format, lint), then stage ALL modified files
+```
+
+```bash
+# WRONG — excludes the blocker file
+git add lib/syna/accounts.ex assets/svelte/components/OtherFile.svelte
+# (skips ProjectChat/index.svelte because it's 707 lines)
+
+# CORRECT — decompose first, then commit everything
+# 1. Split ProjectChat/index.svelte into sub-components (<300 lines each)
+# 2. git add -A  # stage all modified files
+# 3. git commit
+```
+
 ## Adding New Pitfalls
 
 The learning phase (Phase 5) automatically adds pitfalls here when it detects patterns

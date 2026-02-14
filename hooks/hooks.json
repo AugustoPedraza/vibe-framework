@@ -73,8 +73,8 @@
     "PreToolUse": [
       {
         "matcher": "Bash",
-        "description": "Quality check before git commits",
-        "command": "bash -c 'CMD=\"$CLAUDE_BASH_COMMAND\"; if echo \"$CMD\" | grep -q \"git commit\"; then echo \"Pre-commit: Ensure tests pass and code is formatted before committing.\"; fi'",
+        "description": "Block --no-verify and selective file exclusion on git commits",
+        "command": "bash -c 'CMD=\"$CLAUDE_BASH_COMMAND\"; if echo \"$CMD\" | grep -q \"git commit\"; then if echo \"$CMD\" | grep -qE \"--no-verify|--no-gpg-sign\"; then echo \"BLOCKER: --no-verify/--no-gpg-sign is forbidden. Fix the issue that the hook is catching. See rules/no-shortcuts.md.\"; exit 1; fi; MODIFIED=$(git diff --name-only HEAD 2>/dev/null | grep \"\\.svelte$\" || true); STAGED=$(git diff --cached --name-only 2>/dev/null | grep \"\\.svelte$\" || true); if [ -n \"$MODIFIED\" ]; then for f in $MODIFIED; do if ! echo \"$STAGED\" | grep -qF \"$f\"; then echo \"BLOCKER: Modified file $f is not staged. Do not exclude modified files to bypass hooks. Stage it and fix any issues. See rules/no-shortcuts.md.\"; exit 1; fi; done; fi; fi'",
         "timeout_ms": 5000
       }
     ],

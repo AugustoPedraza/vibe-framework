@@ -31,6 +31,13 @@ pause_only_on:
   quality_below_threshold: true   # PAUSE - may need scope adjustment
   review_blockers: true           # PAUSE - must fix before PR
   n_plus_one: true                # PAUSE - structural fix needed
+
+never:                            # HARD BLOCK - see rules/no-shortcuts.md
+  exclude_files_from_commit: true # Fix the issue, don't exclude the file
+  skip_hooks: true                # No --no-verify, no --no-check
+  skip_tests: true                # No .skip, no @tag :skip, no TODO
+  ignore_hook_blockers: true      # If hook says BLOCKER, fix it first
+  selective_staging: true         # All modified files must be staged
 ```
 
 ## Commands
