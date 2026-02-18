@@ -85,24 +85,59 @@ Validate on first command only — skip on subsequent commands in session.
 
 ## Worktree Isolation (Required)
 
-Every `/vibe` run MUST execute inside a worktree slot. Phase 1 enforces this:
+Every `/vibe` run MUST execute inside a worktree slot. Phase 1 auto-provisions one if needed:
 
-1. Check if `.env.worktree` exists in project root
-2. If YES: read it, confirm `PHX_PORT`/`VITE_PORT`/`POSTGRES_DB` are set, proceed
-3. If NO (running in main): **PAUSE** immediately with:
+**Tier A** — `.env.worktree` exists: read it, confirm `PHX_PORT`/`VITE_PORT`/`POSTGRES_DB` are set, proceed.
+
+**Tier B** — No `.env.worktree`, justfile available (`just --list 2>/dev/null | grep wt-setup`):
+1. Detect lowest free slot: check `../worktree-{1..4}` for first non-existent path
+2. Run `just wt-setup {SLOT}` then `just wt-switch {SLOT} feature/{spec_id}`
+3. Read the new `.env.worktree`, cd to worktree, proceed
+
+**Tier C** — No justfile or `wt-setup` recipe: manual git worktree:
+1. Detect lowest free slot (same as Tier B)
+2. `git worktree add ../worktree-{SLOT} -b feature/{spec_id}`
+3. Generate `.env.worktree` in the new worktree:
    ```
-   /vibe must run inside a worktree slot for isolation.
+   PHX_PORT=$((4000 + SLOT * 10))
+   VITE_PORT=$((5173 + SLOT * 10))
+   POSTGRES_DB={project_name}_worktree_{SLOT}
+   ```
+4. Note to user: "You may need to `createdb {POSTGRES_DB}` for the isolated database"
+5. Run cache-aware dep install (see below), proceed
 
-   Quick setup:
+**Tier D** — Creation fails: **PAUSE** with manual instructions:
+   ```
+   Worktree auto-provisioning failed: {error}
+
+   Manual setup:
      just wt-setup 1                          # one-time (~1-3 min)
      just wt-switch 1 feature/{spec_id}       # switch to feature branch
      just wt-tmux 1                           # open tmux session
 
    Then re-run /vibe from that terminal.
-
-   Tip: /bmad-bmm-implement-screen-spec handles this automatically.
    ```
-4. Do NOT proceed — wait for user to switch terminals
+
+### Cache-Aware Dep Install
+
+Used by both `/vibe` (worktree provisioning + Phase 1) and `/vibe check` (Phase 1 setup):
+
+```bash
+# Compute current checksums
+MIX_SUM=$(md5sum mix.lock 2>/dev/null | cut -d' ' -f1)
+NPM_SUM=$(md5sum assets/package-lock.json 2>/dev/null | cut -d' ' -f1)
+
+# Compare against cached checksums
+# File: .claude/.dep-checksums (in worktree root)
+# Format: MIX={hash}\nNPM={hash}
+
+# Only install if changed:
+# mix.lock changed  → mix deps.get && mix compile
+# package-lock.json changed → cd assets && npm ci
+# Neither changed → skip entirely
+
+# Write new checksums after successful install
+```
 
 ---
 
@@ -110,7 +145,7 @@ Every `/vibe` run MUST execute inside a worktree slot. Phase 1 enforces this:
 
 ### Phase 1: PREP (~1 min)
 
-1. **Verify worktree** — Check `.env.worktree` exists. If missing, **PAUSE** (see "Worktree Isolation" above)
+1. **Verify/provision worktree** — Walk Tier A→B→C→D (see "Worktree Isolation" above). Run cache-aware dep install if newly provisioned.
 2. **Load screen spec** — Read `{bmad.screen_specs_path}/{ID}.md`, validate Status is `spec-ready` or `building`
 3. **Auto-match patterns** — Extract keywords from spec title + acceptance criteria + UX Patterns field:
    ```
@@ -238,10 +273,21 @@ When a build attempt fails, classify the failure before retrying:
    - **Table-stakes audit**: For each `[x]` item in spec's Table-Stakes Audit section, verify corresponding code exists. Missing = BLOCKER.
    - **Architecture compliance**: Thin shell (<100 lines), assign_async, camelCase serialization, Svelte 5 runes only. Violations = BLOCKER.
    - **Code quality deep dive**: Security (injection, auth), performance (N+1, loops), error handling, test quality (real assertions vs placeholders).
+   - **Code smell scan**: Long functions (>30 lines `.ex`, >50 lines `.svelte`), deep nesting (>3 levels), dead code, data clumps. Violations = warning.
+   - **UX anti-pattern scan**: Spinners instead of skeletons, horizontal scroll on mobile, missing `autocomplete` on inputs, `vh` instead of `dvh`, bare `outline:none` without visible focus. Violations = warning.
+   - **Design system completeness**: Typography tokens used consistently, spacing scale compliance, component reuse check against existing primitives (don't reinvent). Raw colors, arbitrary values, hardcoded z-index = warning.
+   - **Accessibility deep check**: `aria-label` on icon-only buttons, `aria-required` on required inputs, `role="alert"` on error messages, keyboard navigation reachability for all interactive elements. Missing = BLOCKER.
    - **Touch targets**: Check interactive elements for `min-h-11` or equivalent 44px. Missing = warning.
-   - **Design tokens**: Check for raw colors, arbitrary values, hardcoded z-index. Violations = warning (hooks already catch these).
    - **Component sizes**: Any `.svelte` file >300 lines = BLOCKER.
    - **Severity output**: Categorize all findings as HIGH (must fix before PR), MEDIUM (should fix), LOW (nice to fix). Auto-fix HIGH and MEDIUM where possible.
+
+**3a.5. Pre-PR tooling gate** (deterministic — not agent-based):
+- `mix format --check-formatted`
+- `npx prettier --check "svelte/**" "js/**"`
+- `npx tsc --noEmit`
+- `npm audit --audit-level=moderate` (warn only, not a blocker)
+- Auto-fix: if format/prettier fail, run `mix format` / `npx prettier --write` and re-check
+- Remaining failures (tsc errors, unfixable format) → add to 3d gate blockers
 
 **3b. Runtime + visual validation** (main session):
 - Start dev server if not running:
@@ -298,11 +344,26 @@ When a build attempt fails, classify the failure before retrying:
 - If issues found: fix → re-scan (max 3 cycles)
 - If MCP not available: server-log-only mode (skip browser checks)
 
-**4c. Hand off to user**:
+**4c. Structured test handoff**:
 - Print: "Server running at {URL}"
-- Print: route list with what to test (from spec acceptance criteria)
-- Print: issues found and fixed (if any)
-- Print: "I'm watching server logs. Just test — I'll catch errors."
+- Re-read screen spec AC section
+- Present **numbered manual test checklist** — each AC mapped to a concrete action + route:
+  ```
+  ## Manual Test Checklist
+
+  Server: {URL}
+
+  1. [AC-1] {AC description} → Navigate to {route}, {concrete action to verify}
+  2. [AC-2] {AC description} → {concrete action}
+  ...
+  N. [Visual] Check layout at mobile (375px) and desktop (1280px) — no overflow, no clipped text
+  N+1. [Edge] Test empty state — {how to trigger}
+  N+2. [Edge] Test error state — {how to trigger, e.g., disconnect network}
+
+  Say "check" for re-scan, "done" when verified.
+  ```
+- If MCP Playwright available: navigate to primary route proactively
+- Print: issues found and fixed during Phase 4b (if any)
 
 **4d. Active monitoring loop** (ZERO copy-paste — Claude has direct access to everything):
 - On **EVERY** user message: automatically read `.smoke-server.log` for new lines since last check
@@ -311,7 +372,20 @@ When a build attempt fails, classify the failure before retrying:
 - Errors found:
   - **Trivial** (missing import, typo, format, missing route): fix immediately, tell user what changed
   - **Complex** (logic error, missing handler, data issue): explain the bug clearly + propose solution, ask for confirmation before applying
-- On "done"/"looks good"/"ship it": exit monitoring, print final summary
+- On "done"/"looks good"/"ship it": print **test session summary**, then exit monitoring:
+  ```
+  ## Session Summary
+
+  Duration: {time since Phase 4 started}
+  ACs verified: {N}/{total} (from user "check" confirmations)
+  Issues found: {count} ({fixed}/{total} resolved)
+  Server errors during session: {count or "none"}
+  Commits during monitoring: {list or "none"}
+
+  {If unresolved issues exist:}
+  Unresolved: {list}
+  → Run `/vibe fix` to address these
+  ```
 
 ---
 

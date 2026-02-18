@@ -50,14 +50,23 @@ git worktree add $WORKTREE_PATH origin/{BRANCH_NAME}
 # Subsequent reviews of same PR:
 cd $WORKTREE_PATH && git fetch origin {BRANCH_NAME} && git checkout {BRANCH_NAME} && git reset --hard origin/{BRANCH_NAME} && cd -
 
-# Install deps
-cd $WORKTREE_PATH && mix deps.get && mix compile && cd assets && npm ci
+# Cache-aware dep install (skip if deps unchanged since last review)
+cd $WORKTREE_PATH
+MIX_SUM=$(md5sum mix.lock 2>/dev/null | cut -d' ' -f1)
+NPM_SUM=$(md5sum assets/package-lock.json 2>/dev/null | cut -d' ' -f1)
+# Compare against .claude/.dep-checksums — only install if changed:
+# mix.lock changed  → mix deps.get && mix compile
+# package-lock.json changed → cd assets && npm ci
+# Neither changed → skip entirely
+# Write new checksums after successful install
 ```
 
 Validate design system file exists (unless `--no-design-system`):
 `{WORKTREE_PATH}/architecture/design-system.md`
 
 ## Phase 2: VERIFY (Parallel Agents)
+
+> **Parity note**: These 6 agents mirror what `/vibe` Phase 3 checks inline. If `/vibe` created the PR, `/vibe check` should find zero new issues.
 
 Spawn ALL agents in a single message with multiple Task calls:
 
