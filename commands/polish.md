@@ -18,6 +18,13 @@ args: "[component-path|route|--all]"
 /vibe polish --all               # Scan entire codebase
 ```
 
+## Worktree Gate (HARD BLOCK — must pass before any file writes)
+
+Before ANY file creation or editing (auto-fix actions):
+1. Run `git branch --show-current`
+2. If on `main`/`master` → **HARD BLOCK**: print "Cannot write code on main branch. Run `/vibe polish` from inside a worktree." **STOP.**
+3. Read-only analysis and reporting may proceed on any branch — only auto-fix writes are blocked
+
 ## Single Component Mode
 
 ### With MCP (main session only — subagents cannot use MCP)

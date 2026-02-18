@@ -20,6 +20,13 @@ Migrate existing features using test-first approach:
 
 **Safety Rule**: NO migration without test battery first.
 
+## Worktree Gate (HARD BLOCK — must pass before any file writes)
+
+Before ANY file creation or editing:
+1. Run `git branch --show-current`
+2. If on `main`/`master` → **HARD BLOCK**: print "Cannot write code on main branch. Run `/vibe migrate` from inside a worktree." **STOP.**
+3. `migrate init` and `migrate status` (read-only analysis) may proceed on any branch
+
 ## Subcommands
 
 | Subcommand | Description |

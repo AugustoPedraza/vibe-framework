@@ -18,6 +18,13 @@ Formal process to recover when:
 - Original approach isn't working
 - User says "this isn't working"
 
+## Worktree Gate (HARD BLOCK — must pass before any file writes)
+
+Before ANY file creation or editing (Phase 3 Resume actions that modify code):
+1. Run `git branch --show-current`
+2. If on `main`/`master` → **HARD BLOCK**: print "Cannot write code on main branch. Run `/vibe pivot` from inside a worktree." **STOP.**
+3. Assessment and decision phases (read-only) may proceed on any branch
+
 ## Workflow: ASSESS -> DECIDE -> RESUME
 
 ### Phase 1: Assess

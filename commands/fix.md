@@ -29,6 +29,13 @@ Fix user-reported issues by routing to specialized agents with minimal overhead:
 /vibe fix AUTH-001 "form doesn't submit"      # With feature ID
 ```
 
+## Worktree Gate (HARD BLOCK — must pass before any file writes)
+
+Before ANY file creation or editing:
+1. Run `git branch --show-current`
+2. If on `main`/`master` → **HARD BLOCK**: print "Cannot write code on main branch. Run `/vibe fix` from inside a worktree." **STOP.**
+3. If NOT in a worktree but on a feature branch → proceed (user may have manually branched)
+
 ## Triage System
 
 | Pattern Match | Category | Start Layer |

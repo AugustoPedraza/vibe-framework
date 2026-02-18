@@ -21,6 +21,13 @@ Condensed 2-phase workflow for:
 
 **Use full `/vibe [ID]` instead for:** new features, new components, UX changes, multi-file refactors.
 
+## Worktree Gate (HARD BLOCK — must pass before any file writes)
+
+Before ANY file creation or editing:
+1. Run `git branch --show-current`
+2. If on `main`/`master` → **HARD BLOCK**: print "Cannot write code on main branch. Use `/vibe` with a feature ID for worktree isolation, or manually create a worktree first." **STOP.**
+3. If NOT in a worktree (no `.env.worktree` AND `git rev-parse --show-toplevel` matches main repo root) → **WARN**: "Running outside worktree isolation. Consider using `/vibe` for full isolation."
+
 ## Workflow
 
 ### Phase 1: Dev (Condensed)

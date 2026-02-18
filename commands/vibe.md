@@ -41,6 +41,8 @@ pause_only_on:
   n_plus_one: true                # PAUSE - structural fix needed
 
 never:                            # HARD BLOCK - see rules/no-shortcuts.md
+  edit_on_main_branch: true       # NEVER write/edit files on main/master — worktree required
+  bypass_worktree: true           # NEVER skip worktree provisioning, even "just this once"
   exclude_files_from_commit: true # Fix the issue, don't exclude the file
   skip_hooks: true                # No --no-verify, no --no-check
   skip_tests: true                # No .skip, no @tag :skip, no TODO
@@ -91,16 +93,31 @@ Single agent consults these as checklists while building each layer:
 
 Validate on first command only — skip on subsequent commands in session.
 
-## Worktree Isolation (Required)
+## Main Branch Protection (HARD BLOCK)
 
-Every `/vibe` run MUST execute inside a worktree slot. Phase 1 auto-provisions one if needed:
+**NEVER create or edit any file while on `main` or `master` branch.** This is an unconditional hard block — no exceptions, no overrides.
 
-**Tier A** — `.env.worktree` exists: read it, confirm `PHX_PORT`/`VITE_PORT`/`POSTGRES_DB` are set, proceed.
+Before ANY file operation (Read for context is OK, but Write/Edit/NotebookEdit are BLOCKED):
+1. Run `git branch --show-current` to confirm current branch
+2. If branch is `main` or `master` → **HARD BLOCK** — refuse to proceed, print:
+   ```
+   BLOCKED: Cannot write code on the main branch.
+   Worktree isolation is mandatory. Provisioning now...
+   ```
+3. Then walk through Worktree Isolation tiers below
+
+This check applies to ALL `/vibe` subcommands (`/vibe`, `/vibe quick`, `/vibe fix`, `/vibe pivot`).
+
+## Worktree Isolation (HARD BLOCK)
+
+Every `/vibe` run MUST execute inside a git worktree. This is a **hard prerequisite** — no coding, no file creation, no edits until worktree isolation is confirmed. The agent MUST walk Tiers A→D and succeed before touching any project file.
+
+**Tier A** — `.env.worktree` exists AND `git rev-parse --show-toplevel` differs from the main repo root: read `.env.worktree`, confirm `PHX_PORT`/`VITE_PORT`/`POSTGRES_DB` are set, confirm branch is NOT `main`/`master`, proceed.
 
 **Tier B** — No `.env.worktree`, justfile available (`just --list 2>/dev/null | grep wt-setup`):
 1. Detect lowest free slot: check `../worktree-{1..4}` for first non-existent path
 2. Run `just wt-setup {SLOT}` then `just wt-switch {SLOT} feature/{spec_id}`
-3. Read the new `.env.worktree`, cd to worktree, proceed
+3. Read the new `.env.worktree`, cd to worktree, verify branch is NOT `main`/`master`, proceed
 
 **Tier C** — No justfile or `wt-setup` recipe: manual git worktree:
 1. Detect lowest free slot (same as Tier B)
@@ -111,12 +128,15 @@ Every `/vibe` run MUST execute inside a worktree slot. Phase 1 auto-provisions o
    VITE_PORT=$((5173 + SLOT * 10))
    POSTGRES_DB={project_name}_worktree_{SLOT}
    ```
-4. Note to user: "You may need to `createdb {POSTGRES_DB}` for the isolated database"
-5. Run cache-aware dep install (see below), proceed
+4. cd to worktree, verify branch is NOT `main`/`master`
+5. Note to user: "You may need to `createdb {POSTGRES_DB}` for the isolated database"
+6. Run cache-aware dep install (see below), proceed
 
-**Tier D** — Creation fails: **PAUSE** with manual instructions:
+**Tier D** — Creation fails: **HARD BLOCK** — refuse to proceed, no coding allowed:
    ```
-   Worktree auto-provisioning failed: {error}
+   HARD BLOCK: Worktree auto-provisioning failed: {error}
+
+   I cannot write any code without worktree isolation.
 
    Manual setup:
      just wt-setup 1                          # one-time (~1-3 min)
@@ -125,6 +145,7 @@ Every `/vibe` run MUST execute inside a worktree slot. Phase 1 auto-provisions o
 
    Then re-run /vibe from that terminal.
    ```
+   Do NOT attempt any file writes. Do NOT offer to "just work on main this time". STOP.
 
 ### Cache-Aware Dep Install
 
@@ -153,7 +174,7 @@ NPM_SUM=$(md5sum assets/package-lock.json 2>/dev/null | cut -d' ' -f1)
 
 ### Phase 1: PREP (~1 min)
 
-1. **Verify/provision worktree** — Walk Tier A→B→C→D (see "Worktree Isolation" above). Run cache-aware dep install if newly provisioned.
+1. **Worktree gate (MUST be first)** — Check `git branch --show-current`. If on `main`/`master`, HARD BLOCK. Walk Tier A→B→C→D (see "Worktree Isolation" above). **Do not proceed to step 2 until worktree is confirmed and cwd is inside it.** Run cache-aware dep install if newly provisioned.
 2. **Load screen spec** — Read `{bmad.screen_specs_path}/{ID}.md`, validate Status is `spec-ready` or `building`
 3. **Auto-match patterns** — Extract keywords from spec title + acceptance criteria + UX Patterns field:
    ```
@@ -198,7 +219,7 @@ NPM_SUM=$(md5sum assets/package-lock.json 2>/dev/null | cut -d' ' -f1)
    - Log: "Research: {keyword} → chosen: Option {X} from {source_url}"
    - If pattern matching yields ≥2 results with scores ≥5 → skip research, local patterns are sufficient
 5. **Load critical rules** — Read `project-context.md` "Critical Don't-Miss Rules" section only (not the full file), plus the relevant layer reference guide(s) for this spec
-6. **Create branch** — `git checkout -b feature/{ID}` from main (if not already on it)
+6. **Verify feature branch** — Confirm current branch is `feature/{ID}` (worktree provisioning in Tier B/C already creates it). If worktree exists but branch name doesn't match: `git checkout -b feature/{ID}`. **NEVER checkout main/master.**
 7. **AUTO-PROCEED** to Phase 2 (or after human selects research approach, if research was triggered)
 
 ### Phase 2: BUILD (the core — single-agent TDD)
