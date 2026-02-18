@@ -8,6 +8,8 @@ args: "<PR_URL|PR_NUMBER> [--no-comment] [--no-design-system] [--cleanup]"
 
 > `/vibe check <PR_URL|PR_NUMBER>` - Standalone PR verification in isolated worktree
 
+**Framework root**: All framework-relative paths resolve from `~/.claude/vibe-ash-svelte/`. Project paths resolve from CWD.
+
 ## Purpose
 
 Run comprehensive verification on a PR in an isolated git worktree:

@@ -8,6 +8,14 @@ args: "[SCREEN-SPEC-ID]"
 
 > Autonomous feature implementation. Single focused agent, 4 phases: PREP → BUILD → VERIFY → MONITOR. Pauses only when human judgment is required.
 
+## Framework Root
+
+All framework-relative paths in this file resolve from: `~/.claude/vibe-ash-svelte/`
+
+For example: `references/data-layer.md` → `~/.claude/vibe-ash-svelte/references/data-layer.md`
+
+Project-relative paths (screen specs, config) resolve from the current working directory.
+
 ## Autonomy Settings
 
 ```yaml

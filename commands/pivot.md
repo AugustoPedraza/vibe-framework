@@ -7,6 +7,8 @@ description: Course correction when implementation diverges from plan
 
 > `/vibe pivot` - Course correction when things go off-track
 
+**Framework root**: All framework-relative paths resolve from `~/.claude/vibe-ash-svelte/`. Project paths resolve from CWD.
+
 ## Purpose
 
 Formal process to recover when:

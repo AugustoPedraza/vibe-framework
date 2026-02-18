@@ -8,6 +8,8 @@ args: "[FEATURE-ID] \"description\""
 
 > `/vibe fix [FEATURE-ID] "description"` - Targeted fix for user-reported issues
 
+**Framework root**: All framework-relative paths resolve from `~/.claude/vibe-ash-svelte/`. Project paths resolve from CWD.
+
 ## Purpose
 
 Fix user-reported issues by routing to specialized agents with minimal overhead:

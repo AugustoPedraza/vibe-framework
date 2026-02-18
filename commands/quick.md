@@ -8,6 +8,8 @@ args: "[description]"
 
 > `/vibe quick [description]` - Skip the full workflow for small tasks
 
+**Framework root**: All framework-relative paths resolve from `~/.claude/vibe-ash-svelte/`. Project paths resolve from CWD.
+
 ## Purpose
 
 Condensed 2-phase workflow for:

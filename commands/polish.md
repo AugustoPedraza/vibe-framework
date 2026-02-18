@@ -6,6 +6,8 @@ args: "[component-path|route|--all]"
 
 # Vibe Polish
 
+**Framework root**: All framework-relative paths resolve from `~/.claude/vibe-ash-svelte/`. Project paths resolve from CWD.
+
 > Short feedback loop for visual and UX validation. Validates components against `rules/ui-polish.md`, `rules/animation-patterns.md`, and `rules/ux-validation.md`.
 
 ## Usage

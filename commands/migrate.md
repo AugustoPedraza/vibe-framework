@@ -8,6 +8,8 @@ args: "[subcommand: init | FEATURE | status]"
 
 > `/vibe migrate [subcommand]` - Test-driven migration from legacy to Ash+Svelte
 
+**Framework root**: All framework-relative paths resolve from `~/.claude/vibe-ash-svelte/`. Project paths resolve from CWD.
+
 ## Purpose
 
 Migrate existing features using test-first approach:
