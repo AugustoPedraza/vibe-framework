@@ -41,18 +41,41 @@ Run comprehensive verification on a PR in an isolated git worktree:
 ```bash
 # Parse PR info
 gh pr view {PR_NUMBER} --json headRefName,number,title,headRepositoryOwner,isCrossRepository,url
+```
 
-# Per-PR worktree (allows parallel PR reviews)
-WORKTREE_PATH="../pr-check-{PR_NUMBER}"
+### Worktree resolution (reuse before create)
 
-# First time:
+Before creating a new worktree, check if one already exists for the PR branch:
+
+```bash
 git fetch origin {BRANCH_NAME}
-git worktree add $WORKTREE_PATH origin/{BRANCH_NAME}
 
-# Subsequent reviews of same PR:
-cd $WORKTREE_PATH && git fetch origin {BRANCH_NAME} && git checkout {BRANCH_NAME} && git reset --hard origin/{BRANCH_NAME} && cd -
+# 1. Check all existing worktrees for a match
+git worktree list --porcelain
+# Parse output: look for any worktree whose `branch` is refs/heads/{BRANCH_NAME}
 
-# Cache-aware dep install (skip if deps unchanged since last review)
+# 2. Decision tree:
+#    a) Existing worktree found on {BRANCH_NAME}:
+#       - Compare HEAD against origin/{BRANCH_NAME}
+#       - If HEAD matches origin → reuse as-is (WORKTREE_PATH = that path)
+#       - If HEAD differs → warn "worktree is X commits behind/ahead", then:
+#           git -C $WORKTREE_PATH merge-base --is-ancestor origin/{BRANCH_NAME} HEAD
+#           If local is ahead (has unpushed commits) → reuse as-is, note in report
+#           If local is behind → `git -C $WORKTREE_PATH pull --ff-only origin {BRANCH_NAME}`
+#       - SKIP worktree creation entirely
+#
+#    b) No matching worktree but ../pr-check-{PR_NUMBER} exists (leftover from prior review):
+#       - cd ../pr-check-{PR_NUMBER} && git checkout {BRANCH_NAME} && git reset --hard origin/{BRANCH_NAME}
+#       - WORKTREE_PATH="../pr-check-{PR_NUMBER}"
+#
+#    c) No match at all → create fresh:
+#       - git worktree add ../pr-check-{PR_NUMBER} origin/{BRANCH_NAME}
+#       - WORKTREE_PATH="../pr-check-{PR_NUMBER}"
+```
+
+### Cache-aware dep install
+
+```bash
 cd $WORKTREE_PATH
 MIX_SUM=$(md5sum mix.lock 2>/dev/null | cut -d' ' -f1)
 NPM_SUM=$(md5sum assets/package-lock.json 2>/dev/null | cut -d' ' -f1)
@@ -102,14 +125,18 @@ Post via: `gh pr comment {PR_NUMBER} --body "$(cat comment.md)"`
 
 ## Worktree Management
 
-- Each PR gets its own worktree at `../pr-check-{PR_NUMBER}` (allows parallel reviews)
+- **Reuse first**: if any existing worktree is already on the PR branch, use it — don't create a duplicate
+- This means if the user ran `/vibe` to create the PR from a worktree, `/vibe check` reuses that same worktree
+- Fallback: each PR gets its own worktree at `../pr-check-{PR_NUMBER}` (allows parallel reviews)
 - Worktrees are **kept between reviews** of the same PR (faster: deps already installed)
-- `--cleanup` removes the worktree for the given PR: `git worktree remove ../pr-check-{PR_NUMBER} && git worktree prune`
-- `--cleanup-all` removes all PR check worktrees: `rm -rf ../pr-check-* && git worktree prune`
+- `--cleanup` removes the `pr-check-{PR_NUMBER}` worktree (not user-created worktrees): `git worktree remove ../pr-check-{PR_NUMBER} && git worktree prune`
+- `--cleanup-all` removes all `pr-check-*` worktrees: `rm -rf ../pr-check-* && git worktree prune`
 
 ## Anti-Patterns
 
-- Never run checks in user's current working directory
+- Never run checks on the **main/master branch** working directory — always use a feature branch worktree
+- Never create a new worktree when an existing one already tracks the PR branch (reuse it)
+- Never `git reset --hard` a worktree that is ahead of origin (user may have unpushed work)
 - Never auto-post comments without user confirmation
 - Never delete worktree automatically (cleanup is explicit)
 - Spawn all agents in parallel (single message, multiple Task calls)
