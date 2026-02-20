@@ -65,11 +65,11 @@ Agent behavior:
 
 ### Phase 2: QUICK VERIFY
 
-Run only related tests:
+Run only related tests (use `${WT}` from `git rev-parse --show-toplevel`):
 ```bash
-# UI fixes: cd assets && npm test -- --testPathPattern="ComponentName"
-# Domain fixes: mix test test/domain/ --max-cases 20
-# Integration: mix test test/integration/
+# UI fixes: npm test --prefix ${WT}/assets -- --testPathPattern="ComponentName"
+# Domain fixes: bash -c "cd ${WT} && mix test test/domain/ --max-cases 20"
+# Integration: bash -c "cd ${WT} && mix test test/integration/"
 ```
 
 ### Iteration: "Still Broken"

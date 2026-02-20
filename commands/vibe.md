@@ -110,9 +110,21 @@ This check applies to ALL `/vibe` subcommands (`/vibe`, `/vibe quick`, `/vibe fi
 
 ## Worktree Isolation (HARD BLOCK)
 
-Every `/vibe` run MUST execute inside a git worktree. This is a **hard prerequisite** — no coding, no file creation, no edits until worktree isolation is confirmed. The agent MUST walk Tiers A→D and succeed before touching any project file.
+Every `/vibe` run MUST execute inside a git worktree. This is a **hard prerequisite** — no coding, no file creation, no edits until worktree isolation is confirmed. The agent MUST walk Step 0 then Tiers A→D and succeed before touching any project file.
 
-**Tier A** — `.env.worktree` exists AND `git rev-parse --show-toplevel` differs from the main repo root: read `.env.worktree`, confirm `PHX_PORT`/`VITE_PORT`/`POSTGRES_DB` are set, confirm branch is NOT `main`/`master`, proceed.
+**Step 0 (always)** — Fetch latest main:
+```bash
+git fetch origin main 2>/dev/null || git fetch origin master 2>/dev/null
+```
+If fetch fails (offline/no remote): warn "Could not fetch origin — worktree based on local main (may be stale)", proceed anyway.
+
+**Tier A** — `.env.worktree` exists AND `git rev-parse --show-toplevel` differs from the main repo root: read `.env.worktree`, confirm `PHX_PORT`/`VITE_PORT`/`POSTGRES_DB` are set, confirm branch is NOT `main`/`master`.
+- **Freshness check**: `git merge-base --is-ancestor origin/main HEAD`
+  - YES (up-to-date or ahead): proceed
+  - NO (diverged): `git rebase origin/main`
+    - Conflicts: **PAUSE** — "Worktree conflicts with latest main. Resolve or start fresh."
+  - Fetch failed in Step 0: skip freshness check
+- Proceed.
 
 **Tier B** — No `.env.worktree`, justfile available (`just --list 2>/dev/null | grep wt-setup`):
 1. Detect lowest free slot: check `../worktree-{1..4}` for first non-existent path
@@ -121,7 +133,7 @@ Every `/vibe` run MUST execute inside a git worktree. This is a **hard prerequis
 
 **Tier C** — No justfile or `wt-setup` recipe: manual git worktree:
 1. Detect lowest free slot (same as Tier B)
-2. `git worktree add ../worktree-{SLOT} -b feature/{spec_id}`
+2. `git worktree add ../worktree-{SLOT} -b feature/{spec_id} origin/main` (branches from fetched remote, not stale local)
 3. Generate `.env.worktree` in the new worktree:
    ```
    PHX_PORT=$((4000 + SLOT * 10))
@@ -147,22 +159,48 @@ Every `/vibe` run MUST execute inside a git worktree. This is a **hard prerequis
    ```
    Do NOT attempt any file writes. Do NOT offer to "just work on main this time". STOP.
 
+### Workspace Context
+
+After worktree isolation is confirmed, resolve the absolute path **once** and use it everywhere:
+
+```bash
+WT=$(git rev-parse --show-toplevel)
+```
+
+All subsequent commands use `${WT}` as an absolute prefix — **no `cd` switching**:
+
+| Pattern | Command |
+|---------|---------|
+| Elixir commands | `bash -c "cd ${WT} && mix ..."` (mix requires `mix.exs` in cwd) |
+| npm install | `npm ci --prefix ${WT}/assets` |
+| npm test | `npm test --prefix ${WT}/assets` |
+| eslint/prettier | `bash -c "cd ${WT}/assets && npx eslint svelte/"` |
+| svelte-check/tsc | `bash -c "cd ${WT}/assets && npx svelte-check"` |
+| vite dev server | `bash -c "cd ${WT}/assets && source ${WT}/.env.worktree && npx vite --port $VITE_PORT > ${WT}/.smoke-vite.log 2>&1" &` |
+| Phoenix server | `bash -c "cd ${WT} && source .env.worktree && mix phx.server > ${WT}/.smoke-server.log 2>&1" &` |
+| Source env | `source ${WT}/.env.worktree` |
+| Read logs | `tail -20 ${WT}/.smoke-server.log` |
+
+**Exception**: `mix` commands need `mix.exs` in cwd, so they use `cd ${WT} && mix ...` — but this is one consistent prefix, not scattered directory switching.
+
 ### Cache-Aware Dep Install
 
 Used by both `/vibe` (worktree provisioning + Phase 1) and `/vibe check` (Phase 1 setup):
 
 ```bash
+WT=$(git rev-parse --show-toplevel)
+
 # Compute current checksums
-MIX_SUM=$(md5sum mix.lock 2>/dev/null | cut -d' ' -f1)
-NPM_SUM=$(md5sum assets/package-lock.json 2>/dev/null | cut -d' ' -f1)
+MIX_SUM=$(md5sum ${WT}/mix.lock 2>/dev/null | cut -d' ' -f1)
+NPM_SUM=$(md5sum ${WT}/assets/package-lock.json 2>/dev/null | cut -d' ' -f1)
 
 # Compare against cached checksums
-# File: .claude/.dep-checksums (in worktree root)
+# File: ${WT}/.claude/.dep-checksums (in worktree root)
 # Format: MIX={hash}\nNPM={hash}
 
 # Only install if changed:
-# mix.lock changed  → mix deps.get && mix compile
-# package-lock.json changed → cd assets && npm ci
+# mix.lock changed  → bash -c "cd ${WT} && mix deps.get && mix compile"
+# package-lock.json changed → npm ci --prefix ${WT}/assets
 # Neither changed → skip entirely
 
 # Write new checksums after successful install
@@ -174,7 +212,14 @@ NPM_SUM=$(md5sum assets/package-lock.json 2>/dev/null | cut -d' ' -f1)
 
 ### Phase 1: PREP (~1 min)
 
-1. **Worktree gate (MUST be first)** — Check `git branch --show-current`. If on `main`/`master`, HARD BLOCK. Walk Tier A→B→C→D (see "Worktree Isolation" above). **Do not proceed to step 2 until worktree is confirmed and cwd is inside it.** Run cache-aware dep install if newly provisioned.
+1. **Worktree gate (MUST be first)** — Check `git branch --show-current`. If on `main`/`master`, HARD BLOCK. Walk Step 0 then Tier A→B→C→D (see "Worktree Isolation" above). **Do not proceed to step 1.5 until worktree is confirmed and cwd is inside it.** Run cache-aware dep install if newly provisioned.
+1.5. **Start dev server** (workspace-scoped, provides runtime feedback during BUILD):
+   - `source ${WT}/.env.worktree`
+   - Start Phoenix: `bash -c "cd ${WT} && source .env.worktree && mix phx.server > ${WT}/.smoke-server.log 2>&1" &`
+   - Start Vite: `bash -c "cd ${WT}/assets && source ${WT}/.env.worktree && npx vite --port $VITE_PORT > ${WT}/.smoke-vite.log 2>&1" &`
+   - **NEVER `just dev`** in a worktree
+   - Wait for ready: `curl` poll `http://localhost:${PHX_PORT}`, max 30s
+   - If startup fails: warn, continue (server is informational during BUILD, required for VERIFY)
 2. **Load screen spec** — Read `{bmad.screen_specs_path}/{ID}.md`, validate Status is `spec-ready` or `building`
 3. **Auto-match patterns** — Extract keywords from spec title + acceptance criteria + UX Patterns field:
    ```
@@ -239,6 +284,7 @@ Single agent implements full vertical slice in dependency order:
 - **Strict TDD**: writes test FIRST (tagged `@tag :ac_N` for Elixir, named `AC-N:` for vitest), verifies it FAILS (red), then implements until green
 - **AC traceability**: every acceptance criterion in the spec MUST map to at least one tagged test. Track coverage as you go.
 - Implements until test passes
+- **Server log check** (after each layer completes): read last 20 lines of `${WT}/.smoke-server.log` for `[error]` or compile errors. If Phoenix reports a compilation error related to the current layer, fix before moving to next layer.
 - Moves to next layer
 
 **Hard gates per layer** (self-check before moving on):
@@ -293,8 +339,8 @@ When a build attempt fails, classify the failure before retrying:
 
 **3a. Parallel validation** — spawn 3 background Task agents simultaneously:
 
-1. **backend-verify**: `mix compile --warnings-as-errors && mix credo --strict && mix test`
-2. **frontend-verify**: `cd assets && npx eslint svelte/ && npx svelte-check && npx vitest run`
+1. **backend-verify**: `bash -c "cd ${WT} && mix compile --warnings-as-errors && mix credo --strict && mix test"`
+2. **frontend-verify**: `bash -c "cd ${WT}/assets && npx eslint svelte/ && npx svelte-check && npx vitest run"`
 3. **adversarial-spec-compliance** (read-only audit agent — ADVERSARIAL):
    - **Philosophy**: NEVER accept "looks good". Find minimum 3 specific, actionable issues. If <3 found, look harder: edge cases, null handling, integration issues, architecture violations.
    - **AC coverage**: For each acceptance criterion, find the tagged test (`@tag :ac_N` or `AC-N:`). Missing = BLOCKER.
@@ -319,12 +365,13 @@ When a build attempt fails, classify the failure before retrying:
 - Remaining failures (tsc errors, unfixable format) → add to 3d gate blockers
 
 **3b. Runtime + visual validation** (main session):
-- Start dev server if not running:
-  - **In worktree**: `source .env.worktree && mix phx.server > .smoke-server.log 2>&1 &` then `cd assets && source ../.env.worktree && npx vite --port $VITE_PORT > ../.smoke-vite.log 2>&1 &`
+- Verify dev server is running (started in Phase 1.5):
+  `curl -s -o /dev/null -w "%{http_code}" http://localhost:${PHX_PORT}`
+  - If server is down: restart using Phase 1.5 commands
+  - If responding: proceed to browser validation
   - **NEVER use `just dev`** in a worktree — it starts Docker and conflicts with the main repo's postgres container
-  - Read `.env.worktree` for the correct URL (e.g., `http://localhost:4010` for slot 1)
-  - Wait for server ready: curl poll the URL, max 30s
-- **Server log check**: Read `.smoke-server.log` for `[error]`, `[warning]`, compile errors
+  - Read `${WT}/.env.worktree` for the correct URL (e.g., `http://localhost:4010` for slot 1)
+- **Server log check**: Read `${WT}/.smoke-server.log` for `[error]`, `[warning]`, compile errors
 - For each new/modified screen route (if MCP Playwright available):
   - Navigate to route at 375px width (mobile) — take screenshot
   - `browser_console_messages` — capture JS errors/warnings
@@ -352,16 +399,34 @@ When a build attempt fails, classify the failure before retrying:
 
 **3h. Spawn ci-fixer** in background (max 3 retries)
 
+**3i. Offer /vibe check** (human decision gate):
+- **PAUSE** — present to user:
+  ```
+  PR #{PR_NUMBER} created: {PR_URL}
+  CI-fixer monitoring in background.
+
+  Run full /vibe check? (6-agent deep review in this worktree, ~2-3 min)
+  [yes] Run check now
+  [no]  Skip to monitoring
+  ```
+- If YES:
+  - Run check in current worktree (in-situ mode — skip check.md Phase 1, already provisioned)
+  - Spawn 6 parallel verification agents from check.md Phase 2
+  - Collect results (Phase 3), present review (Phase 4)
+  - Offer to post PR comment (another human gate): "Post findings as PR comment? [yes/no]"
+  - After check: continue to Phase 4 (MONITOR)
+- If NO:
+  - Proceed to Phase 4 (MONITOR)
+
 ### Phase 4: MONITOR (after PR)
 
 > Server under Claude's control. Proactive error detection while user tests. The user NEVER copy-pastes logs.
 
-**4a. Start server** (if not already running from Phase 3b):
-- Read `.env.worktree` for `PHX_PORT`/`VITE_PORT`
-- Start Phoenix: `source .env.worktree && mix phx.server > .smoke-server.log 2>&1 &`
-- Start Vite: `cd assets && source ../.env.worktree && npx vite --port $VITE_PORT > ../.smoke-vite.log 2>&1 &`
+**4a. Confirm server** (should already be running from Phase 1.5):
+- Verify Phoenix and Vite responding:
+  `curl -s -o /dev/null -w "%{http_code}" http://localhost:${PHX_PORT}`
+- If down: restart using Phase 1.5 commands
 - **NEVER `just dev`** in a worktree
-- Wait for ready (curl poll, max 30s)
 
 **4b. Proactive scan** (Playwright MCP required):
 - For each route from the screen spec:
@@ -369,7 +434,7 @@ When a build attempt fails, classify the failure before retrying:
   - `browser_console_messages` — capture JS errors/warnings
   - `browser_snapshot` — verify content renders
   - Check at mobile (375px) and desktop (1280px)
-- Read `.smoke-server.log` for `[error]`, `[warning]`, compile errors
+- Read `${WT}/.smoke-server.log` for `[error]`, `[warning]`, compile errors
 - If issues found: fix → re-scan (max 3 cycles)
 - If MCP not available: server-log-only mode (skip browser checks)
 
@@ -395,7 +460,7 @@ When a build attempt fails, classify the failure before retrying:
 - Print: issues found and fixed during Phase 4b (if any)
 
 **4d. Active monitoring loop** (ZERO copy-paste — Claude has direct access to everything):
-- On **EVERY** user message: automatically read `.smoke-server.log` for new lines since last check
+- On **EVERY** user message: automatically read `${WT}/.smoke-server.log` for new lines since last check
 - If user says "check"/"status"/"re-scan": full browser + server log scan
 - If user says "there's an error on X page": Claude navigates to X via Playwright, reads console + server log, finds root cause
 - Errors found:

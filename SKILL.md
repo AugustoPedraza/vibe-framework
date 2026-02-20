@@ -52,7 +52,7 @@ commands:
 
 Vibe is a **single-agent TDD pipeline** with parallel validation, built on native Claude Code capabilities:
 
-- **3 phases**: PREP → BUILD → VERIFY (not 5 phases with parallel agents)
+- **4 phases**: PREP → BUILD → VERIFY → MONITOR
 - **Single focused agent** implements full vertical slice (DATA → DOMAIN → API → UI → WIRE)
 - **Strict TDD**: test first → red → implement → green, per layer
 - **Parallel validation**: 3 background agents verify backend, frontend, and spec-compliance

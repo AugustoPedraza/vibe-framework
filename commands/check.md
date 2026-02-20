@@ -76,12 +76,12 @@ git worktree list --porcelain
 ### Cache-aware dep install
 
 ```bash
-cd $WORKTREE_PATH
-MIX_SUM=$(md5sum mix.lock 2>/dev/null | cut -d' ' -f1)
-NPM_SUM=$(md5sum assets/package-lock.json 2>/dev/null | cut -d' ' -f1)
-# Compare against .claude/.dep-checksums — only install if changed:
-# mix.lock changed  → mix deps.get && mix compile
-# package-lock.json changed → cd assets && npm ci
+# Use WORKTREE_PATH as absolute prefix — no cd switching
+MIX_SUM=$(md5sum ${WORKTREE_PATH}/mix.lock 2>/dev/null | cut -d' ' -f1)
+NPM_SUM=$(md5sum ${WORKTREE_PATH}/assets/package-lock.json 2>/dev/null | cut -d' ' -f1)
+# Compare against ${WORKTREE_PATH}/.claude/.dep-checksums — only install if changed:
+# mix.lock changed  → bash -c "cd ${WORKTREE_PATH} && mix deps.get && mix compile"
+# package-lock.json changed → npm ci --prefix ${WORKTREE_PATH}/assets
 # Neither changed → skip entirely
 # Write new checksums after successful install
 ```
@@ -131,6 +131,13 @@ Post via: `gh pr comment {PR_NUMBER} --body "$(cat comment.md)"`
 - Worktrees are **kept between reviews** of the same PR (faster: deps already installed)
 - `--cleanup` removes the `pr-check-{PR_NUMBER}` worktree (not user-created worktrees): `git worktree remove ../pr-check-{PR_NUMBER} && git worktree prune`
 - `--cleanup-all` removes all `pr-check-*` worktrees: `rm -rf ../pr-check-* && git worktree prune`
+
+## In-Situ Mode (called from /vibe workflow)
+
+When `/vibe` invokes check after PR creation (step 3i), the check runs in the current
+worktree — no worktree resolution needed. Phase 1 (SETUP) is skipped entirely. Execution
+starts at Phase 2 (VERIFY) using `${WT}` as the worktree path. Phase 5 (COMMENT) still
+requires user confirmation before posting.
 
 ## Anti-Patterns
 
